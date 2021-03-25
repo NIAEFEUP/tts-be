@@ -3,10 +3,14 @@
   "description": "",
   "version": "1.0.0",
   "main": "app.js",
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^7.22.0"
+  },
   "scripts": {
     "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint src --max-warnings 0",
+    "lint:fix": "npm run lint -- --fix"
   },
   "repository": {
     "type": "git",
