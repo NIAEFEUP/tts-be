@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const routes = require("./routes/index");
+const router = require("./routes/check-faculties");
 
 const app = express();
 
@@ -28,3 +29,5 @@ app.use("/", routes);
 app.listen(process.env.PORT, () => {
     console.info(`Server listening on port ${process.env.PORT}`);
 });
+
+module.exports = app;

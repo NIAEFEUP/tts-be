@@ -1,8 +1,9 @@
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
+const faculties = require("./check-faculties");
+const example = require("./example");
 
-router.get("/", function(req, res) {
-    res.send("Hello world");
-});
+router.use("/faculties", faculties);
+router.use("/", example);
+
 
 module.exports = router;
