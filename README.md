@@ -1,9 +1,11 @@
 # tts-be
 
-# /health-check
+## Endpoints 
+
+### /health-check
 API test 
 
-# /faculties 
+### /faculties 
 Returns an object with all the faculties and their respective ids
 
 ```
@@ -13,5 +15,5 @@ Returns an object with all the faculties and their respective ids
     }
 ```
 
-# /faculties/check
+### /faculties/check
 Checks if the ids stored in the backend are updated
