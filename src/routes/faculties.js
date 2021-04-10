@@ -35,7 +35,7 @@ router.get("/check", function(req, res) {
                 })
                 .catch((error) => {
                     console.error(`URL: ${url}:${error}`);
-                    return res.status(404).json({ success: false, error: error.message });
+                    return res.status(500).json({ success: false, error: error.message });
                 });
         });
     } catch (e) {
