@@ -1,9 +1,9 @@
 const router = require("express").Router();
-const faculties = require("./check-faculties");
-const example = require("./example");
+const faculties = require("./faculties");
+const example = require("./health-check");
 
 router.use("/faculties", faculties);
-router.use("/", example);
+router.use("/health-check", example);
 
 
 module.exports = router;

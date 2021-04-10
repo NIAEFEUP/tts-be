@@ -29,7 +29,7 @@ router.get("/check", function(req, res) {
                     // outdated id
                     if (facultyId !== facultiesIds[faculty]) {
                         throw new Error(
-                            `Facultie id ´${faculty}' outdated in the backend storage`
+                            `Faculty id ´${faculty}' outdated in the backend storage`
                         );
                     }
                 })
