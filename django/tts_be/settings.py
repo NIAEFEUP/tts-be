@@ -83,7 +83,7 @@ DATABASES = {
         'USER': os.getenv('MYSQL_USER'),
         'PASSWORD': os.getenv('MYSQL_PASSWORD'),
         'HOST': os.getenv('MYSQL_HOST'),
-        'PORT': os.getenv('MYSQL_PORT') 
+        'PORT': os.getenv('MYSQL_PORT') ,
     }
 }
 
@@ -128,3 +128,13 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Api description
+REST_FRAMEWORK = {
+    # Setting default renderer.
+    # https://www.django-rest-framework.org/api-guide/renderers/
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ]
+}
