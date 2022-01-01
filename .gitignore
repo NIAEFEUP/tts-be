@@ -8,3 +8,6 @@ logs
 # mysql data
 mysql/data/*
 **__pycache__
+
+# django 
+django/**/migrations/**
