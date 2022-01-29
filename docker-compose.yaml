@@ -1,0 +1,37 @@
+version: "3.7" 
+
+services:
+  db:
+    build: ./mysql
+    restart: always 
+    container_name: tts_db
+    volumes: 
+      - ./mysql/data:/var/lib/mysql
+    env_file:
+      - mysql/.env
+    ports:
+      - 3306:3306
+
+  phpmyadmin:
+    image: phpmyadmin:5.1.1-apache
+    container_name: tts_phpmyadmin
+    restart: always
+    ports:
+      - 8080:80
+
+  django:
+    build: ./django 
+    container_name: tts_django
+    env_file:
+      - django/.env.dev
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./django/:/usr/src/django/
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+
+
+
+
