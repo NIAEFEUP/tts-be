@@ -1,7 +1,6 @@
 #!bin/sh
 
-cat  sql/db_creation.sql > entrypoint.sql
-for FILE in sql/populate/*; do
+for FILE in sql/*; do
     cat $FILE >> entrypoint.sql;
 done 
 
