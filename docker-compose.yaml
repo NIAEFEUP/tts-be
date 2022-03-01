@@ -8,7 +8,7 @@ services:
     volumes: 
       - ./mysql/data:/var/lib/mysql
     env_file:
-      - mysql/.env
+      - mysql/.env.dev
     ports:
       - 3306:3306
 
