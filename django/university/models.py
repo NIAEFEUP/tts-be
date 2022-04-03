@@ -43,6 +43,17 @@ class CourseUnit(models.Model):
         unique_together = (('course_unit_id', 'course', 'year', 'semester'),)
 
 
+class DjangoMigrations(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    app = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    applied = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_migrations'
+
+
 class Faculty(models.Model):
     acronym = models.CharField(unique=True, max_length=10, blank=True, null=True)
     name = models.TextField(blank=True, null=True)
