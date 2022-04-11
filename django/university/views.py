@@ -44,7 +44,7 @@ def course_last_year(request, course_id):
 """
 @api_view(['GET'])
 def course_units_by_year(request, course_id, year, semester): 
-    json_data = serializers.serialize(CourseUnit.objects.filter(course=course_id, semester=semester, year=year)) 
+    json_data = serializers.serialize('json', CourseUnit.objects.filter(course=course_id, semester=semester, course_year=year)) 
     return HttpResponse(json_data, content_type="application/json")
 
 
