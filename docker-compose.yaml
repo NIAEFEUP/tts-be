@@ -12,12 +12,15 @@ services:
     ports:
       - 3306:3306
 
+
   phpmyadmin:
     image: phpmyadmin:5.1.1-apache
     container_name: tts_phpmyadmin
     restart: always
     ports:
       - 8080:80
+
+
 
   django:
     build: ./django 
@@ -31,6 +34,12 @@ services:
       - 8000:8000
     depends_on:
       - db
+
+
+networks:
+  default:
+    external:
+      name: tts_bridge
 
 
 

@@ -11,6 +11,9 @@ from django.db.models import Max
 import json
 # Create your views here. 
 
+def get_field(value):
+    return value.field
+
 @api_view(['GET'])
 def faculty(request): 
     json_data = serializers.serialize('json', Faculty.objects.all())
@@ -18,8 +21,8 @@ def faculty(request):
 
 @api_view(['GET'])
 def course(request):
-    data_json = serializers.serialize('json', Course.objects.all()) 
-    return HttpResponse(data_json, content_type="application/json")
+    json_data = serializers.serialize('json', Course.objects.all()) 
+    return HttpResponse(json_data, content_type="application/json")
 
 """
     Return all the units from a course. 
