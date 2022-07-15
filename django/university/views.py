@@ -21,8 +21,8 @@ def faculty(request):
 
 @api_view(['GET'])
 def course(request):
-    json_data = serializers.serialize('json', Course.objects.all()) 
-    return HttpResponse(json_data, content_type="application/json")
+    json_data = list(Course.objects.values())
+    return JsonResponse(json_data, safe=False)
 
 """
     Return all the units from a course. 
