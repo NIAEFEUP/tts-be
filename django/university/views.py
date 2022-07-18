@@ -13,24 +13,27 @@ import json
 
 def get_field(value):
     return value.field
-
+    
 @api_view(['GET'])
 def faculty(request): 
     json_data = serializers.serialize('json', Faculty.objects.all())
     return HttpResponse(json_data, content_type="application/json")
 
+"""
+    Returns all the major/major. 
+"""
 @api_view(['GET'])
 def course(request):
     json_data = list(Course.objects.values())
     return JsonResponse(json_data, safe=False)
 
 """
-    Return all the units from a course. 
+    Return all the units from a course/major. 
 """
 @api_view(['GET'])
 def course_units(request, course_id, semester): 
-    json_data = serializers.serialize('json', CourseUnit.objects.filter(course=course_id, semester=semester).order_by('year')) 
-    return HttpResponse(json_data, content_type="application/json")
+    json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester).order_by('year').values())
+    return JsonResponse(json_data, safe=False)
 
 """
     Returns the last year of a course.
