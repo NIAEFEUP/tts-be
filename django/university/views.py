@@ -32,7 +32,7 @@ def course(request):
 """
 @api_view(['GET'])
 def course_units(request, course_id, semester): 
-    json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester).order_by('year').values())
+    json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester).order_by('course_year').values())
     return JsonResponse(json_data, safe=False)
 
 """
@@ -42,7 +42,7 @@ def course_units(request, course_id, semester):
 def course_last_year(request, course_id):
     max_year = CourseUnit.objects.filter(course=course_id).aggregate(Max('course_year')).get('course_year__max')
     json_data = {"max_year": max_year}
-    return JsonResponse(json_data)
+    return JsonResponse(json_data, safe=False)
 
 
 """
@@ -56,6 +56,6 @@ def course_units_by_year(request, course_id, year, semester):
 
 @api_view(['GET'])
 def schedule(request, course_unit_id):
-    json_data = serializers.serialize('json', Schedule.objects.filter(course_unit=course_unit_id))
-    return HttpResponse(json_data, content_type="application/json")
+    json_data = list(Schedule.objects.filter(course_unit=course_unit_id).values())
+    return JsonResponse(json_data, safe=False)
 
