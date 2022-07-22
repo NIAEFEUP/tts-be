@@ -54,8 +54,9 @@ def course_units_by_year(request, course_id, year, semester):
     return HttpResponse(json_data, content_type="application/json")
 
 
+"""
+"""
 @api_view(['GET'])
 def schedule(request, course_unit_id):
-    json_data = list(Schedule.objects.filter(course_unit=course_unit_id).values())
+    json_data = list(Schedule.objects.filter(course_unit=course_unit_id).order_by('class_name').values())
     return JsonResponse(json_data, safe=False)
-
