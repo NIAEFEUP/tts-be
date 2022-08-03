@@ -12,6 +12,9 @@ COPY ./requirements.txt ./requirements.txt
 RUN apt-get update
 RUN apt-get -y install build-essential default-libmysqlclient-dev
 
+# Install mysql command to wait for the database initialization 
+RUN apt -y install default-mysql-client
+
 # Install the requirements
 RUN pip install -r requirements.txt 
 
