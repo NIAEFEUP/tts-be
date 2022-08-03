@@ -6601,28 +6601,7 @@ ALTER TABLE `course_unit`
 ALTER TABLE `course_unit`
   ADD CONSTRAINT `course_unit_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
---
--- Delete every repeated course with no subjects
---
-DELETE FROM `course`
-WHERE `id` IN (
-  SELECT cid FROM (
-    SELECT `id` as cid
-    FROM `course`
-    WHERE `id` IN (
-      -- Select every repeated course
-      SELECT DISTINCT C1.`id`
-      FROM `course` C1, `course` C2
-      WHERE C1.`course_id` = C2.`course_id` AND C1.`id` <> C2.`id`
-    )
-    AND `id` NOT IN (
-      -- Select every course with subjects
-      SELECT DISTINCT `course`.`id`
-      FROM `course`, `course_unit`
-      WHERE `course`.`id` = `course_unit`.`course_id`
-    )
-  ) AS C
-);
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
