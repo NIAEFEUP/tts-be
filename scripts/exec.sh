@@ -1,4 +1,4 @@
-#!usr/bin/env bash 
+#!/usr/bin/env bash 
 
 if [ -f "./mysql/data/" ] ; then
     sudo rm -rf "./mysql/data/"
