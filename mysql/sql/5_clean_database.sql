@@ -9,7 +9,7 @@ SET time_zone = "+00:00";
 DELETE FROM `course`
 WHERE `id` IN (
   SELECT cid FROM (
-    SELECT `id` as cid
+    SELECT `id` AS cid
     FROM `course`
     WHERE `id` IN (
       -- Select every repeated course
@@ -24,6 +24,20 @@ WHERE `id` IN (
       WHERE `course`.`id` = `course_unit`.`course_id`
     )
   ) AS C
+);
+
+--
+-- Delete repeated theoretical classes: same day, duration, start_time, composed class name and course unit id
+--
+DELETE FROM `schedule`
+WHERE `lesson_type` = 'T'
+AND `id` NOT IN (
+	SELECT cid FROM (
+		SELECT min(`id`) AS cid
+		FROM `schedule` 
+		WHERE `lesson_type` = 'T' 
+		GROUP BY `day`, `duration`, `start_time`, `composed_class_name`, `course_unit_id`
+	) AS C
 );
 
 COMMIT; 
