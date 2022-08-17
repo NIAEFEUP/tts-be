@@ -20,11 +20,12 @@ def faculty(request):
     return HttpResponse(json_data, content_type="application/json")
 
 """
-    Returns all the major/major. 
+    Returns all the major/major.  
+    REQUEST: http://localhost:8000/course/<int:year>
 """
 @api_view(['GET'])
-def course(request):
-    json_data = list(Course.objects.values())
+def course(request, year):
+    json_data = list(Course.objects.filter(year=year).values())
     return JsonResponse(json_data, safe=False)
 
 """
