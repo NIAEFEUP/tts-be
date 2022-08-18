@@ -30,10 +30,11 @@ def course(request, year):
 
 """
     Return all the units from a course/major. 
+    REQUEST: course_units/<int:course_id>/<int:year>/<int:semester>/
 """
 @api_view(['GET'])
-def course_units(request, course_id, semester): 
-    json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester).order_by('course_year').values())
+def course_units(request, course_id, year, semester): 
+    json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester, year=year).order_by('course_year').values())
     return JsonResponse(json_data, safe=False)
 
 """
