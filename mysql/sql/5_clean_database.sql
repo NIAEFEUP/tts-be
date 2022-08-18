@@ -29,15 +29,31 @@ WHERE `id` IN (
 --
 -- Delete repeated theoretical classes: same day, duration, start_time, composed class name and course unit id
 --
-DELETE FROM `schedule`
-WHERE `lesson_type` = 'T'
-AND `id` NOT IN (
-	SELECT cid FROM (
-		SELECT min(`id`) AS cid
-		FROM `schedule` 
-		WHERE `lesson_type` = 'T' 
-		GROUP BY `day`, `duration`, `start_time`, `composed_class_name`, `course_unit_id`
-	) AS C
-);
+-- DELETE FROM `schedule`
+-- WHERE `lesson_type` = 'T'
+-- AND `id` NOT IN (
+--	SELECT cid FROM (
+--		SELECT min(`id`) AS cid
+--		FROM `schedule` 
+--		WHERE `lesson_type` = 'T' 
+--		GROUP BY `day`, `duration`, `start_time`, `composed_class_name`, `course_unit_id`
+--	) AS C
+-- );
+
+
+
+-- 
+-- Delete repeated classes: all fields are equal. 
+-- 
+
+create view `schedule2` as 
+  select min(id) 
+  from `schedule` 
+  group by `day`, `duration`, `start_time`, `location`, `lesson_type`, `teacher_acronym`, `course_unit_id`, `class_name`, `composed_class_name`;
+
+delete from `schedule` 
+where id not in (select * from schedule2);
+
+drop view schedule2;
 
 COMMIT; 
