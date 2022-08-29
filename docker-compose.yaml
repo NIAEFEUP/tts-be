@@ -29,6 +29,11 @@ services:
     ports:
       - 8080:8000
 
+  fetcher:
+    build: ./fetcher
+    container_name: tts_fetcher
+    volumes:
+      - ./fetcher/:/fetcher/
 
 
 
