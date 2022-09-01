@@ -6,4 +6,4 @@ $result | ForEach-Object {$_ -replace "[`r`n]+", "`n"} | Set-Content $Entrypoint
 Write-Output ">> Removing old containers..."
 docker compose down
 Write-Output ">> Initializing docker..."
-docker compose up --build 
+docker compose up --build -d

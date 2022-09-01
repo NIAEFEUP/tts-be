@@ -6,7 +6,6 @@ all:
 	@echo [EXECUTING] ./scripts/$(EXEC)
 	@bash ./scripts/exec.sh
 
-
 download: clean_fetcher clean_database
 	@echo [CREATING] fetcher/data folder 
 	@-mkdir ./fetcher/data
@@ -20,12 +19,9 @@ download: clean_fetcher clean_database
 	@echo [MOVING] data from fetcher to sql... 
 	@mv ./fetcher/data/* ./mysql/sql
 
-
 upload: 
 	@echo [UPLOADING] data...
 	@docker compose run fetcher python ./update_data/upload.py
-
-
 
 clean: clean_fetcher clean_database
 
