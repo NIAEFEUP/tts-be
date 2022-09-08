@@ -16,7 +16,7 @@ services:
     container_name: tts_phpmyadmin
     restart: always
     ports:
-      - 8080:80
+      - 4000:80
 
   django:
     build: ./django 
@@ -27,13 +27,14 @@ services:
     volumes:
       - ./django/:/usr/src/django/
     ports:
-      - 8000:8000
+      - 8080:8000
 
+  fetcher:
+    build: ./fetcher
+    container_name: tts_fetcher
+    volumes:
+      - ./fetcher/:/fetcher/
 
-networks:
-  default:
-    external:
-      name: tts_bridge
 
 
 
