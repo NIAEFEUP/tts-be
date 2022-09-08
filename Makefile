@@ -2,7 +2,7 @@
 
 MYSQL_DATA = ./mysql/sql
 
-all: 
+all: clean_database
 	@echo [EXECUTING] ./scripts/$(EXEC)
 	@bash ./scripts/exec.sh
 
