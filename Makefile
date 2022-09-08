@@ -10,7 +10,7 @@ download: clean_fetcher clean_database
 	@echo [CREATING] fetcher/data folder 
 	@-mkdir ./fetcher/data
 	@echo [DOWNLOADING] data from the source... 
-	@docker compose run fetcher python ./update_data/download.py
+	@docker-compose run fetcher python ./update_data/download.py
 	@echo [REMOVING] data from mysql... 
 	@-rm $(MYSQL_DATA)/1_faculty.sql
 	@-rm $(MYSQL_DATA)/2_course.sql
@@ -21,7 +21,7 @@ download: clean_fetcher clean_database
 
 upload: 
 	@echo [UPLOADING] data...
-	@docker compose run fetcher python ./update_data/upload.py
+	@docker-compose run fetcher python ./update_data/upload.py
 
 clean: clean_fetcher clean_database
 
