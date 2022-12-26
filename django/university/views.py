@@ -7,9 +7,11 @@ from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
 from django.db.models import Max
-
+from university.stats import statistics
 import json
 # Create your views here. 
+
+
 
 def get_field(value):
     return value.field
@@ -26,15 +28,18 @@ def faculty(request):
 @api_view(['GET'])
 def course(request, year):
     json_data = list(Course.objects.filter(year=year).values())
+    statistics(Course.objects.filter(year=year).values(), year)
     return JsonResponse(json_data, safe=False)
 
 """
     Return all the units from a course/major. 
     REQUEST: course_units/<int:course_id>/<int:year>/<int:semester>/
 """
+
 @api_view(['GET'])
 def course_units(request, course_id, year, semester): 
     json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester, year=year).order_by('course_year').values())
+    statistics.get_instance().increment_requests_stats(course_id=course_id)
     return JsonResponse(json_data, safe=False)
 
 """
@@ -61,4 +66,10 @@ def course_units_by_year(request, course_id, year, semester):
 @api_view(['GET'])
 def schedule(request, course_unit_id):
     json_data = list(Schedule.objects.filter(course_unit=course_unit_id).order_by('class_name').values())
+    return JsonResponse(json_data, safe=False)
+
+@api_view(['GET'])
+def data(request):
+    stats = statistics.get_instance()
+    json_data = stats.export_request_stats(Course.objects.filter(year=stats.get_year()).values())
     return JsonResponse(json_data, safe=False)
