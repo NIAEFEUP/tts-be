@@ -11,7 +11,12 @@ from university.stats import statistics
 import json
 # Create your views here. 
 
+"""
+    Initialization of statistics.
+"""
 
+DEFAULT_YEAR = 2021
+statistics(Course.objects.filter(year=DEFAULT_YEAR).values(), DEFAULT_YEAR)
 
 def get_field(value):
     return value.field
@@ -28,7 +33,7 @@ def faculty(request):
 @api_view(['GET'])
 def course(request, year):
     json_data = list(Course.objects.filter(year=year).values())
-    statistics(Course.objects.filter(year=year).values(), year)
+    stats = statistics(Course.objects.filter(year=year).values(), year)
     return JsonResponse(json_data, safe=False)
 
 """
@@ -39,7 +44,7 @@ def course(request, year):
 @api_view(['GET'])
 def course_units(request, course_id, year, semester): 
     json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester, year=year).order_by('course_year').values())
-    statistics.get_instance().increment_requests_stats(course_id=course_id)
+    statistics.get_instance().increment_requests_stats(id=course_id)
     return JsonResponse(json_data, safe=False)
 
 """

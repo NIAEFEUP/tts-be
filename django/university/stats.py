@@ -10,15 +10,16 @@ class statistics:
     __instance = None
     
     def __init__(self, courses, year):
-        if statistics.__instance != None:
-            return statistics.__instance
+        if statistics.__instance == None:
+            self.year = year
+            self.requests_stats = dict() # key: id value: number of requests
+            # print(courses)
+            for course in courses:
+                self.requests_stats[course["id"]] = 0
 
-        self.year = year
-        self.requests_stats = {} # key: course_id value: number of requests
-        for course in courses:
-            self.requests_stats[course["course_id"]] = 0
+            print("requests_stats:", self.requests_stats)
+            statistics.__instance = self
 
-        statistics.__instance = self
 
     @staticmethod
     def get_instance():
@@ -31,12 +32,12 @@ class statistics:
         return self.requests_stats
 
 
-    def get_specific_stat(self, course_id):
-        return self.requests_stats[course_id]
+    def get_specific_stat(self, id):
+        return self.requests_stats[id]
 
     
-    def increment_requests_stats(self, course_id):
-        self.requests_stats[course_id] += 1
+    def increment_requests_stats(self, id):
+        self.requests_stats[id] += 1
 
     
     def import_request_stats(self, filepath, courses):
@@ -52,7 +53,10 @@ class statistics:
     def export_request_stats(self, courses):
         requests_stats_to_export = {}
         for course in courses:
-            if course["course_id"] in self.requests_stats:
-                requests_stats_to_export[course["course_id"]] = self.requests_stats[course["course_id"]]
+            if course["id"] in self.requests_stats:
+                requests_stats_to_export[course["name"]] = self.requests_stats[course["id"]]
 
-        return json.dumps(requests_stats_to_export)
+        # with open("requests_stats.json", 'w') as f:
+        #     json.dump(requests_stats_to_export, f, ensure_ascii=False)
+
+        return json.dumps(requests_stats_to_export, ensure_ascii=False)
