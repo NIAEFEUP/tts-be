@@ -67,12 +67,16 @@ def course_units_by_year(request, course_id, year, semester):
 
 
 """
+    Returns the schedule of a course unit.
 """
 @api_view(['GET'])
 def schedule(request, course_unit_id):
     json_data = list(Schedule.objects.filter(course_unit=course_unit_id).order_by('class_name').values())
     return JsonResponse(json_data, safe=False)
 
+"""
+    Returns the statistics of the requests.
+"""
 @api_view(['GET'])
 def data(request):
     stats = statistics.get_instance()

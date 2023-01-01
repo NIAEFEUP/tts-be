@@ -1,5 +1,6 @@
 import json
-
+from time import sleep
+#from celery import Celery
 
 """
     This singleton class is used to store the statistics of the requests made to the server.
@@ -18,7 +19,12 @@ class statistics:
                 self.requests_stats[course["id"]] = 0
 
             print("requests_stats:", self.requests_stats)
+
+           
+
+
             statistics.__instance = self
+
 
 
     @staticmethod
@@ -45,10 +51,13 @@ class statistics:
             self.requests_stats = json.load(f)
 
 
-    def cache_stats(self, filepath):
-        with open(filepath, 'w') as f:
-            json.dump(self.requests_stats, f)
-
+    def cache_stats(self, filepath: str):
+        while(True):
+            sleep(5)
+            with open(filepath, 'w') as f:
+                json.dump(self.requests_stats, f)
+        
+        
 
     def export_request_stats(self, courses):
         requests_stats_to_export = {}
@@ -60,3 +69,11 @@ class statistics:
         #     json.dump(requests_stats_to_export, f, ensure_ascii=False)
 
         return json.dumps(requests_stats_to_export, ensure_ascii=False)
+
+
+
+def cache_stats(statistics, filepath: str):
+    while(True):
+        sleep(5)
+        with open(filepath, 'w') as f:
+            json.dump(statistics.requests_stats, f)
