@@ -1,5 +1,5 @@
 import json
-
+from celery import shared_task
 
 """
     This singleton class is used to store the statistics of the requests made to the server.
@@ -56,7 +56,11 @@ class statistics:
             if course["id"] in self.requests_stats:
                 requests_stats_to_export[course["name"]] = self.requests_stats[course["id"]]
 
-        # with open("requests_stats.json", 'w') as f:
-        #     json.dump(requests_stats_to_export, f, ensure_ascii=False)
-
         return json.dumps(requests_stats_to_export, ensure_ascii=False)
+
+
+@shared_task
+def cache_statistics():
+    stats = statistics.get_instance()
+    if stats != None:
+        stats.cache_stats("requests_stats.json")

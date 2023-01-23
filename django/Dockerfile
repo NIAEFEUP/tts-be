@@ -23,4 +23,7 @@ EXPOSE 8000
 COPY ./entrypoint.sh ./entrypoint.sh  
 ENTRYPOINT ["sh", "/usr/src/django/entrypoint.sh"]
 
+# Running celery to sort
+# RUN celery -A tts_be worker --beat
+
 

@@ -7,7 +7,9 @@ from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
 from django.db.models import Max
-from university.stats import statistics
+from university.stats import statistics, cache_statistics
+from celery.schedules import crontab
+from tts_be.celery import app
 import json
 # Create your views here. 
 
@@ -17,6 +19,8 @@ import json
 
 DEFAULT_YEAR = 2021
 statistics(Course.objects.filter(year=DEFAULT_YEAR).values(), DEFAULT_YEAR)
+
+app.add_periodic_task(crontab(minute='*/1'), cache_statistics.s())
 
 def get_field(value):
     return value.field
@@ -75,6 +79,9 @@ def schedule(request, course_unit_id):
 
 @api_view(['GET'])
 def data(request):
+
+    #verify if the message body has username=tts and password=batata-frita-tts
+
     stats = statistics.get_instance()
     json_data = stats.export_request_stats(Course.objects.filter(year=stats.get_year()).values())
     return JsonResponse(json_data, safe=False)
