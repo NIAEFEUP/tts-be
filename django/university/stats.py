@@ -1,5 +1,10 @@
 import json
+<<<<<<< HEAD
 from celery import shared_task
+=======
+from time import sleep
+#from celery import Celery
+>>>>>>> 65c91e83fe4feebfc52ab654ae576e8e1c52511a
 
 """
     This singleton class is used to store the statistics of the requests made to the server.
@@ -18,7 +23,12 @@ class statistics:
                 self.requests_stats[course["id"]] = 0
 
             print("requests_stats:", self.requests_stats)
+
+           
+
+
             statistics.__instance = self
+
 
 
     @staticmethod
@@ -45,10 +55,13 @@ class statistics:
             self.requests_stats = json.load(f)
 
 
-    def cache_stats(self, filepath):
-        with open(filepath, 'w') as f:
-            json.dump(self.requests_stats, f)
-
+    def cache_stats(self, filepath: str):
+        while(True):
+            sleep(5)
+            with open(filepath, 'w') as f:
+                json.dump(self.requests_stats, f)
+        
+        
 
     def export_request_stats(self, courses):
         requests_stats_to_export = {}
