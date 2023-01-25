@@ -7,8 +7,9 @@ from time import sleep
     It is used to store the number of requests made to the server for each course.
 """
 class statistics:
-
-    CACHE_FILENAME = "statistics_cache.json"
+    CACHE_DIR = "./university/cache/"
+    REQ_CACHE_FILE = "statistics_cache.json"
+    REQ_CACH_PATH = CACHE_DIR + REQ_CACHE_FILE
 
     __instance = None
     
@@ -19,11 +20,10 @@ class statistics:
             if self.load_cache():
                 print("Loaded cache")
             else:
-                print("Cache not found")
+                print("Cache not found, initializing statistics to 0")
                 for course in courses:
                     self.requests_stats[course["id"]] = 0
 
-            print("requests_stats:", self.requests_stats)
             statistics.__instance = self
 
 
@@ -47,18 +47,20 @@ class statistics:
         self.requests_stats[id] += 1
 
     
-    def import_request_stats(self, filepath, courses):
+    def import_request_stats(self, filepath):
         with open(filepath, 'r') as f:
             self.requests_stats = json.load(f)
 
 
     def cache_stats(self, filepath: str):
+        if not os.path.isdir(self.CACHE_DIR):
+            os.makedirs(self.CACHE_DIR)
         with open(filepath, 'w') as f:
             json.dump(self.requests_stats, f)
 
     def load_cache(self) -> bool: 
-        if os.path.exists(statistics.CACHE_FILENAME):
-            with open(statistics.CACHE_FILENAME, 'r') as f:
+        if os.path.exists(self.REQ_CACH_PATH):
+            with open(self.REQ_CACH_PATH, 'r') as f:
                 cached_json_stats = json.load(f)
 
             for id in cached_json_stats:
@@ -83,5 +85,5 @@ class statistics:
 def cache_statistics():
     stats = statistics.get_instance()
     if stats != None:
-        stats.cache_stats(statistics.CACHE_FILENAME)
+        stats.cache_stats(stats.REQ_CACH_PATH)
 
