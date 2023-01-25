@@ -12,3 +12,5 @@ mysql/data/*
 # django 
 django/**/migrations/**
 django/university/models.py
+
+.vscode/
