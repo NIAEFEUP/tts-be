@@ -1,4 +1,5 @@
 import json
+import os
 from time import sleep
 
 """
@@ -7,21 +8,22 @@ from time import sleep
 """
 class statistics:
 
+    CACHE_FILENAME = "statistics_cache.json"
+
     __instance = None
     
     def __init__(self, courses, year):
         if statistics.__instance == None:
             self.year = year
             self.requests_stats = dict() # key: id value: number of requests
-            # print(courses)
-            for course in courses:
-                self.requests_stats[course["id"]] = 0
+            if self.load_cache():
+                print("Loaded cache")
+            else:
+                print("Cache not found")
+                for course in courses:
+                    self.requests_stats[course["id"]] = 0
 
             print("requests_stats:", self.requests_stats)
-
-           
-
-
             statistics.__instance = self
 
 
@@ -51,10 +53,21 @@ class statistics:
 
 
     def cache_stats(self, filepath: str):
-        while(True):
-            sleep(5)
-            with open(filepath, 'w') as f:
-                json.dump(self.requests_stats, f)
+        with open(filepath, 'w') as f:
+            json.dump(self.requests_stats, f)
+
+    def load_cache(self) -> bool: 
+        if os.path.exists(statistics.CACHE_FILENAME):
+            with open(statistics.CACHE_FILENAME, 'r') as f:
+                cached_json_stats = json.load(f)
+
+            for id in cached_json_stats:
+                self.requests_stats[int(id)] = cached_json_stats[id]
+
+            return True
+        
+        return False
+
         
         
 
@@ -70,5 +83,5 @@ class statistics:
 def cache_statistics():
     stats = statistics.get_instance()
     if stats != None:
-        stats.cache_stats("requests_stats.json")
+        stats.cache_stats(statistics.CACHE_FILENAME)
 

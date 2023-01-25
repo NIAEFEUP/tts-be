@@ -43,7 +43,10 @@ def course(request, year):
 @api_view(['GET'])
 def course_units(request, course_id, year, semester): 
     json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester, year=year).order_by('course_year').values())
-    statistics.get_instance().increment_requests_stats(id=course_id)
+
+    stats = statistics.get_instance()
+    if stats != None:
+        stats.increment_requests_stats(id=course_id)
     return JsonResponse(json_data, safe=False)
 
 """
@@ -82,8 +85,10 @@ def data(request):
     password = request.GET.get('password')
     if name == 'tts_be' and password == 'batata_frita_123':
         stats = statistics.get_instance()
-        json_data = stats.export_request_stats(Course.objects.filter(year=stats.get_year()).values())
-        return HttpResponse(json.dumps(json_data), content_type='application/json') 
+        if stats != None:
+            json_data = stats.export_request_stats(Course.objects.filter(year=stats.get_year()).values())
+            cache_statistics()
+            return HttpResponse(json.dumps(json_data), content_type='application/json') 
     else:
         return HttpResponse(status=401)
 
