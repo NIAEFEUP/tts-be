@@ -25,5 +25,11 @@ python manage.py inspectdb > university/models.py
 python manage.py makemigrations
 python manage.py migrate university --fake
 
+# Execute cron
+
+python manage.py crontab add
+
+
+
 # Initializes the API. 
 exec $cmd

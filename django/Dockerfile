@@ -15,8 +15,11 @@ RUN apt-get -y install build-essential default-libmysqlclient-dev
 # Install mysql command to wait for the database initialization 
 RUN apt -y install default-mysql-client
 
+# Install cron to run the cronjobs
+RUN apt-get install -y cron
+
 # Install the requirements
-RUN pip install -r requirements.txt 
+RUN pip install -r requirements.txt
 
 EXPOSE 8000
 

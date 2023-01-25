@@ -28,6 +28,7 @@ services:
       - ./django/:/usr/src/django/
     ports:
       - 8100:8000
+      
 
   fetcher:
     build: ./fetcher

@@ -1,10 +1,5 @@
 import json
-<<<<<<< HEAD
-from celery import shared_task
-=======
 from time import sleep
-#from celery import Celery
->>>>>>> 65c91e83fe4feebfc52ab654ae576e8e1c52511a
 
 """
     This singleton class is used to store the statistics of the requests made to the server.
@@ -72,8 +67,8 @@ class statistics:
         return json.dumps(requests_stats_to_export, ensure_ascii=False)
 
 
-@shared_task
 def cache_statistics():
     stats = statistics.get_instance()
     if stats != None:
         stats.cache_stats("requests_stats.json")
+
