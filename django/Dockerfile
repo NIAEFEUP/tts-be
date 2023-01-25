@@ -19,7 +19,7 @@ RUN apt -y install default-mysql-client
 RUN apt-get install -y cron
 
 # Install the requirements
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 EXPOSE 8000
 

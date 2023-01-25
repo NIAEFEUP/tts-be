@@ -92,9 +92,9 @@ DATABASES = {
 
 # cron jobs
 
-CRONJOBS = [
-    ('*/1 * * * *', 'university.cron.stats_caching_job')
-]
+# CRONJOBS = [
+#     ('*/1 * * * *', 'university.cron.stats_caching_job')
+# ]
 
 
 # Password validation

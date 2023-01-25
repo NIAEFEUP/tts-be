@@ -26,8 +26,7 @@ python manage.py makemigrations
 python manage.py migrate university --fake
 
 # Execute cron
-
-python manage.py crontab add
+#python manage.py crontab add
 
 
 
