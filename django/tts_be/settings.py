@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['0.0.0.0', 'localhost']
 
 INSTALLED_APPS = [ 
     'corsheaders',
+    'django_crontab',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -88,6 +89,12 @@ DATABASES = {
         'PORT': os.getenv('MYSQL_PORT') ,
     }
 }
+
+# cron jobs
+
+CRONJOBS = [
+    ('*/1 * * * *', 'university.cron.stats_caching_job')
+]
 
 
 # Password validation

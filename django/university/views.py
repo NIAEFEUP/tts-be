@@ -33,7 +33,6 @@ def faculty(request):
 @api_view(['GET'])
 def course(request, year):
     json_data = list(Course.objects.filter(year=year).values())
-    stats = statistics(Course.objects.filter(year=year).values(), year)
     return JsonResponse(json_data, safe=False)
 
 """
@@ -79,6 +78,13 @@ def schedule(request, course_unit_id):
 """
 @api_view(['GET'])
 def data(request):
-    stats = statistics.get_instance()
-    json_data = stats.export_request_stats(Course.objects.filter(year=stats.get_year()).values())
-    return JsonResponse(json_data, safe=False)
+    name = request.GET.get('name')
+    password = request.GET.get('password')
+    if name == 'tts_be' and password == 'batata_frita_123':
+        stats = statistics.get_instance()
+        json_data = stats.export_request_stats(Course.objects.filter(year=stats.get_year()).values())
+        return HttpResponse(json.dumps(json_data), content_type='application/json') 
+    else:
+        return HttpResponse(status=401)
+
+
