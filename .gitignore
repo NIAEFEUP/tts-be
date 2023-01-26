@@ -7,6 +7,7 @@ logs
 
 # mysql data
 mysql/data/*
+mysql/sql/01_data.sql
 **__pycache__
 
 # django 
