@@ -4,6 +4,8 @@ WORKDIR /usr/src/django/
 
 # Get's the output from the django in realtime. 
 ENV PYTHONUNBUFFERED 1
+ENV STATISTICS_NAME tts_be
+ENV STATISTICS_PASS batata_frita_123
 
 # Copy requirements 
 COPY ./requirements.txt ./requirements.txt 

@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view
 from django.db.models import Max
 from university.stats import statistics, cache_statistics
 import json
+import os 
 # Create your views here. 
 
 """
@@ -83,7 +84,7 @@ def schedule(request, course_unit_id):
 def data(request):
     name = request.GET.get('name')
     password = request.GET.get('password')
-    if name == 'tts_be' and password == 'batata_frita_123':
+    if name == os.environ['STATISTICS_NAME'] and password == os.environ['STATISTICS_PASS']:
         stats = statistics.get_instance()
         if stats != None:
             json_data = stats.export_request_stats(Course.objects.filter(year=stats.get_year()).values())
