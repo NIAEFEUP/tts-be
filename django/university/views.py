@@ -7,9 +7,17 @@ from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
 from django.db.models import Max
-
+from university.stats import statistics, cache_statistics
 import json
+import os 
 # Create your views here. 
+
+"""
+    Initialization of statistics.
+"""
+
+DEFAULT_YEAR = 2021
+statistics(Course.objects.filter(year=DEFAULT_YEAR).values(), DEFAULT_YEAR)
 
 def get_field(value):
     return value.field
@@ -32,9 +40,14 @@ def course(request, year):
     Return all the units from a course/major. 
     REQUEST: course_units/<int:course_id>/<int:year>/<int:semester>/
 """
+
 @api_view(['GET'])
 def course_units(request, course_id, year, semester): 
     json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester, year=year).order_by('course_year').values())
+
+    stats = statistics.get_instance()
+    if stats != None:
+        stats.increment_requests_stats(id=course_id)
     return JsonResponse(json_data, safe=False)
 
 """
@@ -57,8 +70,27 @@ def course_units_by_year(request, course_id, year, semester):
 
 
 """
+    Returns the schedule of a course unit.
 """
 @api_view(['GET'])
 def schedule(request, course_unit_id):
     json_data = list(Schedule.objects.filter(course_unit=course_unit_id).order_by('class_name').values())
     return JsonResponse(json_data, safe=False)
+
+"""
+    Returns the statistics of the requests.
+"""
+@api_view(['GET'])
+def data(request):
+    name = request.GET.get('name')
+    password = request.GET.get('password')
+    if name == os.environ['STATISTICS_NAME'] and password == os.environ['STATISTICS_PASS']:
+        stats = statistics.get_instance()
+        if stats != None:
+            json_data = stats.export_request_stats(Course.objects.filter(year=stats.get_year()).values())
+            cache_statistics()
+            return HttpResponse(json.dumps(json_data), content_type='application/json') 
+    else:
+        return HttpResponse(status=401)
+
+
