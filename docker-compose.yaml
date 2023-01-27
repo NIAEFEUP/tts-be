@@ -27,7 +27,7 @@ services:
     volumes:
       - ./django/:/usr/src/django/
     ports:
-      - 8100:8000
+      - 8080:8000
       
 
   fetcher:

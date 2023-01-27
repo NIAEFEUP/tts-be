@@ -4,7 +4,7 @@
 
 # Configure the shell behaviour. 
 set -e
-if [[ ${DEBUG} == 1 ]]
+if [ ${DEBUG} == 1 ]
 then set -x
 fi 
 
