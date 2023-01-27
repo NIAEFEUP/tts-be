@@ -24,6 +24,7 @@ class statistics:
                 for course in courses:
                     self.requests_stats[course["id"]] = 0
 
+            print("statistics: ", self.requests_stats)
             statistics.__instance = self
 
 
