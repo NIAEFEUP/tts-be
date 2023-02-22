@@ -3,6 +3,7 @@ from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
 from university.models import Schedule
+from university.models import CourseUnitYear
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
@@ -43,11 +44,38 @@ def course(request, year):
 
 @api_view(['GET'])
 def course_units(request, course_id, year, semester): 
-    json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester, year=year).order_by('course_year').values())
+    # Fetch CourseUnitYear model instances that match the attributes from the api url parameters.
+    course_unit_years = CourseUnitYear.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit')
+
+    json_data = list()
+
+    # For each object in those course unit year objects we append the CourseUnit dictionary
+    for course_units in course_unit_years:
+        course_units.__dict__.update(course_units.course_unit.__dict__)
+        del course_units.__dict__["_state"]
+        json_data.append(course_units.__dict__)
 
     stats = statistics.get_instance()
     if stats != None:
         stats.increment_requests_stats(id=course_id)
+
+    return JsonResponse(json_data, safe=False)
+
+"""
+    Returns the last year of a course.
+"""
+@api_view(['GET'])
+def course_units_by_year(request, course_id, year, semester): 
+    course_unit_years = CourseUnitYear.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit')
+
+    json_data = list()
+
+    # For each object in those course unit year objects we append the CourseUnit dictionary
+    for course_units in course_unit_years:
+        course_units.__dict__.update(course_units.course_unit.__dict__)
+        del course_units.__dict__["_state"]
+        json_data.append(course_units.__dict__)
+
     return JsonResponse(json_data, safe=False)
 
 """
@@ -55,19 +83,9 @@ def course_units(request, course_id, year, semester):
 """
 @api_view(['GET'])
 def course_last_year(request, course_id):
-    max_year = CourseUnit.objects.filter(course=course_id).aggregate(Max('course_year')).get('course_year__max')
+    max_year = CourseUnitYear.objects.filter(course__id=course_id).aggregate(Max('course_unit_year')).get('course_unit_year__max')
     json_data = {"max_year": max_year}
     return JsonResponse(json_data, safe=False)
-
-
-"""
-    Get all the units of a course in a certain year. 
-"""
-@api_view(['GET'])
-def course_units_by_year(request, course_id, year, semester): 
-    json_data = list(CourseUnit.objects.filter(course=course_id, semester=semester, course_year=year).values())
-    return JsonResponse(json_data, safe=False)
-
 
 """
     Returns the schedule of a course unit.
@@ -92,5 +110,3 @@ def data(request):
             return HttpResponse(json.dumps(json_data), content_type='application/json') 
     else:
         return HttpResponse(status=401)
-
-
