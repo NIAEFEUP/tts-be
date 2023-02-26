@@ -100,6 +100,18 @@ CREATE TABLE `schedule` (
   `composed_class_name` varchar(16) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+-- --------------------------------------------------------
+-- Table structure for table `statistics`
+-- 
+
+CREATE TABLE `statistics` (
+  `id` int(11) NOT NULL,
+  `acronym` varchar(10) NOT NULL,
+  `course_unit_id` int(11) NOT NULL,
+  `visited_times` int(11) NOT NULL,
+  `last_updated` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 
 -- Add primary keys 
 alter TABLE faculty ADD PRIMARY KEY (`acronym`);
@@ -117,6 +129,7 @@ alter TABLE course_unit_year ADD FOREIGN KEY (`course_id`) REFERENCES `course`(`
 alter TABLE schedule ADD PRIMARY KEY (`id`);
 alter TABLE schedule ADD FOREIGN KEY (`course_unit_id`) REFERENCES `course_unit`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
+alter TABLE statistics ADD PRIMARY KEY (`id`);
 
 -- Create index 
 
@@ -146,6 +159,10 @@ CREATE UNIQUE INDEX `faculty_acronym` ON `faculty`(`acronym`);
 --
 CREATE INDEX `schedule_course_unit_id` ON `schedule`(`course_unit_id`);
 
+--
+-- Indexes for table `schedule`
+--
+CREATE INDEX `statistics` ON `statistics`(`id`);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
