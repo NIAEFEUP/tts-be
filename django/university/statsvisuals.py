@@ -2,6 +2,10 @@ import json
 import matplotlib.pyplot as plt
 import requests
 
+FILE_PATH = './cache/stats_ttsbe_31-01-23.json'
+URL = "https://ni.fe.up.pt/tts/api/statistics/?name=tts_be&password=batata_frita_123"
+
+
 def line_chart(keys, values):
     fig = plt.figure(figsize=(10,5))
     plt.plot(keys, values)
@@ -12,7 +16,7 @@ def line_chart(keys, values):
     plt.yticks(fontsize=8)
     plt.subplots_adjust(bottom=0.5)
     plt.xticks(rotation=50, ha='right')
-    plt.savefig('stats_line_chart.png')
+    plt.savefig('./stats_graphs/stats_line_chart.png')
 
 def bar_chart(keys, values):
     fig = plt.figure(figsize=(10,5))
@@ -24,18 +28,16 @@ def bar_chart(keys, values):
     plt.yticks(fontsize=8)
     plt.subplots_adjust(bottom=0.5)
     plt.xticks(rotation=55, ha='right') 
-    plt.savefig('stats_bar_chart.png')
+    plt.savefig('./stats_graphs/stats_bar_chart.png')
 
 def pie_chart(keys, values):
     fig = plt.figure(figsize=(10, 5))
     plt.pie(values, labels=keys, autopct='%1.1f%%')
     plt.title("Analysis Tool Usage - Pie Chart")
-    plt.savefig('stats_pie_chart.png')
+    plt.savefig('./stats_graphs/stats_pie_chart.png')
 
 """
-url = "https://ni.fe.up.pt/tts/api/statistics/?name=tts_be&password=batata_frita_123"
-
-response = requests.get(url)
+response = requests.get(URL)
 
 if response.status_code == 200:
     stats = response.json()
@@ -43,7 +45,9 @@ if response.status_code == 200:
 else:
     print("Error: Request failed with status code: ", response.status_code)
 """
-with open('./cache/statistics_cache.json') as file:
+
+
+with open(FILE_PATH) as file:
     stats = json.load(file)
     stats = eval(stats)
 
