@@ -15,6 +15,4 @@ django/**/migrations/**
 django/university/models.py
 
 # stats related graphs
-django/university/stats_line_chart.png
-django/university/stats_bar_chart.png
-django/university/stats_pie_chart.png
+django/university/stats_graphs/*
