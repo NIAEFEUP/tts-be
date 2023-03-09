@@ -2,7 +2,7 @@ import json
 import matplotlib.pyplot as plt
 import requests
 
-FILE_PATH = './cache/stats_ttsbe_31-01-23.json'
+FILE_PATH = './stats_example/stats_ttsbe_31-01-23.json'
 URL = "https://ni.fe.up.pt/tts/api/statistics/?name=tts_be&password=batata_frita_123"
 
 
