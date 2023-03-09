@@ -13,3 +13,6 @@ mysql/sql/01_data.sql
 # django 
 django/**/migrations/**
 django/university/models.py
+
+# stats related graphs
+django/university/stats_graphs/*
