@@ -80,14 +80,14 @@ CREATE TABLE `course_metadata` (
 --
 
 CREATE TABLE `schedule` (
-  `id` INTEGER NOT NULL,
-  `day` int(3) NOT NULL,
+  `id` int(11) NOT NULL,
+  `day` tinyint(3) NOT NULL,
   `duration` decimal(3,1) NOT NULL,
   `start_time` decimal(3,1) NOT NULL,
   `location` varchar(31) NOT NULL,
   `lesson_type` varchar(3) NOT NULL,
   `is_composed` boolean NOT NULL,
-  `professor_sigarra_id` INTEGER,
+  `schedule_professor_id` int (11),
   `course_unit_id` int(11) NOT NULL,
   `last_updated` datetime NOT NULL,
   `class_name` varchar(31) NOT NULL,
@@ -118,6 +118,29 @@ CREATE TABLE `professor` (
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `schedule_professor`
+--
+
+CREATE TABLE `schedule_professor` (
+  `schedule_id` int(11) NOT NULL,
+  `professor_id` int(11) NOT NULL
+);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `course`
+--
+
+CREATE TABLE `professor` (
+  `id` int(11) NOT NULL,
+  `professor_acronym` varchar(16),
+  `professor_name` varchar(50)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 
 -- Add primary keys 
 alter TABLE faculty ADD PRIMARY KEY (`acronym`);
@@ -134,6 +157,11 @@ alter TABLE course_metadata ADD FOREIGN KEY (`course_id`) REFERENCES `course`(`i
 
 alter TABLE schedule ADD PRIMARY KEY (`id`);
 alter TABLE schedule ADD FOREIGN KEY (`course_unit_id`) REFERENCES `course_unit`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+alter TABLE professor ADD PRIMARY KEY (`id`);
+
+alter TABLE schedule_professor ADD FOREIGN KEY (`schedule_id`) REFERENCES `schedule`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+alter TABLE schedule_professor ADD FOREIGN KEY (`professor_id`) REFERENCES `professor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 
 alter TABLE schedule_professor ADD PRIMARY KEY (`schedule_id`, `professor_sigarra_id`); 
