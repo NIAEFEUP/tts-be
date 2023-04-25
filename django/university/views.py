@@ -45,12 +45,12 @@ def course(request, year):
 @api_view(['GET'])
 def course_units(request, course_id, year, semester): 
     # Fetch CourseUnitYear model instances that match the attributes from the api url parameters.
-    course_unit_years = CourseMetadata.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit')
+    course_units_metadata = CourseMetadata.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit')
 
     json_data = list()
 
     # For each object in those course unit year objects we append the CourseUnit dictionary
-    for course_units in course_unit_years:
+    for course_units in course_units_metadata:
         course_units.__dict__.update(course_units.course_unit.__dict__)
         del course_units.__dict__["_state"]
         json_data.append(course_units.__dict__)
@@ -66,12 +66,12 @@ def course_units(request, course_id, year, semester):
 """
 @api_view(['GET'])
 def course_units_by_year(request, course_id, year, semester): 
-    course_unit_years = CourseMetadata.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit')
+    course_units_metadata = CourseMetadata.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit')
 
     json_data = list()
 
     # For each object in those course unit year objects we append the CourseUnit dictionary
-    for course_units in course_unit_years:
+    for course_units in course_units_metadata:
         course_units.__dict__.update(course_units.course_unit.__dict__)
         del course_units.__dict__["_state"]
         json_data.append(course_units.__dict__)
