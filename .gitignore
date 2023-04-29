@@ -2,6 +2,9 @@
 logs
 *.log
 
+# sigarra internal data cannot be committed
+mysql/sql/01_dump_mysql.sql 
+
 # dotenv environment variables file
 .env
 
