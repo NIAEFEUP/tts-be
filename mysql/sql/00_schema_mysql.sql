@@ -27,8 +27,8 @@ CREATE TABLE `faculty` (
 
 CREATE TABLE `course` (
   `id` int(11) NOT NULL,
-  `sigarra_course_id` int(11) NOT NULL,
   `faculty_id` varchar(10) NOT NULL,
+  `sigarra_course_id` int(11) NOT NULL,
   `name` varchar(200) NOT NULL,
   `acronym` varchar(10) NOT NULL,
   `course_type` varchar(2) NOT NULL,  
@@ -87,7 +87,7 @@ CREATE TABLE `schedule` (
   `location` varchar(31) NOT NULL,
   `lesson_type` varchar(3) NOT NULL,
   `is_composed` boolean NOT NULL,
-  `schedule_professor_id` INTEGER,
+  `sigarra_schedule_professor_id` INTEGER,
   `course_unit_id` int(11) NOT NULL,
   `last_updated` datetime NOT NULL,
   `class_name` varchar(31) NOT NULL,
@@ -114,7 +114,7 @@ CREATE TABLE `schedule_professor` (
 CREATE TABLE `professor` (
   `id` INTEGER,
   `professor_acronym` varchar(16),
-  `professor_name` varchar(50)
+  `professor_name` varchar(100)
 );
 
 
@@ -142,7 +142,6 @@ alter TABLE schedule_professor ADD FOREIGN KEY (`schedule_id`) REFERENCES `sched
 
 alter TABLE professor ADD PRIMARY KEY (`id`);
 alter TABLE schedule_professor ADD FOREIGN KEY (`professor_id`) REFERENCES `professor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-alter TABLE schedule ADD FOREIGN KEY (`schedule_professor_id`) REFERENCES `professor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 
 
