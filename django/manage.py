@@ -6,9 +6,6 @@ from tasks import add
 
 
 def main():
-    if (sys.argv[1] == "runserver"):
-        add.delay(4, 4)
-
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tts_be.settings')
     try:
@@ -20,15 +17,6 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
     execute_from_command_line(sys.argv)
-
-
-def dump_statistics():
-    command = "mysqldump -P {} -h db -u {} -p{} {} statistics > statistics.sql".format(
-        os.environ["MYSQL_PORT"],
-        os.environ["MYSQL_USER"],
-        os.environ["MYSQL_PASSWORD"],
-        os.environ["MYSQL_DATABASE"])
-    os.system(command)
 
 if __name__ == '__main__':
     main()
