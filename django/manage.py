@@ -2,11 +2,13 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-from threading import Thread, Timer
-import subprocess
-import time
+from tasks import add
+
 
 def main():
+    if (sys.argv[1] == "runserver"):
+        add.delay(4, 4)
+
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tts_be.settings')
     try:
@@ -21,7 +23,6 @@ def main():
 
 
 def dump_statistics():
-    print("lalau")
     command = "mysqldump -P {} -h db -u {} -p{} {} statistics > statistics.sql".format(
         os.environ["MYSQL_PORT"],
         os.environ["MYSQL_USER"],
@@ -29,16 +30,5 @@ def dump_statistics():
         os.environ["MYSQL_DATABASE"])
     os.system(command)
 
-
-def loop_dump_statistics():
-    while (True):
-        time.sleep(10)
-        #t = Timer(10000, dump_statistics)
-        #t.start()
-        dump_statistics()
-
-
 if __name__ == '__main__':
-    t1 = Thread(target=loop_dump_statistics, daemon=True)
-    t1.start()
     main()

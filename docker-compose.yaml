@@ -36,7 +36,8 @@ services:
     volumes:
       - ./fetcher/:/fetcher/
 
-
-
-
-
+  redis_service:
+    image: redis:6.2-bullseye
+    restart: always
+    ports: 
+      - '6379:6379'
