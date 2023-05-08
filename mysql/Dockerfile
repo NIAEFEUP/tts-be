@@ -1,4 +1,4 @@
-FROM mysql:5
+FROM --platform=linux/amd64 mysql:5
 
 # Source: https://hub.docker.com/_/mysql
 # When a container is started for the first time, a new database with the 
@@ -7,4 +7,5 @@ FROM mysql:5
 # Files will be executed in alphabetical order. You can easily populate your mysql services by mounting a SQL dump into 
 #that directory and provide custom images with contributed data. SQL files will be imported by default to the 
 # database specified by the MYSQL_DATABASE variable.
+ENV LANG=C.UTF-8
 ADD  ./sql/*.sql docker-entrypoint-initdb.d/
