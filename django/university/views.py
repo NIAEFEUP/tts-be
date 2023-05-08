@@ -25,8 +25,8 @@ def get_field(value):
     
 @api_view(['GET'])
 def faculty(request): 
-    json_data = serializers.serialize('json', Faculty.objects.all())
-    return HttpResponse(json_data, content_type="application/json")
+    json_data = list(Faculty.objects.values())
+    return JsonResponse(json_data, safe=False)
 
 """
     Returns all the major/major.  
