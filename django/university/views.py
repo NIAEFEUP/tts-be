@@ -45,7 +45,7 @@ def course(request, year):
 @api_view(['GET'])
 def course_units(request, course_id, year, semester): 
     # Fetch CourseUnitYear model instances that match the attributes from the api url parameters.
-    course_units_metadata = CourseMetadata.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit')
+    course_units_metadata = CourseMetadata.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit').order_by('course_unit_year')
 
     json_data = list()
 
