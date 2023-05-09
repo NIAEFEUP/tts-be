@@ -3,9 +3,9 @@ from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
 from university.models import Schedule
-from university.models import CourseMetadata
 from university.models import Professor
 from university.models import ScheduleProfessor
+from university.models import CourseMetadata
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
@@ -119,7 +119,7 @@ def data(request):
 
 @api_view(["GET"])
 def professor(request, schedule):
-    schedule_professors = list(ScheduleProfessor.objects.filter(schedule_id=schedule).values())
+    schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule).values())
     json_data = []
     for schedule_professor in schedule_professors:
         json_data.append(Professor.objects.get(pk=schedule_professor['professor_id']))
