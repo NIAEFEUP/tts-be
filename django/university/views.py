@@ -96,10 +96,10 @@ def course_last_year(request, course_id):
 def schedule(request, course_unit_id):
     schedules = list(Schedule.objects.filter(course_unit=course_unit_id).order_by('class_name').values())
     for schedule in schedules:
-        schedule_professors = list(ScheduleProfessor.objects.filter(schedule_id=schedule['id']).values())
+        schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule['id']).values())
         acronyms = []
         for schedule_professor in schedule_professors:
-            acronyms.append(Professor.objects.get(pk=schedule_professor['professor_id']).professor_acronym)
+            acronyms.append(Professor.objects.get(pk=schedule_professor['professor_sigarra_id']).professor_acronym)
         schedule['professor_acronyms'] = acronyms
     return JsonResponse(schedules, safe=False)
 
@@ -124,9 +124,14 @@ def data(request):
 """ 
 
 @api_view(["GET"])
-def professor(request, schedule_id):
-    schedule_professors = list(ScheduleProfessor.objects.filter(schedule_id=schedule_id).values())
-    json_data = []
+def professor(request, schedule):
+    schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule).values())
+    professors = []
     for schedule_professor in schedule_professors:
-        json_data.append(Professor.objects.get(pk=schedule_professor['professor_id']))
-    return JsonResponse(json_data, safe=False)
+        professor = Professor.objects.get(pk=schedule_professor['professor_sigarra_id'])
+        professors.append({
+            'sigarra_id': professor.sigarra_id,
+            'professor_acronym': professor.professor_acronym,
+            'professor_name': professor.professor_name
+        })
+    return JsonResponse(professors, safe=False)
