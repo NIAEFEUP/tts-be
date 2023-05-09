@@ -94,8 +94,14 @@ def course_last_year(request, course_id):
 """
 @api_view(['GET'])
 def schedule(request, course_unit_id):
-    json_data = list(Schedule.objects.filter(course_unit=course_unit_id).order_by('class_name').values())
-    return JsonResponse(json_data, safe=False)
+    schedules = list(Schedule.objects.filter(course_unit=course_unit_id).order_by('class_name').values())
+    for schedule in schedules:
+        schedule_professors = list(ScheduleProfessor.objects.filter(schedule_id=schedule['id']).values())
+        acronyms = []
+        for schedule_professor in schedule_professors:
+            acronyms.append(Professor.objects.get(pk=schedule_professor['professor_id']).professor_acronym)
+        schedule['professor_acronyms'] = acronyms
+    return JsonResponse(schedules, safe=False)
 
 """
     Returns the statistics of the requests.
@@ -118,8 +124,8 @@ def data(request):
 """ 
 
 @api_view(["GET"])
-def professor(request, schedule):
-    schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule).values())
+def professor(request, schedule_id):
+    schedule_professors = list(ScheduleProfessor.objects.filter(schedule_id=schedule_id).values())
     json_data = []
     for schedule_professor in schedule_professors:
         json_data.append(Professor.objects.get(pk=schedule_professor['professor_id']))
