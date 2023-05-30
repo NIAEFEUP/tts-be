@@ -144,7 +144,8 @@ alter TABLE professor ADD PRIMARY KEY (`sigarra_id`);
 
 
 
--- Create index 
+alter TABLE schedule_professor ADD PRIMARY KEY (`schedule_id`, `professor_sigarra_id`); 
+alter TABLE schedule_professor ADD FOREIGN KEY (`schedule_id`) REFERENCES `schedule`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Indexes for table `course`
