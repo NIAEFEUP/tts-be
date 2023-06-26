@@ -86,8 +86,8 @@ CREATE TABLE `schedule` (
   `start_time` decimal(3,1) NOT NULL,
   `location` varchar(31) NOT NULL,
   `lesson_type` varchar(3) NOT NULL,
-  `is_composed` boolean NOT NULL,
-  `professor_sigarra_id` INTEGER,
+  `is_composed` boolean NOT NULL, --kinda bloat
+  `professor_sigarra_id` INTEGER, --bloat
   `course_unit_id` int(11) NOT NULL,
   `last_updated` datetime NOT NULL,
   `class_name` varchar(31) NOT NULL,
@@ -135,17 +135,11 @@ alter TABLE course_metadata ADD FOREIGN KEY (`course_id`) REFERENCES `course`(`i
 alter TABLE schedule ADD PRIMARY KEY (`id`);
 alter TABLE schedule ADD FOREIGN KEY (`course_unit_id`) REFERENCES `course_unit`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
-
-alter TABLE schedule_professor ADD PRIMARY KEY (`schedule_id`, `professor_sigarra_id`); 
-alter TABLE schedule_professor ADD FOREIGN KEY (`schedule_id`) REFERENCES `schedule`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
-
 alter TABLE professor ADD PRIMARY KEY (`sigarra_id`);
 
-
-
 alter TABLE schedule_professor ADD PRIMARY KEY (`schedule_id`, `professor_sigarra_id`); 
 alter TABLE schedule_professor ADD FOREIGN KEY (`schedule_id`) REFERENCES `schedule`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
 
 --
 -- Indexes for table `course`
