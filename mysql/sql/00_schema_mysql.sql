@@ -86,8 +86,8 @@ CREATE TABLE `schedule` (
   `start_time` decimal(3,1) NOT NULL,
   `location` varchar(31) NOT NULL,
   `lesson_type` varchar(3) NOT NULL,
-  `is_composed` boolean NOT NULL, --kinda bloat
-  `professor_sigarra_id` INTEGER, --bloat
+  `is_composed` boolean NOT NULL,
+  `professor_sigarra_id` INTEGER,
   `course_unit_id` int(11) NOT NULL,
   `last_updated` datetime NOT NULL,
   `class_name` varchar(31) NOT NULL,

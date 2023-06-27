@@ -10,6 +10,17 @@ to install docker, take a look on the [official website](https://www.docker.com/
 
 In case you're using linux, after installing docker check the [`Manage Docker as a non-root user`](https://docs.docker.com/engine/install/linux-postinstall/), so you can use docker without the `sudo` command.  
 
+## Data
+
+The data is available the NIAEFEUP drive (Only for NIAEFEUP members):
+
+https://drive.google.com/drive/folders/1hyiwPwwPWhbAPeJm03c0MAo1HTF6s_zK?usp=sharing
+
+- The ```00_schema_mysql.sql``` corresponds to the schema for the most recent data.
+
+- Copy the ```01_data.sql``` and ```00_schema_mysql.sql``` of year and semester you desire to the ```mysql/sql``` folder.
+
+
 
 ## Usage 
 ### Development environment 
