@@ -22,7 +22,7 @@ class statistics:
             else:
                 print("Cache not found, initializing statistics to 0")
                 for course in courses:
-                    self.requests_stats[course["id"]] = 0
+                    self.requests_stats[course["sigarra_id"]] = 0
 
             statistics.__instance = self
 
@@ -76,8 +76,8 @@ class statistics:
     def export_request_stats(self, courses):
         requests_stats_to_export = {}
         for course in courses:
-            if course["id"] in self.requests_stats:
-                requests_stats_to_export[course["name"]] = self.requests_stats[course["id"]]
+            if course["sigarra_id"] in self.requests_stats:
+                requests_stats_to_export[course["name"]] = self.requests_stats[course["sigarra_id"]]
 
         return json.dumps(requests_stats_to_export, ensure_ascii=False)
 
@@ -86,4 +86,3 @@ def cache_statistics():
     stats = statistics.get_instance()
     if stats != None:
         stats.cache_stats(stats.REQ_CACH_PATH)
-

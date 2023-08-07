@@ -123,9 +123,8 @@ CREATE TABLE `professor` (
 -- 
 
 CREATE TABLE `statistics` (
-  `id` int(11) NOT NULL,
-  `acronym` varchar(10) NOT NULL,
   `course_unit_id` int(11) NOT NULL,
+  `acronym` varchar(10) NOT NULL,
   `visited_times` int(11) NOT NULL,
   `last_updated` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -147,7 +146,7 @@ alter TABLE course_metadata ADD FOREIGN KEY (`course_id`) REFERENCES `course`(`i
 alter TABLE schedule ADD PRIMARY KEY (`id`);
 alter TABLE schedule ADD FOREIGN KEY (`course_unit_id`) REFERENCES `course_unit`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
-alter TABLE statistics ADD PRIMARY KEY (`id`);
+alter TABLE statistics ADD PRIMARY KEY (`course_unit_id`);
 
 alter TABLE professor ADD PRIMARY KEY (`sigarra_id`);
 
@@ -180,11 +179,7 @@ CREATE INDEX `schedule_course_unit_id` ON `schedule`(`course_unit_id`);
 --
 -- Indexes for table `schedule`
 --
-CREATE INDEX `statistics` ON `statistics`(`id`);
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+CREATE INDEX `statistics` ON `statistics`(`course_unit_id`);
 
 --
 -- Indexes for table `course_metadata`
