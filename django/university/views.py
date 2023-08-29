@@ -19,7 +19,7 @@ import os
     Initialization of statistics.
 """
 
-DEFAULT_YEAR = 2022
+DEFAULT_YEAR = 2023
 statistics(Course.objects.filter(year=DEFAULT_YEAR).values(), DEFAULT_YEAR)
 
 def get_field(value):
