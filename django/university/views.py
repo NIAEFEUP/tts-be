@@ -22,7 +22,7 @@ from django.utils import timezone
     Initialization of statistics.
 """
 
-DEFAULT_YEAR = 2022
+DEFAULT_YEAR = 2023
 statistics(Course.objects.filter(year=DEFAULT_YEAR).values(), DEFAULT_YEAR)
 
 def get_field(value):
@@ -105,13 +105,21 @@ def course_last_year(request, course_id):
 """
 @api_view(['GET'])
 def schedule(request, course_unit_id):
+    course_unit = CourseUnit.objects.get(pk=course_unit_id)
+    faculty = course_unit.url.split('/')[3]
     schedules = list(Schedule.objects.filter(course_unit=course_unit_id).order_by('class_name').values())
     for schedule in schedules:
         schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule['id']).values())
-        acronyms = []
+        professors_link = f'https://sigarra.up.pt/{faculty}/pt/{"hor_geral.composto_doc?p_c_doc=" if schedule["is_composed"] else "func_geral.FormView?p_codigo="}{schedule["professor_sigarra_id"]}'
+        schedule['professors_link'] = professors_link
+        del schedule['professor_sigarra_id']
+        professors_information = []
         for schedule_professor in schedule_professors:
-            acronyms.append(Professor.objects.get(pk=schedule_professor['professor_sigarra_id']).professor_acronym)
-        schedule['professor_acronyms'] = acronyms
+            professors_information.append({
+                'acronym': Professor.objects.get(pk=schedule_professor['professor_sigarra_id']).professor_acronym,
+                'name': Professor.objects.get(pk=schedule_professor['professor_sigarra_id']).professor_name
+            })
+        schedule['professor_information'] = professors_information
     return JsonResponse(schedules, safe=False)
 
 """
