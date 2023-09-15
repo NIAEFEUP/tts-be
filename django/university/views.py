@@ -12,18 +12,11 @@ from django.core import serializers
 from rest_framework.decorators import api_view
 from django.db.models import Max
 from django.db import transaction
-from university.stats import statistics, cache_statistics
 import json
 import os 
 from django.utils import timezone
 # Create your views here. 
 
-"""
-    Initialization of statistics.
-"""
-
-DEFAULT_YEAR = 2023
-statistics(Course.objects.filter(year=DEFAULT_YEAR).values(), DEFAULT_YEAR)
 
 def get_field(value):
     return value.field
