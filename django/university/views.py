@@ -6,21 +6,17 @@ from university.models import Schedule
 from university.models import Professor
 from university.models import ScheduleProfessor
 from university.models import CourseMetadata
+from university.models import Statistics
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
 from django.db.models import Max
-from university.stats import statistics, cache_statistics
+from django.db import transaction
 import json
 import os 
+from django.utils import timezone
 # Create your views here. 
 
-"""
-    Initialization of statistics.
-"""
-
-DEFAULT_YEAR = 2023
-statistics(Course.objects.filter(year=DEFAULT_YEAR).values(), DEFAULT_YEAR)
 
 def get_field(value):
     return value.field
@@ -56,10 +52,18 @@ def course_units(request, course_id, year, semester):
         course_units.__dict__.update(course_units.course_unit.__dict__)
         del course_units.__dict__["_state"]
         json_data.append(course_units.__dict__)
+    
+    course = Course.objects.get(id = course_id)
 
-    stats = statistics.get_instance()
-    if stats != None:
-        stats.increment_requests_stats(id=course_id)
+    with transaction.atomic():
+        statistics, created = Statistics.objects.select_for_update().get_or_create(
+            course_unit_id = course_id, 
+            acronym = course.acronym,
+            defaults = {"visited_times": 0, "last_updated": timezone.now()},
+        )
+        statistics.visited_times += 1
+        statistics.last_updated = timezone.now()
+        statistics.save()
 
     return JsonResponse(json_data, safe=False)
 
@@ -119,13 +123,10 @@ def data(request):
     name = request.GET.get('name')
     password = request.GET.get('password')
     if name == os.environ['STATISTICS_NAME'] and password == os.environ['STATISTICS_PASS']:
-        stats = statistics.get_instance()
-        if stats != None:
-            json_data = stats.export_request_stats(Course.objects.filter(year=stats.get_year()).values())
-            cache_statistics()
-            return HttpResponse(json.dumps(json_data), content_type='application/json') 
+        json_data = serializers.serialize("json", Statistics.objects.all())
+        return HttpResponse(json_data, content_type='application/json')
     else:
-        return HttpResponse(status=401)
+       return HttpResponse(status=401)
 
 """
     Returns all the professors of a class of the schedule id

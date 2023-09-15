@@ -118,6 +118,17 @@ CREATE TABLE `professor` (
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
 
+-- --------------------------------------------------------
+-- Table structure for table `statistics`
+-- 
+
+CREATE TABLE `statistics` (
+  `course_unit_id` int(11) NOT NULL,
+  `acronym` varchar(10) NOT NULL,
+  `visited_times` int(11) NOT NULL,
+  `last_updated` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 
 -- Add primary keys 
 alter TABLE faculty ADD PRIMARY KEY (`acronym`);
@@ -134,6 +145,8 @@ alter TABLE course_metadata ADD FOREIGN KEY (`course_id`) REFERENCES `course`(`i
 
 alter TABLE schedule ADD PRIMARY KEY (`id`);
 alter TABLE schedule ADD FOREIGN KEY (`course_unit_id`) REFERENCES `course_unit`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+alter TABLE statistics ADD PRIMARY KEY (`course_unit_id`);
 
 alter TABLE professor ADD PRIMARY KEY (`sigarra_id`);
 
@@ -164,7 +177,11 @@ CREATE UNIQUE INDEX `faculty_acronym` ON `faculty`(`acronym`);
 CREATE INDEX `schedule_course_unit_id` ON `schedule`(`course_unit_id`);
 
 --
+-- Indexes for table `schedule`
+--
+CREATE INDEX `statistics` ON `statistics`(`course_unit_id`);
+
+--
 -- Indexes for table `course_metadata`
 -- 
 CREATE INDEX `course_metadata_index` ON `course_metadata`(`course_id`, `course_unit_id`, `course_unit_year`); 
-

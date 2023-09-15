@@ -25,7 +25,9 @@ python manage.py inspectdb > university/models.py
 python manage.py makemigrations
 python manage.py migrate university --fake
 
-
+# Initialize redis worker for celery and celery's beat scheduler in the background
+celery -A tasks worker --loglevel=INFO &
+celery -A tasks beat &
 
 # Initializes the API. 
 exec $cmd

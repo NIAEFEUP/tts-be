@@ -16,6 +16,10 @@ mysql/sql/01_data.sql
 # django 
 django/**/migrations/**
 django/university/models.py
+django/statistics.sql
+
+# celery
+django/celerybeat-schedule
 
 # stats related graphs
 django/university/stats_graphs/*
