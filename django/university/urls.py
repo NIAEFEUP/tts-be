@@ -10,6 +10,7 @@ urlpatterns = [
     path('course_last_year/<int:course_id>/', views.course_last_year),
     path('schedule/<int:course_unit_id>/', views.schedule),
     path('statistics/', views.data),
-    path('professors/<int:schedule>/', views.professor)
+    path('professors/<int:schedule>/', views.professor),
+    path('info/', views.info)
 ]
 
