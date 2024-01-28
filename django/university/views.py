@@ -7,6 +7,7 @@ from university.models import Professor
 from university.models import ScheduleProfessor
 from university.models import CourseMetadata
 from university.models import Statistics
+from university.models import Info
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
@@ -131,7 +132,6 @@ def data(request):
 """
     Returns all the professors of a class of the schedule id
 """ 
-
 @api_view(["GET"])
 def professor(request, schedule):
     schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule).values())
@@ -144,3 +144,18 @@ def professor(request, schedule):
             'professor_name': professor.professor_name
         })
     return JsonResponse(professors, safe=False)
+
+
+"""
+    Returns the contents of the info table
+"""
+@api_view(["GET"])
+def info(request):
+    info = Info.objects.first()
+    if info:
+        json_data = {
+            'date': timezone.localtime(info.date).strftime('%Y-%m-%d %H:%M:%S')
+        }
+        return JsonResponse(json_data, safe=False)
+    else:
+        return JsonResponse({}, safe=False)

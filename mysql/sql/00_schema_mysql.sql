@@ -71,9 +71,6 @@ CREATE TABLE `course_metadata` (
   `ects` float(4) NOT NULL
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
-
-
-
 -- --------------------------------------------------------
 --
 -- Table structure for table `schedule`
@@ -117,8 +114,18 @@ CREATE TABLE `professor` (
   `professor_name` varchar(100)
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `info`
+--
+
+CREATE TABLE `info` (
+  `date` datetime
+) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
 -- --------------------------------------------------------
+
 -- Table structure for table `statistics`
 -- 
 
@@ -145,6 +152,8 @@ alter TABLE course_metadata ADD FOREIGN KEY (`course_id`) REFERENCES `course`(`i
 
 alter TABLE schedule ADD PRIMARY KEY (`id`);
 alter TABLE schedule ADD FOREIGN KEY (`course_unit_id`) REFERENCES `course_unit`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+alter TABLE info ADD PRIMARY KEY (`date`);
 
 alter TABLE statistics ADD PRIMARY KEY (`course_unit_id`);
 
