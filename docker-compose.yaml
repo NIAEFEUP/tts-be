@@ -1,0 +1,47 @@
+version: "3.7" 
+
+services:
+  db:
+    build: ./mysql
+    container_name: tts_db
+    volumes: 
+      - ./mysql/data:/var/lib/mysql
+    env_file:
+      - mysql/.env.dev
+    ports:
+      - 3306:3306
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  phpmyadmin:
+    image: phpmyadmin:5.1.1-apache
+    container_name: tts_phpmyadmin
+    restart: always
+    ports:
+      - 4000:80
+
+  django:
+    build: ./django 
+    container_name: tts_django
+    env_file:
+      - django/.env.dev
+    command: ["db", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+    volumes:
+      - ./django/:/usr/src/django/
+    ports:
+      - 8100:8000
+      
+
+  fetcher:
+    build: ./fetcher
+    container_name: tts_fetcher
+    volumes:
+      - ./fetcher/:/fetcher/
+
+  redis_service:
+    image: redis:6.2-bullseye
+    restart: always
+    ports: 
+      - '6379:6379'
