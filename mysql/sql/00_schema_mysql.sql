@@ -38,7 +38,6 @@ CREATE TABLE `course` (
   `last_updated` datetime NOT NULL
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
-
 -- --------------------------------------------------------
 
 --

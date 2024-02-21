@@ -99,9 +99,9 @@ def course_last_year(request, course_id):
 """
 @api_view(['GET'])
 def schedule(request, course_unit_id):
-    course_unit = CourseUnit.objects.get(pk=course_unit_id)
+    course_unit = CourseUnit.objects.get(sigarra_id=course_unit_id)
     faculty = course_unit.url.split('/')[3]
-    schedules = list(Schedule.objects.filter(course_unit=course_unit_id).order_by('class_name').values())
+    schedules = list(Schedule.objects.filter(course_unit=course_unit.id).order_by('class_name').values())
     for schedule in schedules:
         schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule['id']).values())
         professors_link = f'https://sigarra.up.pt/{faculty}/pt/{"hor_geral.composto_doc?p_c_doc=" if schedule["is_composed"] else "func_geral.FormView?p_codigo="}{schedule["professor_sigarra_id"]}'
