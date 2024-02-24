@@ -181,7 +181,7 @@ def login(request):
 
         if response.status_code == 200:
             for cookie in response.cookies:
-                new_response.set_cookie(cookie.name, cookie.value)
+                new_response.set_cookie(cookie.name, cookie.value, httponly=True, secure=True)
 
             return new_response
         else:
