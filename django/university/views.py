@@ -13,7 +13,7 @@ from django.core import serializers
 from rest_framework.decorators import api_view
 from django.db.models import Max
 from django.db import transaction
-import json
+import requests
 import os 
 from django.utils import timezone
 # Create your views here. 
@@ -21,7 +21,7 @@ from django.utils import timezone
 
 def get_field(value):
     return value.field
-    
+
 @api_view(['GET'])
 def faculty(request): 
     json_data = list(Faculty.objects.values())
@@ -159,3 +159,32 @@ def info(request):
         return JsonResponse(json_data, safe=False)
     else:
         return JsonResponse({}, safe=False)
+
+@api_view(["POST"])
+def login(request):
+    username = request.POST.get('pv_login')
+    password = request.POST.get('pv_password')
+
+    login_data = {
+        'pv_login': username,
+        'pv_password': password
+    }
+
+    if not username or not password:
+        return JsonResponse({"error": "Missing credentials"}, safe=False)
+
+    try:
+        response = requests.post("https://sigarra.up.pt/feup/pt/mob_val_geral.autentica/", data=login_data)
+        
+        new_response = HttpResponse(response.content)
+        new_response.status_code = response.status_code
+
+        if response.status_code == 200:
+            for cookie in response.cookies:
+                new_response.set_cookie(cookie.name, cookie.value, httponly=True, secure=True)
+
+            return new_response
+        else:
+            return new_response 
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": e}, safe=False)
