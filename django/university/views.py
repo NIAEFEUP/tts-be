@@ -188,3 +188,29 @@ def login(request):
             return new_response 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+
+
+"""
+    Returns schedule of student
+"""
+@api_view(["GET"])
+def student_schedule(request):
+    student = request.GET.get('pv_codigo')
+
+    print(student)
+
+    schedule_data = {
+        'pv_codigo': student,
+        'pv_semana_ini': "2024-02-04",
+        'pv_semana_fim': "2024-05-25"
+    }
+
+    try:
+        response = requests.post("https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante/", data=schedule_data, cookies=request.cookies)
+
+        new_response = HttpResponse(response.content)
+        new_response.status_code = response.status_code
+
+        return new_response 
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": e}, safe=False)
