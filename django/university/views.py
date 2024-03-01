@@ -216,7 +216,8 @@ def submit_direct_exchange(request):
         inserted_exchange.save();
     
     # 1. Create token
-    token = jwt.encode({"username": request.session["username"], "exchange_id": "1"}, JWT_KEY, algorithm="HS256")
+    token = jwt.encode({"username": request.session["username"], "exchange_id": exchange.id}, JWT_KEY, algorithm="HS256")
+    print(token)
     
     # 2. Send confirmation email
 
