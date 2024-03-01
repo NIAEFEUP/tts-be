@@ -194,20 +194,42 @@ def login(request):
     Returns schedule of student
 """
 @api_view(["GET"])
-def student_schedule(request):
-    student = request.GET.get('pv_codigo')
+def student_schedule(request, student):
     semana_ini = "20240101"
     semana_fim = "20240601"
 
-    print(student)
-
     try:
-        real_request = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={student}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
-        response = requests.get(real_request, cookies=request.COOKIES)
+        url = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={student}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
+        response = requests.get(url, cookies=request.COOKIES)
 
-        new_response = HttpResponse(response.content)
+        schedule_data = response.json()['horario']
+        
+        new_response = JsonResponse(schedule_data, safe=False)    
+
         new_response.status_code = response.status_code
 
         return new_response 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+
+"""
+    Returns all classes of a course unit from sigarra
+""" 
+@api_view(["GET"])
+def schedule_sigarra(request, course_unit_id):
+    semana_ini = "20240101"
+    semana_fim = "20240601"
+
+    try:
+        url = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={course_unit_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
+        response = requests.get(url, cookies=request.COOKIES)
+
+        new_response = JsonResponse(response.json()['horario'], safe=False)
+
+        new_response.status_code = response.status_code
+
+        return new_response
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": e}, safe=False)
+    
