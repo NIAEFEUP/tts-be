@@ -12,6 +12,12 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os 
+from dotenv import dotenv_values
+
+CONFIG={
+    **dotenv_values(".env"),  # load variables
+    **os.environ,  # override loaded values with environment variables
+}
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-!d4s#a%mo7ou&nc+-b&qfx$nu&&vo_^z*kauh0-8@%)ni@ze+7'
 
-JWT_KEY= 'hello'
+JWT_KEY= CONFIG['JWT_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
