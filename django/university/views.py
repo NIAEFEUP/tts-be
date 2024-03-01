@@ -196,17 +196,14 @@ def login(request):
 @api_view(["GET"])
 def student_schedule(request):
     student = request.GET.get('pv_codigo')
+    semana_ini = "20240101"
+    semana_fim = "20240601"
 
     print(student)
 
-    schedule_data = {
-        'pv_codigo': student,
-        'pv_semana_ini': "2024-02-04",
-        'pv_semana_fim': "2024-05-25"
-    }
-
     try:
-        response = requests.post("https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante/", data=schedule_data, cookies=request.cookies)
+        real_request = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={student}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
+        response = requests.get(real_request, cookies=request.COOKIES)
 
         new_response = HttpResponse(response.content)
         new_response.status_code = response.status_code
