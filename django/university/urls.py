@@ -12,6 +12,7 @@ urlpatterns = [
     path('statistics/', views.data),
     path('professors/<int:schedule>/', views.professor),
     path('info/', views.info),
-    path('login/', views.login)
+    path('login/', views.login),
+    path('submit_direct_exchange/', views.submit_direct_exchange)
 ]
 

@@ -9,3 +9,4 @@ mysqlclient==1.4.6
 celery==5.2.7
 redis==3.5.3
 requests==2.31.0
+djangorestframework-simplejwt==5.3.1

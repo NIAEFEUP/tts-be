@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    #'django.contrib.sessions', # legacy
+    'django.contrib.sessions', # legacy
     'django.contrib.messages',
     'rest_framework', 
     'django.contrib.staticfiles',
@@ -138,7 +138,6 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ]
-
 }
 
 CORS_ORIGIN_ALLOW_ALL = True

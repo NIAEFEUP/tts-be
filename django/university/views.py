@@ -1,4 +1,5 @@
 from django.http.response import HttpResponse
+from django.contrib.auth import authenticate, login
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -182,9 +183,16 @@ def login(request):
         if response.status_code == 200:
             for cookie in response.cookies:
                 new_response.set_cookie(cookie.name, cookie.value, httponly=True, secure=True)
-
+            
+            request.session["username"] = login_data["pv_login"]
             return new_response
         else:
             return new_response 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+
+@api_view(["POST"])
+def submit_direct_exchange(request):
+    exchanges = request.POST.get('exchangeChoices')
+
+    return JsonResponse({"error": "Missing credentials"}, safe=False)
