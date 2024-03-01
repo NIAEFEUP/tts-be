@@ -1,5 +1,6 @@
 from django.http.response import HttpResponse
 from django.contrib.auth import authenticate, login
+from tts_be.settings import JWT_KEY
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -7,6 +8,8 @@ from university.models import Schedule
 from university.models import Professor
 from university.models import ScheduleProfessor
 from university.models import CourseMetadata
+from university.models import DirectExchange
+from university.models import DirectExchangeParticipants
 from university.models import Statistics
 from university.models import Info
 from django.http import JsonResponse
@@ -16,6 +19,8 @@ from django.db.models import Max
 from django.db import transaction
 import requests
 import os 
+import jwt
+import json
 from django.utils import timezone
 # Create your views here. 
 
@@ -193,6 +198,44 @@ def login(request):
 
 @api_view(["POST"])
 def submit_direct_exchange(request):
-    exchanges = request.POST.get('exchangeChoices')
+    exchanges = request.POST.getlist('exchangeChoices[]')
 
-    return JsonResponse({"error": "Missing credentials"}, safe=False)
+    exchange = DirectExchange(accepted=False)
+    exchange.save()
+
+    for curr_exchange in exchanges:
+        curr_exchange = json.loads(curr_exchange)
+        inserted_exchange = DirectExchangeParticipants(
+            participant=request.session["username"],
+            old_class=curr_exchange["old_class"],
+            new_class=curr_exchange["new_class"],
+            course_unit=curr_exchange["course_unit"],
+            direct_exchange=exchange,
+            accepted=False
+        )
+        inserted_exchange.save();
+    
+    # 1. Create token
+    token = jwt.encode({"username": request.session["username"], "exchange_id": "1"}, JWT_KEY, algorithm="HS256")
+    
+    # 2. Send confirmation email
+
+    return HttpResponse()
+
+@api_view(["POST"])
+def verify_direct_exchange(request, token):
+    exchange_info = jwt.decode(token, JWT_KEY, algorithms=["HS256"])
+    
+    participant = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
+    participant.update(accepted=True)
+
+    all_participants = DirectExchangeParticipants.objects.filter(direct_exchange_id=exchange_info["exchange_id"])
+    
+    accepted_participants = 0
+    for participant in all_participants:
+        accepted_participants += participant.accepted
+
+    if accepted_participants == len(all_participants):
+        DirectExchange.objects.filter(id=int(exchange_info["exchange_id"])).update(accepted=True)
+
+    return HttpResponse() 

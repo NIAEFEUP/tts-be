@@ -141,19 +141,19 @@ CREATE TABLE `statistics` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `direct_exchange` (
-  `id` INTEGER NOT NULL,
-  `accepted` boolean,
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `accepted` boolean NOT NULL,
   PRIMARY KEY(`id`)
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
 CREATE TABLE `direct_exchange_participants` (
-  `id` INTEGER NOT NULL,
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
   `participant` varchar(32) NOT NULL,
   `old_class` varchar(16) NOT NULL,
   `new_class` varchar(16) NOT NULL,
   `course_unit` varchar(64) NOT NULL,
   `direct_exchange` INTEGER NOT NULL,
-  `accepted` boolean,
+  `accepted` boolean NOT NULL,
   PRIMARY KEY(`id`),
   FOREIGN KEY (`direct_exchange`) REFERENCES `direct_exchange`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
