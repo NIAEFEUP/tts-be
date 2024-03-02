@@ -143,6 +143,7 @@ CREATE TABLE `statistics` (
 CREATE TABLE `direct_exchange` (
   `id` INTEGER NOT NULL AUTO_INCREMENT,
   `accepted` boolean NOT NULL,
+  `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY(`id`)
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
@@ -154,6 +155,7 @@ CREATE TABLE `direct_exchange_participants` (
   `course_unit` varchar(64) NOT NULL,
   `direct_exchange` INTEGER NOT NULL,
   `accepted` boolean NOT NULL,
+  `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY(`id`),
   FOREIGN KEY (`direct_exchange`) REFERENCES `direct_exchange`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
