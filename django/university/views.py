@@ -255,6 +255,7 @@ def submit_direct_exchange(request):
             return JsonResponse({"error": "classes-overlap"}, status=400)
         
         # If no overlap, change it
+        tmp = student_schedules[request.session["username"]][(class_auth_student_goes_to, course_unit)]
         student_schedules[request.session["username"]][(class_auth_student_goes_to, course_unit)] = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
         student_schedules[other_student][(class_other_student_goes_to, course_unit)] = tmp
 
