@@ -22,6 +22,7 @@ import requests
 import os 
 import jwt
 import json
+import datetime
 from django.utils import timezone
 # Create your views here. 
 
@@ -217,11 +218,11 @@ def submit_direct_exchange(request):
         return HttpResponse(status=curr_student_schedule.status_code)
 
     # TODO We need to change the fetched schedule with the exchange information we have in our database
+    # DirectExchangeParticipants.objects.filter(direct_exchange__accepted=True, participant=request.session["username"])
 
     student_schedules[request.session["username"]] = build_student_schedule_dict(json.loads(curr_student_schedule.content)["horario"])
 
     for curr_exchange in exchanges:
-        print(curr_exchange)
         curr_username = curr_exchange["other_student"]
         if not(curr_username in student_schedules):
             schedule_request = requests.get(get_student_schedule_url(curr_username, semana_ini, semana_fim), cookies=request.COOKIES)
@@ -270,15 +271,13 @@ def submit_direct_exchange(request):
             accepted=False
         ))
     
-    print("ie: ", inserted_exchanges)
     for inserted_exchange in inserted_exchanges:
         inserted_exchange.save()
 
     exchange.save()
     
     # 1. Create token
-    token = jwt.encode({"username": request.session["username"], "exchange_id": exchange.id}, JWT_KEY, algorithm="HS256")
-    print(token)
+    token = jwt.encode({"username": request.session["username"], "exchange_id": exchange.id, "exp": int(datetime.datetime.now() + datetime.timedelta(hours=2))}, JWT_KEY, algorithm="HS256")
     
     # 2. Send confirmation email
 
