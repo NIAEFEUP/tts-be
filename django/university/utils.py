@@ -6,7 +6,10 @@ def build_student_schedule_dict(schedule: list):
         (class_schedule["turma_sigla"], class_schedule["ucurr_sigla"]): class_schedule for class_schedule in schedule if class_schedule["tipo"] == "TP"
     }
 
-def check_class_schedule_overlap(start_1: int, end_1: int, start_2: int, end_2: int) -> bool:
+def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: int, start_2: int, end_2: int) -> bool:
+    if day_1 != day_2:
+        return False
+
     if (start_2 >= start_1 and start_2 <= end_1) or (start_1 >= start_2 and start_1 <= end_2):
         return True
 
@@ -14,12 +17,14 @@ def check_class_schedule_overlap(start_1: int, end_1: int, start_2: int, end_2: 
 
 
 def exchange_overlap(student_schedules, student, class_to_insert) -> bool:
-    for class_schedule in student_schedules[student]:
-        if class_schedule["ucurr_sigla"] != class_to_insert["uccur_sigla"]:
-            (class_schedule_start, class_schedule_end) = (class_schedule["hora_inicio"], class_schedule["aula_duracao"] + class_schedule["hora_inicio"])
-            (overlap_param_start, overlap_param_end) = (class_to_insert["hora_inicio"], class_to_insert["aula_duracao"] + class_to_insert["hora_inicio"])
+    for (key, class_schedule) in student_schedules[student].items():
+        # print("Class schedule: ", class_schedule)
+        if class_schedule["ucurr_sigla"] != class_to_insert["ucurr_sigla"]:
+            (class_schedule_day, class_schedule_start, class_schedule_end) = (class_schedule["dia"], class_schedule["hora_inicio"], class_schedule["aula_duracao"] + class_schedule["hora_inicio"])
+            (overlap_param_day, overlap_param_start, overlap_param_end) = (class_to_insert["dia"], class_to_insert["hora_inicio"], class_to_insert["aula_duracao"] + class_to_insert["hora_inicio"])
 
-            if check_class_schedule_overlap(class_schedule_start, class_schedule_end, overlap_param_start, overlap_param_end):
+            if check_class_schedule_overlap(class_schedule_day, class_schedule_start, class_schedule_end, overlap_param_day, overlap_param_start, overlap_param_end):
+                print("Key: ", key)
                 return True
 
     return False
