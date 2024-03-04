@@ -191,6 +191,13 @@ def login(request):
 
 
 """
+    Returns name of course unit
+"""
+def course_unit_name(course_unit_id):
+    course_unit = CourseUnit.objects.get(sigarra_id=course_unit_id)
+    return course_unit.name
+
+"""
     Returns schedule of student
 """
 @api_view(["GET"])
@@ -203,6 +210,9 @@ def student_schedule(request, student):
         response = requests.get(url, cookies=request.COOKIES)
 
         schedule_data = response.json()['horario']
+
+        for schedule in schedule_data:
+            schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
         
         new_response = JsonResponse(schedule_data, safe=False)    
 
