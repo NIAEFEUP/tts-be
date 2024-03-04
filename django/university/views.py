@@ -259,6 +259,8 @@ def submit_direct_exchange(request):
     exchanges = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
+    exchange_includes_auth_user = False
+
     semana_ini = "20240101"
     semana_fim = "20240601"
 
@@ -280,6 +282,9 @@ def submit_direct_exchange(request):
 
     for curr_exchange in exchanges:
         curr_username = curr_exchange["other_student"]
+        if curr_username == request.session["username"]:
+            exchange_includes_auth_user = True
+
         if not(curr_username in student_schedules):
             schedule_request = requests.get(get_student_schedule_url(curr_username, semana_ini, semana_fim), cookies=request.COOKIES)
             if(schedule_request.status_code != 200):
@@ -287,15 +292,23 @@ def submit_direct_exchange(request):
 
             schedule = json.loads(schedule_request.content)["horario"]
             student_schedules[curr_username] = build_student_schedule_dict(schedule)
-    
+
+    if not(exchange_includes_auth_user):
+        return JsonResponse({"error: auth-user-is-not-in-exchange"}, status=400)
+
     exchange = DirectExchange(accepted=False)
 
     inserted_exchanges = []
     for curr_exchange in exchanges:
+        if curr_exchange["other_student"] == request.session["username"]:
+            continue
+
+        print("Curr exchange: ", curr_exchange)
+
         other_student = curr_exchange["other_student"]
         course_unit = curr_exchange["course_unit"]
-        class_other_student_goes_to = curr_exchange["old_class"]
-        class_auth_student_goes_to = curr_exchange["new_class"]
+        class_auth_student_goes_to = curr_exchange["old_class"]
+        class_other_student_goes_to = curr_exchange["new_class"] # The other student goes to its new class
         
         # If participant is neither enrolled in that course unit or in that class
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
@@ -307,11 +320,11 @@ def submit_direct_exchange(request):
         other_student_overlap_param = student_schedules[request.session["username"]][(class_other_student_goes_to, course_unit)]
         auth_student_overlap_param = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
 
-        if exchange_overlap(student_schedules, auth_student_overlap_param) or exchange_overlap(student_schedules, other_student_overlap_param):
+        if exchange_overlap(student_schedules, request.session["username"], auth_student_overlap_param) or exchange_overlap(student_schedules, other_student, other_student_overlap_param):
             return JsonResponse({"error": "classes-overlap"}, status=400)
         
         # If no overlap, change it
-        tmp = student_schedules[request.session["username"]][(class_auth_student_goes_to, course_unit)]
+        tmp = student_schedules[request.session["username"]][(class_other_student_goes_to, course_unit)]
         student_schedules[request.session["username"]][(class_auth_student_goes_to, course_unit)] = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
         student_schedules[other_student][(class_other_student_goes_to, course_unit)] = tmp
 
@@ -322,19 +335,21 @@ def submit_direct_exchange(request):
         inserted_exchanges.append(DirectExchangeParticipants(
             participant=curr_exchange["other_student"],
             old_class=curr_exchange["new_class"], # This is not a typo, the old class of the authenticted student is the new class of the other student
-            new_class=curr_exchange["other_class"],
+            new_class=curr_exchange["old_class"],
             course_unit=curr_exchange["course_unit"],
             direct_exchange=exchange,
             accepted=False
         ))
     
+    exchange.save()
+
     for inserted_exchange in inserted_exchanges:
         inserted_exchange.save()
 
-    exchange.save()
     
     # 1. Create token
-    token = jwt.encode({"username": request.session["username"], "exchange_id": exchange.id, "exp": int(datetime.datetime.now() + datetime.timedelta(hours=2))}, JWT_KEY, algorithm="HS256")
+    token = jwt.encode({"username": request.session["username"], "exchange_id": exchange.id, "exp": (datetime.datetime.now() + datetime.timedelta(hours=2)).timestamp()}, JWT_KEY, algorithm="HS256")
+    print(token)
     
     # 2. Send confirmation email
 
