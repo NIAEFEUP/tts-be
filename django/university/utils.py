@@ -1,5 +1,4 @@
-from django.university.models import CourseUnit
-
+from university.models import CourseUnit
 
 def get_student_schedule_url(username, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
