@@ -203,8 +203,6 @@ def submit_direct_exchange(request):
     exchanges = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
-    exchange_includes_auth_user = False
-
     semana_ini = "20240101"
     semana_fim = "20240601"
 
@@ -220,14 +218,15 @@ def submit_direct_exchange(request):
         return HttpResponse(status=curr_student_schedule.status_code)
 
     # TODO We need to change the fetched schedule with the exchange information we have in our database
-    # DirectExchangeParticipants.objects.filter(direct_exchange__accepted=True, participant=request.session["username"])
+    # user_schedule_offset = DirectExchangeParticipants.objects.filter("""direct_exchange__accepted=True,""" participant=request.session["username"], accepted=True)
+    user_schedule_offset = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
+    for schedule in user_schedule_offset:
+        print("eheh: ", schedule)
 
     student_schedules[request.session["username"]] = build_student_schedule_dict(json.loads(curr_student_schedule.content)["horario"])
 
     for curr_exchange in exchanges:
         curr_username = curr_exchange["other_student"]
-        if curr_username == request.session["username"]:
-            exchange_includes_auth_user = True
 
         if not(curr_username in student_schedules):
             schedule_request = requests.get(get_student_schedule_url(curr_username, semana_ini, semana_fim), cookies=request.COOKIES)
@@ -237,18 +236,10 @@ def submit_direct_exchange(request):
             schedule = json.loads(schedule_request.content)["horario"]
             student_schedules[curr_username] = build_student_schedule_dict(schedule)
 
-    if not(exchange_includes_auth_user):
-        return JsonResponse({"error: auth-user-is-not-in-exchange"}, status=400)
-
     exchange = DirectExchange(accepted=False)
 
     inserted_exchanges = []
     for curr_exchange in exchanges:
-        if curr_exchange["other_student"] == request.session["username"]:
-            continue
-
-        print("Curr exchange: ", curr_exchange)
-
         other_student = curr_exchange["other_student"]
         course_unit = curr_exchange["course_unit"]
         class_auth_student_goes_to = curr_exchange["old_class"]
@@ -258,14 +249,14 @@ def submit_direct_exchange(request):
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
         auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[request.session["username"]]
         if not(other_student_valid) or not(auth_user_valid):
-            return JsonResponse({"error": "students-with-incorrect-classes"}, status=400)
+            return JsonResponse({"error": "students-with-incorrect-classes"}, status=400, safe=False)
 
         # Check of overlap
         other_student_overlap_param = student_schedules[request.session["username"]][(class_other_student_goes_to, course_unit)]
         auth_student_overlap_param = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
 
         if exchange_overlap(student_schedules, request.session["username"], auth_student_overlap_param) or exchange_overlap(student_schedules, other_student, other_student_overlap_param):
-            return JsonResponse({"error": "classes-overlap"}, status=400)
+            return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
         
         # If no overlap, change it
         tmp = student_schedules[request.session["username"]][(class_other_student_goes_to, course_unit)]
@@ -278,6 +269,15 @@ def submit_direct_exchange(request):
 
         inserted_exchanges.append(DirectExchangeParticipants(
             participant=curr_exchange["other_student"],
+            old_class=curr_exchange["old_class"], 
+            new_class=curr_exchange["new_class"],
+            course_unit=curr_exchange["course_unit"],
+            direct_exchange=exchange,
+            accepted=False
+        ))
+
+        inserted_exchanges.append(DirectExchangeParticipants(
+            participant=request.session["username"],
             old_class=curr_exchange["new_class"], # This is not a typo, the old class of the authenticted student is the new class of the other student
             new_class=curr_exchange["old_class"],
             course_unit=curr_exchange["course_unit"],
@@ -289,7 +289,6 @@ def submit_direct_exchange(request):
 
     for inserted_exchange in inserted_exchanges:
         inserted_exchange.save()
-
     
     # 1. Create token
     token = jwt.encode({"username": request.session["username"], "exchange_id": exchange.id, "exp": (datetime.datetime.now() + datetime.timedelta(hours=2)).timestamp()}, JWT_KEY, algorithm="HS256")
