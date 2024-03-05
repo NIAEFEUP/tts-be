@@ -1,7 +1,7 @@
 from django.http.response import HttpResponse
 from django.contrib.auth import authenticate, login
 from tts_be.settings import JWT_KEY
-from university.utils import get_student_schedule_url, build_student_schedule_dict, exchange_overlap
+from university.utils import course_unit_name, get_student_schedule_url, build_student_schedule_dict, exchange_overlap
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -197,14 +197,6 @@ def login(request):
             return new_response 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
-
-
-"""
-    Returns name of course unit
-"""
-def course_unit_name(course_unit_id):
-    course_unit = CourseUnit.objects.get(sigarra_id=course_unit_id)
-    return course_unit.name
 
 """
     Returns schedule of student

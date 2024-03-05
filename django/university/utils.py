@@ -1,3 +1,6 @@
+from django.university.models import CourseUnit
+
+
 def get_student_schedule_url(username, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
 
@@ -23,3 +26,10 @@ def exchange_overlap(student_schedules, student, class_to_insert) -> bool:
                 return True
 
     return False
+
+"""
+    Returns name of course unit
+"""
+def course_unit_name(course_unit_id):
+    course_unit = CourseUnit.objects.get(sigarra_id=course_unit_id)
+    return course_unit.name
