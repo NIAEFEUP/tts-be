@@ -1,4 +1,7 @@
 from django.http.response import HttpResponse
+from django.contrib.auth import authenticate, login
+from tts_be.settings import JWT_KEY
+from university.utils import get_student_schedule_url, build_student_schedule_dict, exchange_overlap
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -6,6 +9,8 @@ from university.models import Schedule
 from university.models import Professor
 from university.models import ScheduleProfessor
 from university.models import CourseMetadata
+from university.models import DirectExchange
+from university.models import DirectExchangeParticipants
 from university.models import Statistics
 from university.models import Info
 from django.http import JsonResponse
@@ -15,6 +20,9 @@ from django.db.models import Max
 from django.db import transaction
 import requests
 import os 
+import jwt
+import json
+import datetime
 from django.utils import timezone
 # Create your views here. 
 
@@ -182,7 +190,8 @@ def login(request):
         if response.status_code == 200:
             for cookie in response.cookies:
                 new_response.set_cookie(cookie.name, cookie.value, httponly=True, secure=True)
-
+            
+            request.session["username"] = login_data["pv_login"]
             return new_response
         else:
             return new_response 
@@ -242,4 +251,107 @@ def schedule_sigarra(request, course_unit_id):
 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+
+@api_view(["POST"])
+def submit_direct_exchange(request):
+    exchanges = request.POST.getlist('exchangeChoices[]')
+    exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
+
+    semana_ini = "20240101"
+    semana_fim = "20240601"
+
+    student_schedules = {}
+
+    curr_student_schedule = requests.get(get_student_schedule_url(
+        request.session["username"],
+        semana_ini,
+        semana_fim
+    ), cookies=request.COOKIES)
+
+    if(curr_student_schedule.status_code != 200):
+        return HttpResponse(status=curr_student_schedule.status_code)
+
+    # TODO We need to change the fetched schedule with the exchange information we have in our database
+    # DirectExchangeParticipants.objects.filter(direct_exchange__accepted=True, participant=request.session["username"])
+
+    student_schedules[request.session["username"]] = build_student_schedule_dict(json.loads(curr_student_schedule.content)["horario"])
+
+    for curr_exchange in exchanges:
+        curr_username = curr_exchange["other_student"]
+        if not(curr_username in student_schedules):
+            schedule_request = requests.get(get_student_schedule_url(curr_username, semana_ini, semana_fim), cookies=request.COOKIES)
+            if(schedule_request.status_code != 200):
+                return HttpResponse(status=curr_student_schedule.status_code)
+
+            schedule = json.loads(schedule_request.content)["horario"]
+            student_schedules[curr_username] = build_student_schedule_dict(schedule)
     
+    exchange = DirectExchange(accepted=False)
+
+    inserted_exchanges = []
+    for curr_exchange in exchanges:
+        other_student = curr_exchange["other_student"]
+        course_unit = curr_exchange["course_unit"]
+        class_other_student_goes_to = curr_exchange["old_class"]
+        class_auth_student_goes_to = curr_exchange["new_class"]
+        
+        # If participant is neither enrolled in that course unit or in that class
+        other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
+        auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[request.session["username"]]
+        if not(other_student_valid) or not(auth_user_valid):
+            return JsonResponse({"error": "students-with-incorrect-classes"}, status=400)
+
+        # Check of overlap
+        other_student_overlap_param = student_schedules[request.session["username"]][(class_other_student_goes_to, course_unit)]
+        auth_student_overlap_param = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
+
+        if exchange_overlap(student_schedules, auth_student_overlap_param) or exchange_overlap(student_schedules, other_student_overlap_param):
+            return JsonResponse({"error": "classes-overlap"}, status=400)
+        
+        # If no overlap, change it
+        tmp = student_schedules[request.session["username"]][(class_auth_student_goes_to, course_unit)]
+        student_schedules[request.session["username"]][(class_auth_student_goes_to, course_unit)] = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
+        student_schedules[other_student][(class_other_student_goes_to, course_unit)] = tmp
+
+        del student_schedules[other_student][(class_auth_student_goes_to, course_unit)] # remove old class of other student
+        del student_schedules[request.session["username"]][(class_other_student_goes_to, course_unit)] # remove old class of auth student
+        # If there are any, return http error
+
+        inserted_exchanges.append(DirectExchangeParticipants(
+            participant=curr_exchange["other_student"],
+            old_class=curr_exchange["new_class"], # This is not a typo, the old class of the authenticted student is the new class of the other student
+            new_class=curr_exchange["other_class"],
+            course_unit=curr_exchange["course_unit"],
+            direct_exchange=exchange,
+            accepted=False
+        ))
+    
+    for inserted_exchange in inserted_exchanges:
+        inserted_exchange.save()
+
+    exchange.save()
+    
+    # 1. Create token
+    token = jwt.encode({"username": request.session["username"], "exchange_id": exchange.id, "exp": int(datetime.datetime.now() + datetime.timedelta(hours=2))}, JWT_KEY, algorithm="HS256")
+    
+    # 2. Send confirmation email
+
+    return HttpResponse()
+
+@api_view(["POST"])
+def verify_direct_exchange(request, token):
+    exchange_info = jwt.decode(token, JWT_KEY, algorithms=["HS256"])
+    
+    participant = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
+    participant.update(accepted=True)
+
+    all_participants = DirectExchangeParticipants.objects.filter(direct_exchange_id=exchange_info["exchange_id"])
+    
+    accepted_participants = 0
+    for participant in all_participants:
+        accepted_participants += participant.accepted
+
+    if accepted_participants == len(all_participants):
+        DirectExchange.objects.filter(id=int(exchange_info["exchange_id"])).update(accepted=True)
+
+    return HttpResponse() 
