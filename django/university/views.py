@@ -1,7 +1,7 @@
 from django.http.response import HttpResponse
 from django.contrib.auth import authenticate, login
 from tts_be.settings import JWT_KEY
-from university.utils import get_student_schedule_url, build_student_schedule_dict, exchange_overlap
+from university.utils import course_unit_name, get_student_schedule_url, build_student_schedule_dict, exchange_overlap
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -195,6 +195,58 @@ def login(request):
             return new_response
         else:
             return new_response 
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": e}, safe=False)
+
+"""
+    Returns schedule of student
+"""
+@api_view(["GET"])
+def student_schedule(request, student):
+    semana_ini = "20240101"
+    semana_fim = "20240601"
+
+    try:
+        url = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={student}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
+        response = requests.get(url, cookies=request.COOKIES)
+
+        if(response.status_code != 200):
+            return HttpResponse(status=response.status_code)
+
+        schedule_data = response.json()['horario']
+
+        for schedule in schedule_data:
+            schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
+        
+        new_response = JsonResponse(schedule_data, safe=False)    
+
+        new_response.status_code = response.status_code
+
+        return new_response 
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": e}, safe=False)
+
+"""
+    Returns all classes of a course unit from sigarra
+""" 
+@api_view(["GET"])
+def schedule_sigarra(request, course_unit_id):
+    semana_ini = "20240101"
+    semana_fim = "20240601"
+
+    try:
+        url = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={course_unit_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
+        response = requests.get(url, cookies=request.COOKIES)
+
+        if(response.status_code != 200):
+            return HttpResponse(status=response.status_code)
+
+        new_response = JsonResponse(response.json()['horario'], safe=False)
+
+        new_response.status_code = response.status_code
+
+        return new_response
+
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
 
