@@ -210,6 +210,9 @@ def student_schedule(request, student):
         url = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={student}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
         response = requests.get(url, cookies=request.COOKIES)
 
+        if(response.status_code != 200):
+            return HttpResponse(status=response.status_code)
+
         schedule_data = response.json()['horario']
 
         for schedule in schedule_data:
@@ -234,6 +237,9 @@ def schedule_sigarra(request, course_unit_id):
     try:
         url = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={course_unit_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
         response = requests.get(url, cookies=request.COOKIES)
+
+        if(response.status_code != 200):
+            return HttpResponse(status=response.status_code)
 
         new_response = JsonResponse(response.json()['horario'], safe=False)
 
