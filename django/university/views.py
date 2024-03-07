@@ -348,7 +348,7 @@ def submit_direct_exchange(request):
     
     # 2. Send confirmation email
 
-    return HttpResponse()
+    return JsonResponse({"success": True}, safe=False)
 
 @api_view(["POST"])
 def verify_direct_exchange(request, token):
