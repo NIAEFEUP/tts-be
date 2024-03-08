@@ -272,8 +272,6 @@ def submit_direct_exchange(request):
     # TODO We need to change the fetched schedule with the exchange information we have in our database
     # user_schedule_offset = DirectExchangeParticipants.objects.filter("""direct_exchange__accepted=True,""" participant=request.session["username"], accepted=True)
     user_schedule_offset = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
-    for schedule in user_schedule_offset:
-        print("eheh: ", schedule)
 
     student_schedules[request.session["username"]] = build_student_schedule_dict(json.loads(curr_student_schedule.content)["horario"])
 
@@ -303,14 +301,7 @@ def submit_direct_exchange(request):
         if not(other_student_valid) or not(auth_user_valid):
             return JsonResponse({"error": "students-with-incorrect-classes"}, status=400, safe=False)
 
-        # Check of overlap
-        other_student_overlap_param = student_schedules[request.session["username"]][(class_other_student_goes_to, course_unit)]
-        auth_student_overlap_param = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
-
-        if exchange_overlap(student_schedules, request.session["username"], auth_student_overlap_param) or exchange_overlap(student_schedules, other_student, other_student_overlap_param):
-            return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
-        
-        # If no overlap, change it
+        # Change schedule
         tmp = student_schedules[request.session["username"]][(class_other_student_goes_to, course_unit)]
         student_schedules[request.session["username"]][(class_auth_student_goes_to, course_unit)] = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
         student_schedules[other_student][(class_other_student_goes_to, course_unit)] = tmp
@@ -319,6 +310,12 @@ def submit_direct_exchange(request):
         del student_schedules[request.session["username"]][(class_other_student_goes_to, course_unit)] # remove old class of auth student
         # If there are any, return http error
 
+    for curr_exchange in exchanges:
+        other_student = curr_exchange["other_student"]
+
+        if exchange_overlap(student_schedules, request.session["username"]) or exchange_overlap(student_schedules, other_student):
+            return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+    
         inserted_exchanges.append(DirectExchangeParticipants(
             participant=curr_exchange["other_student"],
             old_class=curr_exchange["old_class"], 

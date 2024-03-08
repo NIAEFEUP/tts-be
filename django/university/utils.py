@@ -18,12 +18,14 @@ def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: in
     return False
 
 
-def exchange_overlap(student_schedules, student, class_to_insert) -> bool:
+def exchange_overlap(student_schedules, student) -> bool:
     for (key, class_schedule) in student_schedules[student].items():
-        # print("Class schedule: ", class_schedule)
-        if class_schedule["ucurr_sigla"] != class_to_insert["ucurr_sigla"]:
+        for (other_key, other_class_schedule) in student_schedules[student].items():
+            if key == other_key:
+                continue
+
             (class_schedule_day, class_schedule_start, class_schedule_end) = (class_schedule["dia"], class_schedule["hora_inicio"], class_schedule["aula_duracao"] + class_schedule["hora_inicio"])
-            (overlap_param_day, overlap_param_start, overlap_param_end) = (class_to_insert["dia"], class_to_insert["hora_inicio"], class_to_insert["aula_duracao"] + class_to_insert["hora_inicio"])
+            (overlap_param_day, overlap_param_start, overlap_param_end) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"], other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"])
 
             if check_class_schedule_overlap(class_schedule_day, class_schedule_start, class_schedule_end, overlap_param_day, overlap_param_start, overlap_param_end):
                 print("Key: ", key)
