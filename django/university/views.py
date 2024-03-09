@@ -1,5 +1,4 @@
 from django.http.response import HttpResponse
-from django.contrib.auth import authenticate, login
 from tts_be.settings import JWT_KEY
 from university.exchange.utils import course_unit_name, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts
 from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps
@@ -198,6 +197,11 @@ def login(request):
             return new_response 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+
+@api_view(["POST"])
+def logout(request):
+    del request.session["username"]
+    return HttpResponse(status=200)
 
 """
     Returns schedule of student
