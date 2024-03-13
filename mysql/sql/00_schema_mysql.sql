@@ -13,7 +13,7 @@ SET time_zone = "+00:00";
 
 
 CREATE TABLE `faculty` (
-  `acronym` varchar(10) PRIMARY KEY ,
+  `acronym` varchar(10) PRIMARY KEY,
   `name` text,
   `last_updated` datetime NOT NULL
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
@@ -37,6 +37,7 @@ CREATE TABLE `course` (
   `last_updated` datetime NOT NULL,
   FOREIGN KEY (`faculty_id`) REFERENCES `faculty`(`acronym`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
+
 
 -- --------------------------------------------------------
 
@@ -149,6 +150,7 @@ CREATE TABLE `info` (
 -- 
 
 CREATE TABLE `statistics` (
+  `id` INTEGER AUTO_INCREMENT PRIMARY KEY,
   `course_unit_id` int(11) NOT NULL,
   `acronym` varchar(10) NOT NULL,
   `visited_times` int(11) NOT NULL,
