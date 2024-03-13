@@ -2,9 +2,10 @@ from django.http.response import HttpResponse
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
-from university.models import Schedule
+from university.models import Class 
+from university.models import Slot
 from university.models import Professor
-from university.models import ScheduleProfessor
+from university.models import SlotProfessor
 from university.models import CourseMetadata
 from university.models import Statistics
 from university.models import Info
@@ -40,7 +41,6 @@ def course(request, year):
     Return all the units from a course/major. 
     REQUEST: course_units/<int:course_id>/<int:year>/<int:semester>/
 """
-
 @api_view(['GET'])
 def course_units(request, course_id, year, semester): 
     # Fetch CourseUnitYear model instances that match the attributes from the api url parameters.
@@ -69,52 +69,32 @@ def course_units(request, course_id, year, semester):
     return JsonResponse(json_data, safe=False)
 
 """
-    Returns the last year of a course.
+    Returns the classes of a course unit.
 """
 @api_view(['GET'])
-def course_units_by_year(request, course_id, year, semester): 
-    course_units_metadata = CourseMetadata.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit')
+def classes(request, course_unit_id):
+    classes = list(Class.objects.filter(course_unit=course_unit_id).order_by('name').values())
+    for class_obj in classes:
+        slots = list(Slot.objects.filter(class_field=class_obj['id']).values())
 
-    json_data = list()
+        for slot_obj in slots:
+            slot_professors = list(SlotProfessor.objects.filter(slot_id=slot_obj['id']).values())
 
-    # For each object in those course unit year objects we append the CourseUnit dictionary
-    for course_units in course_units_metadata:
-        course_units.__dict__.update(course_units.course_unit.__dict__)
-        del course_units.__dict__["_state"]
-        json_data.append(course_units.__dict__)
+            professors = []
 
-    return JsonResponse(json_data, safe=False)
+            for slot_professor in slot_professors:
+                professor = Professor.objects.get(id=slot_professor['professor_id'])
+                professors.append({
+                    'professor_id': professor.id,
+                    'professor_acronym': professor.professor_acronym,
+                    'professor_name': professor.professor_name
+                })
 
-"""
-    Returns the last year of a course.
-"""
-@api_view(['GET'])
-def course_last_year(request, course_id):
-    max_year = CourseMetadata.objects.filter(course__id=course_id).aggregate(Max('course_unit_year')).get('course_unit_year__max')
-    json_data = {"max_year": max_year}
-    return JsonResponse(json_data, safe=False)
+            slot_obj['professors'] = professors
+            
+        class_obj['slots'] = slots
 
-"""
-    Returns the schedule of a course unit.
-"""
-@api_view(['GET'])
-def schedule(request, course_unit_id):
-    course_unit = CourseUnit.objects.get(sigarra_id=course_unit_id)
-    faculty = course_unit.url.split('/')[3]
-    schedules = list(Schedule.objects.filter(course_unit=course_unit.id).order_by('class_name').values())
-    for schedule in schedules:
-        schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule['id']).values())
-        professors_link = f'https://sigarra.up.pt/{faculty}/pt/{"hor_geral.composto_doc?p_c_doc=" if schedule["is_composed"] else "func_geral.FormView?p_codigo="}{schedule["professor_sigarra_id"]}'
-        schedule['professors_link'] = professors_link
-        del schedule['professor_sigarra_id']
-        professors_information = []
-        for schedule_professor in schedule_professors:
-            professors_information.append({
-                'acronym': Professor.objects.get(pk=schedule_professor['professor_sigarra_id']).professor_acronym,
-                'name': Professor.objects.get(pk=schedule_professor['professor_sigarra_id']).professor_name
-            })
-        schedule['professor_information'] = professors_information
-    return JsonResponse(schedules, safe=False)
+    return JsonResponse(classes, safe=False)
 
 """
     Returns the statistics of the requests.
@@ -130,21 +110,23 @@ def data(request):
        return HttpResponse(status=401)
 
 """
-    Returns all the professors of a class of the schedule id
+    Returns all the professors of a class of the class id
 """ 
 @api_view(["GET"])
-def professor(request, schedule):
-    schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule).values())
+def professor(request, slot):
+    slot_professors = list(SlotProfessor.objects.filter(slot_id=slot).values())
+
     professors = []
-    for schedule_professor in schedule_professors:
-        professor = Professor.objects.get(pk=schedule_professor['professor_sigarra_id'])
+
+    for slot_professor in slot_professors:
+        professor = Professor.objects.get(id=slot_professor['professor_id'])
         professors.append({
-            'sigarra_id': professor.sigarra_id,
+            'professor_id': professor.id,
             'professor_acronym': professor.professor_acronym,
             'professor_name': professor.professor_name
         })
-    return JsonResponse(professors, safe=False)
 
+    return JsonResponse(professors, safe=False)
 
 """
     Returns the contents of the info table
