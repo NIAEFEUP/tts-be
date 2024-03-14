@@ -1,3 +1,4 @@
+from datetime import date
 from university.models import CourseUnit, DirectExchangeParticipants
 from enum import Enum
 import json
@@ -114,3 +115,15 @@ def exchange_overlap(student_schedules, student) -> bool:
 def course_unit_name(course_unit_id):
     course_unit = CourseUnit.objects.get(sigarra_id=course_unit_id)
     return course_unit.name
+
+def curr_semester_weeks():
+    currdate = date.today()
+    year = str(currdate.year)
+    primeiro_semestre = currdate.month >= 10 and currdate.month <= 12
+    if primeiro_semestre: 
+        semana_ini = "1001"
+        semana_fim = "1201"
+    else:
+        semana_ini = "0101"
+        semana_fim = "0601"
+    return (year+semana_ini, year+semana_fim)
