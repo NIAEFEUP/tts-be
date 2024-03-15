@@ -1,6 +1,6 @@
 from django.http.response import HttpResponse
 from tts_be.settings import JWT_KEY
-from university.exchange.utils import course_unit_name, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts
+from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts
 from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps
 from university.models import Faculty
 from university.models import Course
@@ -208,8 +208,10 @@ def logout(request):
 """
 @api_view(["GET"])
 def student_schedule(request, student):
-    semana_ini = "20240101"
-    semana_fim = "20240601"
+
+    student = request.session['username'];
+
+    (semana_ini, semana_fim) = curr_semester_weeks();
 
     try:
         url = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={student}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
@@ -231,13 +233,15 @@ def student_schedule(request, student):
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
 
+
+
 """
     Returns all classes of a course unit from sigarra
 """ 
 @api_view(["GET"])
 def schedule_sigarra(request, course_unit_id):
-    semana_ini = "20240101"
-    semana_fim = "20240601"
+
+    (semana_ini, semana_fim) = curr_semester_weeks();
 
     try:
         url = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={course_unit_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
@@ -260,8 +264,7 @@ def submit_direct_exchange(request):
     exchanges = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
-    semana_ini = "20240101"
-    semana_fim = "20240601"
+    (semana_ini, semana_fim) = curr_semester_weeks();
 
     student_schedules = {}
 
