@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os 
+#import saml2
+#import saml2.saml
 from dotenv import dotenv_values
 
 CONFIG={
@@ -44,6 +46,7 @@ DOMAIN = os.getenv('DOMAIN')
 INSTALLED_APPS = [ 
     'corsheaders',
     'django.contrib.admin',
+   # 'djangosaml2',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions', # legacy
@@ -64,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'university.auth_middleware.AuthMiddleware',
+    #'djangosaml2.middleware.SamlSessionMiddleware'
 ]
 
 ROOT_URLCONF = 'tts_be.urls'
@@ -87,6 +91,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'tts_be.wsgi.application'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    #'djangosaml2.backends.Saml2Backend'
+)
 
 
 # Database
@@ -157,7 +166,7 @@ REST_FRAMEWORK = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': f"redis://{CONFIG['REDIS_HOST']}:{CONFIG['REDIS_PORT']}//"
+        'LOCATION': f"redis://{CONFIG['TTS_REDIS_HOST']}:{CONFIG['TTS_REDIS_PORT']}//"
     }
 }
 

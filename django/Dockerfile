@@ -10,7 +10,7 @@ COPY ./requirements.txt ./requirements.txt
 
 # Dependencies for mysqlclient 
 RUN apt-get update
-RUN apt-get -y install build-essential default-libmysqlclient-dev
+RUN apt-get -y install build-essential default-libmysqlclient-dev xmlsec1 libssl-dev libsasl2-dev
 
 # Install mysql command to wait for the database initialization 
 RUN apt -y install default-mysql-client

@@ -1,18 +1,22 @@
-from django.urls import path 
-from . import views  
+from django.urls import path, include
+
+from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
+from . import views
 
 # URLConf
 urlpatterns = [
     path('faculty/', views.faculty),
     path('course/<int:year>', views.course),
-    path('course_units/<int:course_id>/<int:year>/<int:semester>/', views.course_units), 
-    path('course_units_by_year/<int:course_id>/<int:year>/<int:semester>/', views.course_units_by_year), 
-    path('course_last_year/<int:course_id>/', views.course_last_year),
-    path('schedule/<int:course_unit_id>/', views.schedule),
-    path('statistics/', views.data),
+    path('course_units/<int:course_id>/<int:year>/<int:semester>/', views.course_units),
+    # path('course_units_by_year/<int:course_id>/<int:year>/<int:semester>/',views.course_units_by_year),
+    # path('course_last_year/<int:course_id>/', views.course_last_year),
+    # path('schedule/<int:course_unit_id>/', views.schedule),
+    # path('statistics/', views.data),
     path('professors/<int:schedule>/', views.professor),
     path('info/', views.info),
     path('login/', views.login),
+    # path('saml_session/', views.saml_session),
+    # path('saml_response_handler/', views.federated_login),
     path('logout/', views.logout),
     path('student_schedule/<int:student>/', views.student_schedule),
     path('schedule_sigarra/<int:course_unit_id>/', views.schedule_sigarra),
@@ -21,15 +25,13 @@ urlpatterns = [
     path('verify_direct_exchange/<str:token>', views.verify_direct_exchange),
     path('students_per_course_unit/<int:course_unit_id>/', views.students_per_course_unit),
     path('student_data/<str:codigo>/', views.student_data),
-    path('submit_marketplace_exchange/', views.submit_marketplace_exchange_request),
-    path('marketplace_exchange/', views.marketplace_exchange),
+    path('exchange/marketplace/', MarketplaceExchangeView.as_view()),
     path('is_admin/', views.is_admin),
     path('export/', views.export_exchanges),
     path('direct_exchange/history/', views.direct_exchange_history),
-    path('direct_exchange/', views.DirectExchangeView.as_view())
+    path('direct_exchange/', views.DirectExchangeView.as_view()),
     path('course_unit/<int:course_unit_id>/', views.course_unit_by_id),
     path('class/<int:course_unit_id>/', views.classes),
     path('professors/<int:slot>/', views.professor),
     path('info/', views.info)
 ]
-

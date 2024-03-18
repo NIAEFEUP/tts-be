@@ -23,16 +23,34 @@ services:
     ports:
       - 4000:80
 
+  httpd:
+    build: httpd
+    image: httpd-shib2
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        mode: host
+    # networks:
+    #   - internal-mail
+    volumes:
+      - ./httpd/apache2:/usr/local/apache2/conf:ro
+      - ./httpd/shibboleth:/etc/shibboleth
+
   django:
     build: ./django
     container_name: tts_django
     env_file:
       - django/.env.dev
-    command: ["db", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+    command: ["db", "python", "manage.py", "runserver", "0.0.0.0:8100"]
     volumes:
       - ./django/:/usr/src/django/
     ports:
-      - 8100:8000
+      - 8100:8100
+      
 
   fetcher:
     build: ./fetcher

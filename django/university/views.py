@@ -34,6 +34,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from django.db.models import Max, Q
 from django.db import transaction
+from django.shortcuts import redirect
 import requests
 import jwt
 import json
@@ -51,6 +52,7 @@ from django.forms.models import model_to_dict
 
 def get_field(value):
     return value.field
+
 
 @api_view(['GET'])
 def faculty(request):
@@ -105,15 +107,13 @@ def course_units(request, course_id, year, semester):
     return JsonResponse(json_data, safe=False)
 
 
+
 """
     Returns the classes of a course unit.
 """
-
-
 @ api_view(['GET'])
 def classes(request, course_unit_id):
     return JsonResponse(ClassController.get_classes(course_unit_id), safe=False)
-
 
 """
     Returns all the professors of a class of the class id
@@ -153,6 +153,7 @@ def info(request):
     else:
         return JsonResponse({}, safe=False)
 
+
 @api_view(["POST"])
 def login(request):
     username = request.POST.get('pv_login')
@@ -168,7 +169,7 @@ def login(request):
 
     try:
         response = requests.post("https://sigarra.up.pt/feup/pt/mob_val_geral.autentica/", data=login_data)
-        
+
         new_response = HttpResponse(response.content)
         new_response.status_code = response.status_code
 
@@ -182,9 +183,10 @@ def login(request):
             request.session["username"] = login_data["pv_login"]
             return new_response
         else:
-            return new_response 
+            return new_response
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+
 
 @api_view(["POST"])
 def logout(request):
@@ -201,9 +203,12 @@ def logout(request):
 
     return HttpResponse(status=200)
 
+
 """
     Returns schedule of student
 """
+
+
 @api_view(["GET"])
 def student_schedule(request, student):
 
@@ -216,7 +221,7 @@ def student_schedule(request, student):
             semana_fim
         ), cookies=request.COOKIES)
 
-        if(response.status_code != 200):
+        if (response.status_code != 200):
             return HttpResponse(status=response.status_code)
 
         schedule_data = response.json()['horario']
@@ -237,7 +242,9 @@ def student_schedule(request, student):
 
 """
     Returns all classes of a course unit from sigarra
-""" 
+"""
+
+
 @api_view(["GET"])
 def schedule_sigarra(request, course_unit_id):
     (semana_ini, semana_fim) = curr_semester_weeks();
@@ -270,7 +277,7 @@ def students_per_course_unit(request, course_unit_id):
         url = f"https://sigarra.up.pt/feup/pt/mob_ucurr_geral.uc_inscritos?pv_ocorrencia_id={course_unit_id}"
         response = requests.get(url, cookies=request.COOKIES)
 
-        if(response.status_code != 200):
+        if (response.status_code != 200):
             return HttpResponse(status=response.status_code)
 
         new_response = JsonResponse(response.json(), safe=False)
@@ -321,10 +328,11 @@ def class_sigarra_schedule(request, course_unit_id, class_name):
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
 
+
 @api_view(["POST"])
 def submit_marketplace_exchange_request(request):
     exchanges = request.POST.getlist('exchangeChoices[]')
-    exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
+    exchanges = list(map(lambda exchange: json.loads(exchange), exchanges))
 
     print("Marketplace exchange: ", exchanges)
 
@@ -374,7 +382,7 @@ def submit_direct_exchange(request):
         semana_fim
     ), cookies=request.COOKIES)
 
-    if(curr_student_schedule.status_code != 200):
+    if (curr_student_schedule.status_code != 200):
         return HttpResponse(status=curr_student_schedule.status_code)
 
     username = request.session["username"]
@@ -401,7 +409,8 @@ def submit_direct_exchange(request):
 
     exchange_model = DirectExchange(accepted=False, issuer=request.session["username"], marketplace_exchange=marketplace_exchange)
 
-    (status, trailing) = build_new_schedules(student_schedules, exchanges, request.session["username"])
+    (status, trailing) = build_new_schedules(
+        student_schedules, exchanges, request.session["username"])
     if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
         return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
     
@@ -409,7 +418,7 @@ def submit_direct_exchange(request):
     (status, trailing) = create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_model, request.session["username"])
     if status == ExchangeStatus.CLASSES_OVERLAP:    
         return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
-    
+
     exchange_model.save()
     
     tokens_to_generate = {}
@@ -428,6 +437,7 @@ def submit_direct_exchange(request):
         inserted_exchange.save()
     
     return JsonResponse({"success": True}, safe=False)
+
 
 @api_view(["POST"])
 def verify_direct_exchange(request, token):
