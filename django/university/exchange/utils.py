@@ -1,5 +1,5 @@
 from datetime import date
-from university.models import CourseUnit, DirectExchangeParticipants
+from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants
 from enum import Enum
 import json
 import requests
@@ -127,3 +127,15 @@ def curr_semester_weeks():
         semana_ini = "0101"
         semana_fim = "0601"
     return (year+semana_ini, year+semana_fim)
+
+def append_tts_info_to_sigarra_schedule(schedule):
+    course_unit = CourseUnit.objects.filter(sigarra_id=schedule['ocorrencia_id'])[0]
+    course_metadata = CourseMetadata.objects.filter(course_unit=course_unit.id)[0]
+            
+    schedule['url'] = course_unit.url
+    # The sigarra api does not return the course with the full name, just the acronym
+    schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
+
+    schedule['ects'] = course_metadata.ects
+    schedule['last_updated'] = course_unit.last_updated
+
