@@ -32,6 +32,8 @@ services:
       - ./django/:/usr/src/django/
     ports:
       - 8100:8000
+    depends_on:
+      - redis_service
       
 
   fetcher:
