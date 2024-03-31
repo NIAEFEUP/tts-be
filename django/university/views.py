@@ -258,6 +258,28 @@ def schedule_sigarra(request, course_unit_id):
 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+    
+"""
+    Returns all students enrolled in a course unit
+""" 
+@api_view(["GET"])
+def students_per_course_unit(request, course_unit_id):
+
+    try:
+        url = f"https://sigarra.up.pt/feup/pt/mob_ucurr_geral.uc_inscritos?pv_ocorrencia_id={course_unit_id}"
+        response = requests.get(url, cookies=request.COOKIES)
+
+        if(response.status_code != 200):
+            return HttpResponse(status=response.status_code)
+
+        new_response = JsonResponse(response.json(), safe=False)
+
+        new_response.status_code = response.status_code
+
+        return new_response
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": e}, safe=False)
 
 @api_view(["POST"])
 def submit_direct_exchange(request):
