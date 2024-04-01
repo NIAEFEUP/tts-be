@@ -1,5 +1,5 @@
 from datetime import date
-from university.models import CourseUnit, DirectExchangeParticipants
+from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants
 from enum import Enum
 import json
 import requests
@@ -19,11 +19,11 @@ def build_marketplace_submission_schedule(schedule, submission, auth_username):
         class_auth_student_goes_from = exchange["old_class"]
         class_auth_student_goes_to = exchange["new_class"]
         
-        auth_user_valid = (class_auth_student_goes_from, course_unit) in schdule:
+        auth_user_valid = (class_auth_student_goes_from, course_unit) in schedule # change this
         if not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
 
-        schedule[(class_auth_student_goes_to, course_unit)] = # get class schedule
+        # schedule[(class_auth_student_goes_to, course_unit)] = # get class schedule
 
         del schedule[(class_auth_student_goes_from, course_unit)] # remove old class of other student
 
@@ -147,4 +147,15 @@ def curr_semester_weeks():
 
 def incorrect_class_error() -> str:
     return "students-with-incorrect-classes"    
+
+def append_tts_info_to_sigarra_schedule(schedule):
+    course_unit = CourseUnit.objects.filter(sigarra_id=schedule['ocorrencia_id'])[0]
+    course_metadata = CourseMetadata.objects.filter(course_unit=course_unit.id)[0]
+            
+    schedule['url'] = course_unit.url
+    # The sigarra api does not return the course with the full name, just the acronym
+    schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
+
+    schedule['ects'] = course_metadata.ects
+    schedule['last_updated'] = course_unit.last_updated
 

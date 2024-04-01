@@ -1,7 +1,7 @@
 from django.http.response import HttpResponse
 from tts_be.settings import JWT_KEY
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts
-from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, build_marketplace_submission_schedule, incorrect_class_error
+from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, build_marketplace_submission_schedule, incorrect_class_error, append_tts_info_to_sigarra_schedule
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -223,8 +223,8 @@ def student_schedule(request, student):
         schedule_data = response.json()['horario']
 
         for schedule in schedule_data:
-            schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
-        
+            append_tts_info_to_sigarra_schedule(schedule)
+                    
         new_response = JsonResponse(schedule_data, safe=False)    
 
         new_response.status_code = response.status_code
@@ -232,15 +232,11 @@ def student_schedule(request, student):
         return new_response 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
-
-
-
 """
     Returns all classes of a course unit from sigarra
 """ 
 @api_view(["GET"])
 def schedule_sigarra(request, course_unit_id):
-
     (semana_ini, semana_fim) = curr_semester_weeks();
 
     try:
@@ -280,6 +276,33 @@ def students_per_course_unit(request, course_unit_id):
 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+
+@api_view(["GET"])
+def class_sigarra_schedule(request, course_unit_id, class_name):
+    (semana_ini, semana_fim) = curr_semester_weeks();
+
+    try:
+        url = f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={course_unit_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
+        response = requests.get(url, cookies=request.COOKIES)
+
+        if(response.status_code != 200):
+            return HttpResponse(status=response.status_code)
+
+        schedule = json.loads(response.content)
+        classes = schedule["horario"]
+        class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))[0]
+
+        append_tts_info_to_sigarra_schedule(class_schedule)
+
+        new_response = JsonResponse(class_schedule, safe=False)
+
+        new_response.status_code = response.status_code
+
+        return new_response
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": e}, safe=False)
+
 
 @api_view(["POST"])
 def submit_marketplace_exchange(request):
