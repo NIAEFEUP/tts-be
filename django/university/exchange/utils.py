@@ -13,6 +13,23 @@ class ExchangeStatus(Enum):
 def get_student_schedule_url(username, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
 
+def build_marketplace_submission_schedule(schedule, submission, auth_username):
+    for exchange in submission:
+        course_unit = exchange["course_unit"]
+        class_auth_student_goes_from = exchange["old_class"]
+        class_auth_student_goes_to = exchange["new_class"]
+        
+        auth_user_valid = (class_auth_student_goes_from, course_unit) in schdule:
+        if not(auth_user_valid):
+            return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
+
+        schedule[(class_auth_student_goes_to, course_unit)] = # get class schedule
+
+        del schedule[(class_auth_student_goes_from, course_unit)] # remove old class of other student
+
+    return (ExchangeStatus.SUCCESS, None)     
+
+
 def build_new_schedules(student_schedules, exchanges, auth_username):
     for curr_exchange in exchanges:
         other_student = curr_exchange["other_student"]
@@ -127,3 +144,7 @@ def curr_semester_weeks():
         semana_ini = "0101"
         semana_fim = "0601"
     return (year+semana_ini, year+semana_fim)
+
+def incorrect_class_error() -> str:
+    return "students-with-incorrect-classes"    
+

@@ -1,7 +1,7 @@
 from django.http.response import HttpResponse
 from tts_be.settings import JWT_KEY
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts
-from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps
+from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, build_marketplace_submission_schedule, incorrect_class_error
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -282,6 +282,27 @@ def students_per_course_unit(request, course_unit_id):
         return JsonResponse({"error": e}, safe=False)
 
 @api_view(["POST"])
+def submit_marketplace_exchange(request):
+    exchanges = request.POST.getlist('exchangeChoices[]')
+    exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
+
+    print("exchanges: ", exchanges)
+    
+    (semana_ini, semana_fim) = curr_semester_weeks();
+
+    curr_student_schedule = requests.get(get_student_schedule_url(
+        request.session["username"],
+        semana_ini,
+        semana_fim
+    ), cookies=request.COOKIES)
+
+    (status, trailing) = build_marketplace_submission_schedule(curr_student_schedule, exchanges)
+    if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
+        return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
+
+    return HttpResponse()
+
+@api_view(["POST"])
 def submit_direct_exchange(request):
     exchanges = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
@@ -315,7 +336,7 @@ def submit_direct_exchange(request):
 
     (status, trailing) = build_new_schedules(student_schedules, exchanges, request.session["username"])
     if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
-        return JsonResponse({"error": "students-with-incorrect-classes"}, status=400, safe=False)
+        return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
     
     inserted_exchanges = []
     (status, trailing) = check_for_overlaps(student_schedules, exchanges, inserted_exchanges, exchange_model, request.session["username"])
@@ -352,3 +373,4 @@ def verify_direct_exchange(request, token):
         DirectExchange.objects.filter(id=int(exchange_info["exchange_id"])).update(accepted=True)
 
     return HttpResponse() 
+
