@@ -148,5 +148,14 @@ REST_FRAMEWORK = {
     ]
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': f"redis://{CONFIG['REDIS_HOST']}:{CONFIG['REDIS_PORT']}//"
+    }
+}
+
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS = 3600 * 24

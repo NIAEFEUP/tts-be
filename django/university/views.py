@@ -1,5 +1,5 @@
 from django.http.response import HttpResponse
-from tts_be.settings import JWT_KEY
+from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts
 from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps
 from university.models import Faculty
@@ -23,7 +23,9 @@ import os
 import jwt
 import json
 import datetime
+import time
 from django.utils import timezone
+from django.core.cache import cache
 # Create your views here. 
 
 
@@ -303,8 +305,6 @@ def submit_direct_exchange(request):
     # user_schedule_offset = DirectExchangeParticipants.objects.filter("""direct_exchange__accepted=True,""" participant=request.session["username"], accepted=True)
     user_schedule_offset = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
 
-    #check_for_overlaps()
-
     student_schedules[request.session["username"]] = build_student_schedule_dict(json.loads(curr_student_schedule.content)["horario"])
 
     (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, request.COOKIES)
@@ -323,13 +323,14 @@ def submit_direct_exchange(request):
         return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
     
     exchange_model.save()
-
-    for inserted_exchange in inserted_exchanges:
-        inserted_exchange.save()
     
-    # 1. Create token
-    token = jwt.encode({"username": request.session["username"], "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(hours=24)).timestamp()}, JWT_KEY, algorithm="HS256")
-    print(token)
+    tokens_to_generate = {}
+    for inserted_exchange in inserted_exchanges:
+        participant = inserted_exchange.participant;
+        if not(participant in tokens_to_generate):
+            token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
+            tokens_to_generate[participant] = token
+        inserted_exchange.save()
     
     # 2. Send confirmation email
 
@@ -337,18 +338,36 @@ def submit_direct_exchange(request):
 
 @api_view(["POST"])
 def verify_direct_exchange(request, token):
-    exchange_info = jwt.decode(token, JWT_KEY, algorithms=["HS256"])
+    try:
+        exchange_info = jwt.decode(token, JWT_KEY, algorithms=["HS256"])
     
-    participant = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
-    participant.update(accepted=True)
+        token_seconds_elapsed = time.time() - exchange_info["exp"]
+        if token_seconds_elapsed > VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS:
+            return JsonResponse({"verified": False}, safe=False, status=403)
 
-    all_participants = DirectExchangeParticipants.objects.filter(direct_exchange_id=exchange_info["exchange_id"])
+        participant = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
+        participant.update(accepted=True)
+
+        all_participants = DirectExchangeParticipants.objects.filter(direct_exchange_id=exchange_info["exchange_id"])
     
-    accepted_participants = 0
-    for participant in all_participants:
-        accepted_participants += participant.accepted
+        accepted_participants = 0
+        for participant in all_participants:
+            accepted_participants += participant.accepted
 
-    if accepted_participants == len(all_participants):
-        DirectExchange.objects.filter(id=int(exchange_info["exchange_id"])).update(accepted=True)
+        if accepted_participants == len(all_participants):
+            DirectExchange.objects.filter(id=int(exchange_info["exchange_id"])).update(accepted=True)
 
-    return HttpResponse() 
+        if cache.get(token) != None:
+            return JsonResponse({"verified": False}, safe=False, status=403)
+    
+        # Blacklist token since this token is usable only once
+        cache.set(
+            key=token,
+            value=token,
+            timeout=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS - token_seconds_elapsed
+        )
+
+        return JsonResponse({"verified": True}, safe=False)
+
+    except Exception as e:
+        return HttpResponse(status=500)
