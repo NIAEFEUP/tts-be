@@ -1,3 +1,7 @@
+import random
+import string
+from datetime import datetime, timedelta
+from django.utils import timezone
 from django.http.response import HttpResponse
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts
@@ -17,6 +21,7 @@ from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
 from django.db.models import Max
+from django.db.models import Q
 from django.db import transaction
 import requests
 import os 
@@ -211,8 +216,6 @@ def logout(request):
 @api_view(["GET"])
 def student_schedule(request, student):
 
-    student = request.session['username'];
-
     (semana_ini, semana_fim) = curr_semester_weeks();
 
     try:
@@ -225,15 +228,46 @@ def student_schedule(request, student):
         schedule_data = response.json()['horario']
 
         for schedule in schedule_data:
+
             append_tts_info_to_sigarra_schedule(schedule)
                     
         new_response = JsonResponse(schedule_data, safe=False)    
 
-        new_response.status_code = response.status_code
+        schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
 
+        student_exchange_ids = DirectExchangeParticipants.objects.filter(participant=student).values_list('direct_exchange_id', flat=True)
+
+        q = Q(direct_exchange_id__in=student_exchange_ids) & Q(accepted=True)
+
+        exchanges = DirectExchangeParticipants.objects.filter(q)
+        
+        student_schedules = {}
+        
+        student_schedules[student] = schedule_data
+
+        (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, request.COOKIES)
+        if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
+            return HttpResponse(status=trailing)
+
+        exchange_model = DirectExchange(accepted=False)
+
+        (status, trailing) = build_new_schedules(student_schedules, exchanges, request.session["username"])
+        if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
+            return JsonResponse({"error": "students-with-incorrect-classes"}, status=400, safe=False)
+
+        inserted_exchanges = []
+        (status, trailing) = check_for_overlaps(student_schedules, exchanges, inserted_exchanges, exchange_model, request.session["username"])
+        if status == ExchangeStatus.CLASSES_OVERLAP:    
+            return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+
+        new_response = JsonResponse(student_schedules[student], safe=False)    
+        new_response.status_code = response.status_code
         return new_response 
+        
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+
+
 """
     Returns all classes of a course unit from sigarra
 """ 
@@ -308,8 +342,6 @@ def class_sigarra_schedule(request, course_unit_id, class_name):
 
 @api_view(["POST"])
 def submit_direct_exchange(request):
-    exchanges = request.POST.getlist('exchangeChoices[]')
-    exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
     (semana_ini, semana_fim) = curr_semester_weeks();
 
@@ -329,6 +361,34 @@ def submit_direct_exchange(request):
     user_schedule_offset = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
 
     student_schedules[request.session["username"]] = build_student_schedule_dict(json.loads(curr_student_schedule.content)["horario"])
+
+    
+    username = request.session["username"]
+
+    student_exchange_ids = DirectExchangeParticipants.objects.filter(participant=username).values_list('direct_exchange_id', flat=True)
+
+    q = Q(direct_exchange_id__in=student_exchange_ids) & Q(accepted=True)
+
+    exchanges = DirectExchangeParticipants.objects.filter(q)
+
+    
+    (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, request.COOKIES)
+    if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
+        return HttpResponse(status=trailing)
+
+    exchange_model = DirectExchange(accepted=False)
+
+    (status, trailing) = build_new_schedules(student_schedules, exchanges, request.session["username"])
+    if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
+        return JsonResponse({"error": "students-with-incorrect-classes"}, status=400, safe=False)
+    
+    inserted_exchanges = []
+    (status, trailing) = check_for_overlaps(student_schedules, exchanges, inserted_exchanges, exchange_model, request.session["username"])
+    if status == ExchangeStatus.CLASSES_OVERLAP:    
+        return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+
+    exchange_choices = request.POST.getlist('exchangeChoices[]')
+    exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
 
     (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, request.COOKIES)
     if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
