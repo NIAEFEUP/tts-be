@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django.http.response import HttpResponse
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
-from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts
+from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, update_schedule
 from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, append_tts_info_to_sigarra_schedule
 from university.models import Faculty
 from university.models import Course
@@ -274,37 +274,20 @@ def student_schedule(request, student):
 
         student_schedules = {}
         student_schedules[student] = schedule_data
-        student_exchange_ids = DirectExchangeParticipants.objects.filter(participant=student).values_list('direct_exchange_id', flat=True)
 
-        q = Q(direct_exchange_id__in=student_exchange_ids) & Q(accepted=True)
+        direct_exchange_ids = DirectExchangeParticipants.objects.filter(
+            Q(participant='student') & Q(accepted=True)
+        ).values_list('direct_exchange', flat=True)
+        direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids)
 
-        exchanges = DirectExchangeParticipants.objects.filter(q)
+        for exchange in direct_exchanges:
+            participants = DirectExchangeParticipants.objects.filter(Q(direct_exchange=exchange) & (-Q(participant=student)))
+            (status, trailing) = update_schedule(schedule_data,participants,request) 
+            if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
+                return HttpResponse(status=trailing)
+            
 
-        exchange_dicts = list() 
-        for exchange in exchanges:
-            exchange_dict = {}
-            exchange_dict["other_student"] = exchange.participant
-            exchange_dict["old_class"] = exchange.old_class
-            exchange_dict["new_class"] = exchange.new_class
-            exchange_dict["course_unit"] = exchange.course_unit
-            exchange_dicts.append(exchange_dict)
-
-        (status, trailing) = build_student_schedule_dicts(student_schedules, exchange_dicts, semana_ini, semana_fim, request.COOKIES)
-        if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
-            return HttpResponse(status=trailing)
-
-        exchange_model = DirectExchange(accepted=False)
-
-        (status, trailing) = build_new_schedules(student_schedules, exchange_dicts, request.session["username"])
-        if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
-            return JsonResponse({"error": "students-with-incorrect-classes"}, status=400, safe=False)
-        
-        inserted_exchanges = []
-        (status, trailing) = check_for_overlaps(student_schedules, exchange_dicts, inserted_exchanges, exchange_model, request.session["username"])
-        if status == ExchangeStatus.CLASSES_OVERLAP:    
-            return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
-
-        new_response = JsonResponse(student_schedules[student], safe=False)    
+        new_response = JsonResponse(schedule_data, safe=False)    
         new_response.status_code = response.status_code
         return new_response 
         

@@ -13,6 +13,9 @@ class ExchangeStatus(Enum):
 def get_student_schedule_url(username, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
 
+def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
+    return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
+
 def build_new_schedules(student_schedules, exchanges, auth_username):
     for curr_exchange in exchanges:
         other_student = curr_exchange["other_student"]
@@ -138,4 +141,30 @@ def append_tts_info_to_sigarra_schedule(schedule):
 
     schedule['ects'] = course_metadata.ects
     schedule['last_updated'] = course_unit.last_updated
+
+def update_schedule(student_schedule, exchanges, request):
+    (semana_ini, semana_fim) = curr_semester_weeks();
+
+    for exchange in exchanges:
+        for schedule in student_schedule:
+            if schedule["ucurr_sigla"] == exchange.course_unit:
+                ocorr_id = schedule["ocorrencia_id"]
+        
+
+                unit_schedules = requests.get(get_unit_schedule_url(
+                    ocorr_id,
+                    semana_ini,
+                    semana_fim
+                ), cookies=request.COOKIES)
+
+                if unit_schedules.status_code != 200:
+                    return (ExchangeStatus.FETCH_SCHEDULE_ERROR, unit_schedules.status_code)
+
+                for unit_schedule in unit_schedules.json():
+                    for turma in unit_schedule["turmas"]:
+                        if turma["turma_sigla"] == exchange.new_class:
+                            schedule = unit_schedule
+                            
+                        
+    return (ExchangeStatus.SUCCESS, None)
 
