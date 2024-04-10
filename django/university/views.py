@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.http.response import HttpResponse
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, update_schedule
-from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, append_tts_info_to_sigarra_schedule
+from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, convert_sigarra_schedule
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -230,12 +230,6 @@ def student_schedule(request, student):
 
         schedule_data = response.json()['horario']
 
-        for schedule in schedule_data:
-
-            append_tts_info_to_sigarra_schedule(schedule)
-            schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
-
-    
         # testing #################################
         exchange = DirectExchange.objects.create(accepted=True)
         DirectExchangeParticipants.objects.create(
@@ -287,7 +281,7 @@ def student_schedule(request, student):
                 return HttpResponse(status=trailing)
             
 
-        new_response = JsonResponse(schedule_data, safe=False)    
+        new_response = JsonResponse(convert_sigarra_schedule(student_schedules[student]), safe=False)    
         new_response.status_code = response.status_code
         return new_response 
         
@@ -309,8 +303,7 @@ def schedule_sigarra(request, course_unit_id):
         if(response.status_code != 200):
             return HttpResponse(status=response.status_code)
 
-        new_response = JsonResponse(response.json()['horario'], safe=False)
-
+        new_response = JsonResponse(convert_sigarra_schedule(response.json()['horario']), safe=False)
         new_response.status_code = response.status_code
 
         return new_response
@@ -353,12 +346,10 @@ def class_sigarra_schedule(request, course_unit_id, class_name):
 
         schedule = json.loads(response.content)
         classes = schedule["horario"]
-        class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))[0]
+        class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))
+        theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
 
-        append_tts_info_to_sigarra_schedule(class_schedule)
-
-        new_response = JsonResponse(class_schedule, safe=False)
-
+        new_response = JsonResponse(convert_sigarra_schedule(class_schedule + theoretical_schedule), safe=False)
         new_response.status_code = response.status_code
 
         return new_response

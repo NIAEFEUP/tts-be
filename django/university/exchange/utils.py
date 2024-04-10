@@ -1,5 +1,5 @@
 from datetime import date
-from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants
+from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, Professor
 from enum import Enum
 import json
 import requests
@@ -131,16 +131,34 @@ def curr_semester_weeks():
         semana_fim = "0601"
     return (year+semana_ini, year+semana_fim)
 
-def append_tts_info_to_sigarra_schedule(schedule):
-    course_unit = CourseUnit.objects.filter(sigarra_id=schedule['ocorrencia_id'])[0]
-    course_metadata = CourseMetadata.objects.filter(course_unit=course_unit.id)[0]
-            
-    schedule['url'] = course_unit.url
-    # The sigarra api does not return the course with the full name, just the acronym
-    schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
+def convert_sigarra_schedule(schedule_data):
+    new_schedule_data = []
+        
+    for schedule in schedule_data:
+        course_unit = CourseUnit.objects.filter(sigarra_id=schedule['ocorrencia_id'])[0]
+        professors = []
+        for docente in schedule['docentes']:
+            professor = Professor.objects.filter(sigarra_id=docente['doc_codigo'])
+            if(len(professor) < 1):
+                continue
+            professors.append({"name": docente['doc_nome'], "acronym": professor[0].professor_acronym})
 
-    schedule['ects'] = course_metadata.ects
-    schedule['last_updated'] = course_unit.last_updated
+        new_schedule = {
+            'acronym': schedule['ucurr_sigla'],
+            'name': course_unit.name,
+            'class': schedule['turma_sigla'],
+            'code': schedule['ocorrencia_id'],
+            'type': schedule['tipo'],
+            'duration': schedule['aula_duracao'],
+            'room': schedule['sala_sigla'],
+            'start': str(schedule['hora_inicio'] / 3600),
+            'day': schedule['dia'] - 2,
+            'professors': professors
+        }
+
+        new_schedule_data.append(new_schedule)
+
+    return new_schedule_data
 
 def update_schedule(student_schedule, exchanges, request):
     (semana_ini, semana_fim) = curr_semester_weeks();
@@ -167,4 +185,3 @@ def update_schedule(student_schedule, exchanges, request):
                             
                         
     return (ExchangeStatus.SUCCESS, None)
-
