@@ -85,9 +85,9 @@ def classes(request, course_unit_id):
             for slot_professor in slot_professors:
                 professor = Professor.objects.get(id=slot_professor['professor_id'])
                 professors.append({
-                    'professor_id': professor.id,
-                    'professor_acronym': professor.professor_acronym,
-                    'professor_name': professor.professor_name
+                    'id': professor.id,
+                    'acronym': professor.professor_acronym,
+                    'name': professor.professor_name
                 })
 
             slot_obj['professors'] = professors
@@ -121,9 +121,9 @@ def professor(request, slot):
     for slot_professor in slot_professors:
         professor = Professor.objects.get(id=slot_professor['professor_id'])
         professors.append({
-            'professor_id': professor.id,
-            'professor_acronym': professor.professor_acronym,
-            'professor_name': professor.professor_name
+            'id': professor.id,
+            'acronym': professor.professor_acronym,
+            'name': professor.professor_name
         })
 
     return JsonResponse(professors, safe=False)
