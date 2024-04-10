@@ -1,5 +1,6 @@
 from datetime import date
-from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, Professor
+from django.db.models import Q
+from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, Professor, DirectExchange
 from enum import Enum
 import json
 import requests
@@ -48,6 +49,9 @@ def build_student_schedule_dicts(student_schedules, exchanges, semana_ini, seman
                 return (ExchangeStatus.FETCH_SCHEDULE_ERROR, schedule_request.status_code)
 
             schedule = json.loads(schedule_request.content)["horario"]
+
+            update_schedule_accepted_exchanges(curr_username, schedule, cookies)
+
             student_schedules[curr_username] = build_student_schedule_dict(schedule)
 
     return (ExchangeStatus.SUCCESS, None)
@@ -160,28 +164,43 @@ def convert_sigarra_schedule(schedule_data):
 
     return new_schedule_data
 
-def update_schedule(student_schedule, exchanges, request):
+def update_schedule_accepted_exchanges(student, schedule, cookies):
+    direct_exchange_ids = DirectExchangeParticipants.objects.filter(
+        Q(participant=student) & Q(direct_exchange__accepted=True)
+    ).values_list('direct_exchange', flat=True)
+    direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids)
+
+    for exchange in direct_exchanges:
+        participants = DirectExchangeParticipants.objects.filter(Q(direct_exchange=exchange) & Q(participant=student))
+        (status, trailing) = update_schedule(schedule, participants, cookies) 
+        if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
+            return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
+
+    return (ExchangeStatus.SUCCESS, None)
+
+def update_schedule(student_schedule, exchanges, cookies):
     (semana_ini, semana_fim) = curr_semester_weeks();
 
     for exchange in exchanges:
-        for schedule in student_schedule:
+        for i, schedule in enumerate(student_schedule):
             if schedule["ucurr_sigla"] == exchange.course_unit:
+                print("found course unit")
                 ocorr_id = schedule["ocorrencia_id"]
-        
+                class_type = schedule["tipo"]
 
                 unit_schedules = requests.get(get_unit_schedule_url(
                     ocorr_id,
                     semana_ini,
                     semana_fim
-                ), cookies=request.COOKIES)
+                ), cookies=cookies)
 
                 if unit_schedules.status_code != 200:
                     return (ExchangeStatus.FETCH_SCHEDULE_ERROR, unit_schedules.status_code)
 
-                for unit_schedule in unit_schedules.json():
+                for unit_schedule in unit_schedules.json()["horario"]:
                     for turma in unit_schedule["turmas"]:
-                        if turma["turma_sigla"] == exchange.new_class:
-                            schedule = unit_schedule
-                            
-                        
+                        if turma["turma_sigla"] == exchange.new_class and unit_schedule["tipo"] == class_type:
+                            print("found turma")
+                            student_schedule[i] = unit_schedule
+
     return (ExchangeStatus.SUCCESS, None)
