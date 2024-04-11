@@ -21,7 +21,6 @@ from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
 from django.db.models import Max
-from django.db.models import Q
 from django.db import transaction
 import requests
 import os 
@@ -337,9 +336,8 @@ def submit_direct_exchange(request):
 
     username = request.session["username"]
     schedule_data = json.loads(curr_student_schedule.content)["horario"]
-    update_schedule_accepted_exchanges(username, schedule_data, request.COOKIES)
 
-    student_schedules[request.session["username"]] = build_student_schedule_dict(schedule_data)
+    student_schedules[username] = build_student_schedule_dict(schedule_data)
 
     exchange_choices = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
@@ -347,6 +345,12 @@ def submit_direct_exchange(request):
     (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, request.COOKIES)
     if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
         return HttpResponse(status=trailing)
+
+    for student in student_schedules.keys():
+        student_schedule = list(student_schedules[student].values())
+        update_schedule_accepted_exchanges(student, student_schedule, request.COOKIES)
+        student_schedules[student] = build_student_schedule_dict(student_schedule)
+
 
     exchange_model = DirectExchange(accepted=False)
 
