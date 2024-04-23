@@ -1,5 +1,5 @@
 from datetime import date
-from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants
+from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, Professor, DirectExchange
 from enum import Enum
 import json
 import requests
@@ -29,6 +29,8 @@ def build_marketplace_submission_schedule(schedule, submission, auth_username):
 
     return (ExchangeStatus.SUCCESS, None)     
 
+def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
+    return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
 
 def build_new_schedules(student_schedules, exchanges, auth_username):
     for curr_exchange in exchanges:
@@ -62,6 +64,7 @@ def build_student_schedule_dicts(student_schedules, exchanges, semana_ini, seman
                 return (ExchangeStatus.FETCH_SCHEDULE_ERROR, schedule_request.status_code)
 
             schedule = json.loads(schedule_request.content)["horario"]
+
             student_schedules[curr_username] = build_student_schedule_dict(schedule)
 
     return (ExchangeStatus.SUCCESS, None)
@@ -156,6 +159,70 @@ def append_tts_info_to_sigarra_schedule(schedule):
     # The sigarra api does not return the course with the full name, just the acronym
     schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
 
-    schedule['ects'] = course_metadata.ects
-    schedule['last_updated'] = course_unit.last_updated
+def convert_sigarra_schedule(schedule_data):
+    new_schedule_data = []
+        
+    for schedule in schedule_data:
+        course_unit = CourseUnit.objects.filter(sigarra_id=schedule['ocorrencia_id'])[0]
+        professors = []
+        for docente in schedule['docentes']:
+            professor = Professor.objects.filter(sigarra_id=docente['doc_codigo'])
+            if(len(professor) < 1):
+                continue
+            professors.append({"name": docente['doc_nome'], "acronym": professor[0].professor_acronym})
 
+        new_schedule = {
+            'acronym': schedule['ucurr_sigla'],
+            'name': course_unit.name,
+            'class': schedule['turma_sigla'],
+            'code': schedule['ocorrencia_id'],
+            'type': schedule['tipo'],
+            'duration': schedule['aula_duracao'],
+            'room': schedule['sala_sigla'],
+            'start': str(schedule['hora_inicio'] / 3600),
+            'day': schedule['dia'] - 2,
+            'professors': professors
+        }
+
+        new_schedule_data.append(new_schedule)
+
+    return new_schedule_data
+
+def update_schedule_accepted_exchanges(student, schedule, cookies):
+    direct_exchange_ids = DirectExchangeParticipants.objects.filter(
+        participant=student, direct_exchange__accepted=True
+    ).values_list('direct_exchange', flat=True)
+    direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids)
+
+    for exchange in direct_exchanges:
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant=student)
+        (status, trailing) = update_schedule(schedule, participants, cookies) 
+        if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
+            return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
+
+    return (ExchangeStatus.SUCCESS, None)
+
+def update_schedule(student_schedule, exchanges, cookies):
+    (semana_ini, semana_fim) = curr_semester_weeks();
+
+    for exchange in exchanges:
+        for i, schedule in enumerate(student_schedule):
+            if schedule["ucurr_sigla"] == exchange.course_unit:
+                ocorr_id = schedule["ocorrencia_id"]
+                class_type = schedule["tipo"]
+
+                unit_schedules = requests.get(get_unit_schedule_url(
+                    ocorr_id,
+                    semana_ini,
+                    semana_fim
+                ), cookies=cookies)
+
+                if unit_schedules.status_code != 200:
+                    return (ExchangeStatus.FETCH_SCHEDULE_ERROR, unit_schedules.status_code)
+
+                for unit_schedule in unit_schedules.json()["horario"]:
+                    for turma in unit_schedule["turmas"]:
+                        if turma["turma_sigla"] == exchange.new_class and unit_schedule["tipo"] == class_type:
+                            student_schedule[i] = unit_schedule
+
+    return (ExchangeStatus.SUCCESS, None)
