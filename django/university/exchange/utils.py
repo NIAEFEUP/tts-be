@@ -165,10 +165,10 @@ def update_schedule_accepted_exchanges(student, schedule, cookies):
     direct_exchange_ids = DirectExchangeParticipants.objects.filter(
         participant=student, direct_exchange__accepted=True
     ).values_list('direct_exchange', flat=True)
-    direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids)
+    direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids).order_by('date')
 
     for exchange in direct_exchanges:
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant=student)
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant=student).order_by('date')
         (status, trailing) = update_schedule(schedule, participants, cookies) 
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
