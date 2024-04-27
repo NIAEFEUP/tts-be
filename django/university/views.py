@@ -17,6 +17,7 @@ from university.models import DirectExchange
 from university.models import DirectExchangeParticipants
 from university.models import Statistics
 from university.models import Info
+from university.models import MarketplaceExchange
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
@@ -433,3 +434,8 @@ def verify_direct_exchange(request, token):
 
     except Exception as e:
         return HttpResponse(status=500)
+
+
+# @api_view(["GET"])
+# def marketplace_exchange(request):
+
