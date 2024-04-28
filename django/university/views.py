@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.http.response import HttpResponse
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule, update_schedule_accepted_exchanges
-from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, convert_sigarra_schedule
+from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, convert_sigarra_schedule, build_marketplace_submission_schedule
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -330,9 +330,10 @@ def submit_marketplace_exchange(request):
         semana_fim
     ), cookies=request.COOKIES)
 
-    (status, trailing) = build_marketplace_submission_schedule(curr_student_schedule, exchanges)
+    auth_username = request.session["username"]
+    (status, trailing) = build_marketplace_submission_schedule(curr_student_schedule, exchanges, auth_username)
     if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
-        return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
+        return JsonResponse({"error": "The class you selected is incorrect."}, status=400, safe=False)
 
     return HttpResponse()
 
@@ -436,6 +437,29 @@ def verify_direct_exchange(request, token):
         return HttpResponse(status=500)
 
 
-# @api_view(["GET"])
-# def marketplace_exchange(request):
+@api_view(["GET"])
+def marketplace_exchange(request):
+    exchanges = MarketplaceExchange.objects.all()
+
+    exchanges_json = json.loads(serializers.serialize('json', exchanges))
+
+    exchanges_json = map(lambda entry: entry['fields'], exchanges_json)
+    exchanges_map = dict()
+    for exchange in exchanges_json:
+        if exchanges_map.get(exchange['marketplace_exchange']):
+            exchanges_map[exchange['marketplace_exchange']]['class_exchanges'].append(exchange)
+        else:
+            exchanges_map[exchange['marketplace_exchange']] = {
+                'id' : exchange['marketplace_exchange'],
+                'issuer' : exchange['issuer'],
+                'old_class' : exchange['old_class'],
+                'new_class' : exchange['new_class'],
+                'course_unit' : exchange['course_unit'],
+                'direct_exchange' : exchange['direct_exchange'],
+                'accepted' : exchange['accepted'],
+                'date' : exchange['date'],
+                'class_exchanges' : [exchange]
+            }
+
+    return JsonResponse(list(exchanges_map.values()), safe=False)
 
