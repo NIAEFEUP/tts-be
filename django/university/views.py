@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django.http.response import HttpResponse
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
-from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule, update_schedule_accepted_exchanges
-from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, convert_sigarra_schedule, build_marketplace_submission_schedule
+from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
+from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -287,42 +287,33 @@ def students_per_course_unit(request, course_unit_id):
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
 
+"""
+Gets schedule from a specific class from a course unit from sigarra
+"""
 @api_view(["GET"])
 def class_sigarra_schedule(request, course_unit_id, class_name):
-    (semana_ini, semana_fim) = curr_semester_weeks();
 
     try:
-        response = requests.get(get_unit_schedule_url(
-            course_unit_id, 
-            semana_ini, 
-            semana_fim
-        ), cookies=request.COOKIES)
-
-        if(response.status_code != 200):
-            return HttpResponse(status=response.status_code)
-
-        schedule = json.loads(response.content)
-        classes = schedule["horario"]
-        class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))
-        theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
-
+        # return HttpResponse(status=response.status_code)
+        class_schedule_response = get_class_from_sigarra(course_unit_id, class_name, request.COOKIES)
+        
+        (class_schedule, theoretical_schedule) = class_schedule_response
         new_response = JsonResponse(convert_sigarra_schedule(class_schedule + theoretical_schedule), safe=False)
-        new_response.status_code = response.status_code
 
         return new_response
 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
 
-
 @api_view(["POST"])
-def submit_marketplace_exchange(request):
+def submit_marketplace_exchange_request(request):
     exchanges = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
     print("exchanges: ", exchanges)
     
-    (semana_ini, semana_fim) = curr_semester_weeks();
+    (semana_ini, semana_fim) = curr_semester_weeks()
+    curr_student = request.session["username"]
 
     curr_student_schedule = requests.get(get_student_schedule_url(
         request.session["username"],
@@ -330,12 +321,24 @@ def submit_marketplace_exchange(request):
         semana_fim
     ), cookies=request.COOKIES)
 
-    auth_username = request.session["username"]
-    (status, trailing) = build_marketplace_submission_schedule(curr_student_schedule, exchanges, auth_username)
-    if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
-        return JsonResponse({"error": "The class you selected is incorrect."}, status=400, safe=False)
+    if(curr_student_schedule.status_code != 200):
+        return HttpResponse(status=curr_student_schedule.status_code)
+    
+    student_schedules = {}
+    student_schedules[curr_student] = build_student_schedule_dict(json.loads(curr_student_schedule.content)["horario"])
+    
+    student_schedule = list(student_schedules[curr_student].values())
+    update_schedule_accepted_exchanges(curr_student, student_schedule, request.COOKIES)
+    student_schedules[curr_student] = build_student_schedule_dict(student_schedule)
 
-    return HttpResponse()
+    (status, curr_student_schedule) = build_marketplace_submission_schedule(student_schedules, exchanges, request.COOKIES, curr_student)
+    if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
+         return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
+    
+    if exchange_overlap(student_schedules, curr_student):
+        return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+
+    return JsonResponse({"success": True}, safe=False)
 
 @api_view(["POST"])
 def submit_direct_exchange(request):
@@ -353,10 +356,6 @@ def submit_direct_exchange(request):
     if(curr_student_schedule.status_code != 200):
         return HttpResponse(status=curr_student_schedule.status_code)
 
-    # TODO We need to change the fetched schedule with the exchange information we have in our database
-    # user_schedule_offset = DirectExchangeParticipants.objects.filter("""direct_exchange__accepted=True,""" participant=request.session["username"], accepted=True)
-    user_schedule_offset = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
-
     username = request.session["username"]
     schedule_data = json.loads(curr_student_schedule.content)["horario"]
 
@@ -365,6 +364,7 @@ def submit_direct_exchange(request):
     exchange_choices = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
 
+    # Add the other students schedule to the dictionary
     (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, request.COOKIES)
     if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
         return HttpResponse(status=trailing)
@@ -373,7 +373,6 @@ def submit_direct_exchange(request):
         student_schedule = list(student_schedules[student].values())
         update_schedule_accepted_exchanges(student, student_schedule, request.COOKIES)
         student_schedules[student] = build_student_schedule_dict(student_schedule)
-
 
     exchange_model = DirectExchange(accepted=False)
 

@@ -13,19 +13,21 @@ class ExchangeStatus(Enum):
 def get_student_schedule_url(username, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
 
-def build_marketplace_submission_schedule(schedule, submission, auth_username):
+def build_marketplace_submission_schedule(schedule, submission, cookies, auth_student):
+    
     for exchange in submission:
         course_unit = exchange["course_unit"]
-        class_auth_student_goes_from = exchange["old_class"]
-        class_auth_student_goes_to = exchange["new_class"]
+        class_auth_student_goes_to = exchange["old_class"]
+        class_auth_student_goes_from = exchange["new_class"]
+
+        print("schedule is: ", schedule[auth_student])
         
-        auth_user_valid = (class_auth_student_goes_from, course_unit) in schedule # change this
+        auth_user_valid = (class_auth_student_goes_from, course_unit) in schedule[auth_student]
         if not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
-
-        # schedule[(class_auth_student_goes_to, course_unit)] = # get class schedule
-
-        del schedule[(class_auth_student_goes_from, course_unit)] # remove old class of other student
+        
+        schedule[(class_auth_student_goes_to, course_unit)] = get_class_from_sigarra(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to, cookies)# get class schedule
+        del schedule[auth_student][(class_auth_student_goes_from, course_unit)] # remove old class of other student
 
     return (ExchangeStatus.SUCCESS, None)     
 
@@ -116,10 +118,13 @@ def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: in
 
 
 def exchange_overlap(student_schedules, student) -> bool:
+    print("fogo: ", student_schedules)
     for (key, class_schedule) in student_schedules[student].items():
         for (other_key, other_class_schedule) in student_schedules[student].items():
             if key == other_key:
                 continue
+
+            print("other class schedule: ", other_class_schedule);
 
             (class_schedule_day, class_schedule_start, class_schedule_end) = (class_schedule["dia"], class_schedule["hora_inicio"], class_schedule["aula_duracao"] + class_schedule["hora_inicio"])
             (overlap_param_day, overlap_param_start, overlap_param_end) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"], other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"])
@@ -153,7 +158,6 @@ def incorrect_class_error() -> str:
 
 def append_tts_info_to_sigarra_schedule(schedule):
     course_unit = CourseUnit.objects.filter(sigarra_id=schedule['ocorrencia_id'])[0]
-    course_metadata = CourseMetadata.objects.filter(course_unit=course_unit.id)[0]
             
     schedule['url'] = course_unit.url
     # The sigarra api does not return the course with the full name, just the acronym
@@ -226,3 +230,29 @@ def update_schedule(student_schedule, exchanges, cookies):
                             student_schedule[i] = unit_schedule
 
     return (ExchangeStatus.SUCCESS, None)
+
+"""
+Util function to get the schedule of a class from sigarra
+"""
+def get_class_from_sigarra(course_unit_id, class_name, cookies):
+    (semana_ini, semana_fim) = curr_semester_weeks();
+
+    print("course unit id: ", course_unit_id)
+
+    response = requests.get(get_unit_schedule_url(
+            course_unit_id, 
+            semana_ini, 
+            semana_fim
+        ), cookies=cookies)
+
+    print("response is: ", response)
+
+    if(response.status_code != 200):
+        return None
+
+    schedule = json.loads(response.content)
+    classes = schedule["horario"]
+    class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))
+    theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
+        
+    return (class_schedule, theoretical_schedule)
