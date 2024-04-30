@@ -5,8 +5,8 @@ from django.utils import timezone
 from django.http.response import HttpResponse
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
-from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra
-from university.models import Faculty
+from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
+from university.models import Faculty, MarketplaceExchangeClass
 from university.models import Course
 from university.models import CourseUnit
 from university.models import Schedule
@@ -310,8 +310,6 @@ def submit_marketplace_exchange_request(request):
     exchanges = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
-    print("exchanges: ", exchanges)
-    
     (semana_ini, semana_fim) = curr_semester_weeks()
     curr_student = request.session["username"]
 
@@ -337,7 +335,9 @@ def submit_marketplace_exchange_request(request):
     
     if exchange_overlap(student_schedules, curr_student):
         return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
-
+    
+    create_marketplace_exchange_on_db(exchanges, curr_student)
+    
     return JsonResponse({"success": True}, safe=False)
 
 @api_view(["POST"])

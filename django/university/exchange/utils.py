@@ -1,5 +1,5 @@
 from datetime import date
-from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, Professor, DirectExchange
+from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
 from enum import Enum
 import json
 import requests
@@ -12,6 +12,12 @@ class ExchangeStatus(Enum):
 
 def get_student_schedule_url(username, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
+
+def create_marketplace_exchange_on_db(exchanges, curr_student):
+    marketplace_exchange = MarketplaceExchange.objects.create(issuer=curr_student, accepted=False)
+    for exchange in exchanges:
+        MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
+   
 
 def build_marketplace_submission_schedule(schedule, submission, cookies, auth_student):
     
