@@ -442,23 +442,34 @@ def marketplace_exchange(request):
 
     exchanges_json = json.loads(serializers.serialize('json', exchanges))
 
-    exchanges_json = map(lambda entry: entry['fields'], exchanges_json)
     exchanges_map = dict()
     for exchange in exchanges_json:
-        if exchanges_map.get(exchange['marketplace_exchange']):
-            exchanges_map[exchange['marketplace_exchange']]['class_exchanges'].append(exchange)
-        else:
-            exchanges_map[exchange['marketplace_exchange']] = {
-                'id' : exchange['marketplace_exchange'],
-                'issuer' : exchange['issuer'],
-                'old_class' : exchange['old_class'],
-                'new_class' : exchange['new_class'],
-                'course_unit' : exchange['course_unit'],
-                'direct_exchange' : exchange['direct_exchange'],
-                'accepted' : exchange['accepted'],
-                'date' : exchange['date'],
-                'class_exchanges' : [exchange]
+        exchange_id = exchange['pk']  
+        exchange_fields = exchange['fields']  
+
+        if exchange_id and exchanges_map.get(exchange_id):
+            exchanges_map[exchange_id]['class_exchanges'].append(exchange_fields)
+        elif exchange_id:
+            exchanges_map[exchange_id] = {
+                'id' : exchange_id,
+                'issuer' : exchange_fields.get('issuer'),
+                'accepted' : exchange_fields.get('accepted'),
+                'date' : exchange_fields.get('date'),
+                'class_exchanges' : []
             }
+
+    for exchange_id, exchange in exchanges_map.items():
+        class_exchanges = MarketplaceExchangeClass.objects.filter(marketplace_exchange=exchange_id)
+        class_exchanges_json = json.loads(serializers.serialize('json', class_exchanges))
+        class_exchanges_json = list(map(lambda entry: entry['fields'], class_exchanges_json))  
+        for class_exchange in class_exchanges_json:
+            exchange['class_exchanges'].append({
+                'course_unit' : class_exchange.get('course_unit_name'),
+                'old_class' : class_exchange.get('old_class'),
+                'new_class' : class_exchange.get('new_class')
+            })
+
+    print("Resultado do pedido GET: ", list(exchanges_map.values()))
 
     return JsonResponse(list(exchanges_map.values()), safe=False)
 
