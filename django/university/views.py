@@ -3,6 +3,8 @@ import string
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.http.response import HttpResponse
+from rest_framework.views import APIView
+from django.core.paginator import Paginator
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule, update_schedule_accepted_exchanges
 from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, convert_sigarra_schedule
@@ -20,7 +22,7 @@ from university.models import Info
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.db import transaction
 import requests
 import os 
@@ -351,8 +353,7 @@ def submit_direct_exchange(request):
         update_schedule_accepted_exchanges(student, student_schedule, request.COOKIES)
         student_schedules[student] = build_student_schedule_dict(student_schedule)
 
-
-    exchange_model = DirectExchange(accepted=False)
+    exchange_model = DirectExchange(accepted=False, issuer=request.session["username"])
 
     (status, trailing) = build_new_schedules(student_schedules, exchanges, request.session["username"])
     if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
@@ -412,3 +413,53 @@ def verify_direct_exchange(request, token):
 
     except Exception as e:
         return HttpResponse(status=500)
+
+@api_view(["GET"])
+def direct_exchange_history(request):
+    exchangesT = DirectExchange.objects.filter(
+        issuer=request.session["username"],
+    )
+
+    exchanges_id =  list(map(lambda entry: entry.id, exchangesT))
+
+    q = Q(direct_exchange__in = exchanges_id) & ~Q(participant=request.session["username"])
+    exchanges = DirectExchangeParticipants.objects.filter(q)
+
+    exchanges_map = dict();
+    exchanges_json = json.loads(serializers.serialize('json', exchanges))
+    exchanges_json = map(lambda entry: entry['fields'], exchanges_json)
+    for exchange in exchanges_json:
+        exchange['other_student'] = exchange.pop('participant')
+        print(exchange)
+        if exchanges_map.get(exchange['direct_exchange']):
+            exchanges_map[exchange['direct_exchange']]['class_exchanges'].append(exchange)
+        else:
+            exchanges_map[exchange['direct_exchange']] = {
+                'id' : exchange['direct_exchange'],
+                'class_exchanges' : [exchange],
+                'status' : 'accepted' if exchange['accepted'] else 'pending' 
+            }
+
+    # exchange_status_filter: str = request.GET.get('filter')
+    # accepted_filter_values = ["pending", "accepted", "rejected"]
+    # if exchange_status_filter != None and exchange_status_filter in accepted_filter_values:
+    #     exchanges.filter(accepted=exchange_status_filter)  
+    # 
+    # paginator = Paginator(exchanges, 15)
+
+    return JsonResponse(list(exchanges_map.values()), safe=False)
+
+class DirectExchangeView(APIView):
+    def delete(self, request):
+        exchange_id = request.POST.get('exchange_id')
+        exchange = DirectExchange.objects.get(pk=exchange_id)
+        exchange_participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange_id)
+        
+        for participant in exchange_participants: 
+            # avisar os participantes
+            pass
+
+        # Apagar a troca direta
+        exchange.delete()
+        return JsonResponse({"status": "refactoring"}, safe=False)
+        

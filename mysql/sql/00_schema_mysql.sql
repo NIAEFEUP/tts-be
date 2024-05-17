@@ -142,6 +142,7 @@ CREATE TABLE `statistics` (
 
 CREATE TABLE `direct_exchange` (
   `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `issuer` varchar(32) NOT NULL,
   `accepted` boolean NOT NULL,
   `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY(`id`)
