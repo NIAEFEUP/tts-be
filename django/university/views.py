@@ -1,4 +1,5 @@
 import random
+from django.core.mail import send_mail
 import string
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -372,6 +373,12 @@ def submit_direct_exchange(request):
         if not(participant in tokens_to_generate):
             token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
             tokens_to_generate[participant] = token
+            send_mail(
+                'Confirmação de troca',
+                f'https://localhost:3100/tts/verify_direct_exchange/{token}',
+                'tts@exchange.com',
+                [f'up{participant}@up.pt'],
+                fail_silently=False)
         inserted_exchange.save()
     
     # 2. Send confirmation email
