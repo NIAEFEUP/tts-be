@@ -141,11 +141,20 @@ def exchange_overlap(student_schedules, student) -> bool:
     return False
 
 """
-    Returns name of course unit
+    Returns name of course unit given its id
 """
 def course_unit_name(course_unit_id):
     course_unit = CourseUnit.objects.get(sigarra_id=course_unit_id)
     return course_unit.name
+
+"""
+    Returns name of course unit given its acronym
+"""
+def course_unit_name_by_acronym(acronym):
+    course_units = CourseUnit.objects.filter(acronym=acronym)
+    if course_units.exists():
+        return course_units.first().name
+    return None
 
 def curr_semester_weeks():
     currdate = date.today()

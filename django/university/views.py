@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django.http.response import HttpResponse
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
-from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
+from university.exchange.utils import course_unit_name, course_unit_name_by_acronym, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
 from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
 from university.models import Faculty, MarketplaceExchangeClass
 from university.models import Course
@@ -286,6 +286,28 @@ def students_per_course_unit(request, course_unit_id):
 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+    
+"""
+    Returns student data
+"""    
+@api_view(["GET"])
+def student_data(request, codigo):
+    try:
+        url = f"https://sigarra.up.pt/feup/pt/mob_fest_geral.perfil?pv_codigo={codigo}"
+        response = requests.get(url, cookies=request.COOKIES)
+
+        if(response.status_code != 200):
+            return HttpResponse(status=response.status_code)
+
+        new_response = JsonResponse(response.json(), safe=False)
+
+        new_response.status_code = response.status_code
+
+        return new_response
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": e}, safe=False)
+    
 
 """
 Gets schedule from a specific class from a course unit from sigarra
@@ -435,7 +457,6 @@ def verify_direct_exchange(request, token):
     except Exception as e:
         return HttpResponse(status=500)
 
-
 @api_view(["GET"])
 def marketplace_exchange(request):
     exchanges = MarketplaceExchange.objects.all()
@@ -463,8 +484,9 @@ def marketplace_exchange(request):
         class_exchanges_json = json.loads(serializers.serialize('json', class_exchanges))
         class_exchanges_json = list(map(lambda entry: entry['fields'], class_exchanges_json))  
         for class_exchange in class_exchanges_json:
+            course_unit_name = course_unit_name_by_acronym(class_exchange.get('course_unit_name'))
             exchange['class_exchanges'].append({
-                'course_unit' : class_exchange.get('course_unit_name'),
+                'course_unit' : course_unit_name,
                 'old_class' : class_exchange.get('old_class'),
                 'new_class' : class_exchange.get('new_class')
             })
