@@ -6,7 +6,7 @@ from django.http.response import HttpResponse
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
-from university.exchange.utils import course_unit_name, course_unit_name_by_acronym, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
+from university.exchange.utils import course_unit_name, course_unit_name_by_id, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
 from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
 from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
@@ -338,6 +338,8 @@ def submit_marketplace_exchange_request(request):
     exchanges = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
+    print("Marketplace exchange: ", exchanges)
+
     (semana_ini, semana_fim) = curr_semester_weeks()
     curr_student = request.session["username"]
 
@@ -391,6 +393,8 @@ def submit_direct_exchange(request):
 
     exchange_choices = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
+
+    print("Direct exchhanges are: ", exchanges)
 
     # Add the other students schedule to the dictionary
     (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, request.COOKIES)
@@ -487,14 +491,14 @@ def marketplace_exchange(request):
 
     for exchange_id, exchange in exchanges_map.items():
         class_exchanges = MarketplaceExchangeClass.objects.filter(marketplace_exchange=exchange_id)
-        class_exchanges_json = json.loads(serializers.serialize('json', class_exchanges))
-        class_exchanges_json = list(map(lambda entry: entry['fields'], class_exchanges_json))  
-        for class_exchange in class_exchanges_json:
-            course_unit_name = course_unit_name_by_acronym(class_exchange.get('course_unit_name'))
+        
+        for class_exchange in class_exchanges:
+            course_unit_name = course_unit_name_by_id(class_exchange.course_unit_id)
             exchange['class_exchanges'].append({
                 'course_unit' : course_unit_name,
-                'old_class' : class_exchange.get('old_class'),
-                'new_class' : class_exchange.get('new_class')
+                'course_unit_id': class_exchange.course_unit_id,
+                'old_class' : class_exchange.old_class,
+                'new_class' : class_exchange.new_class
             })
 
     print("Resultado do pedido GET: ", list(exchanges_map.values()))

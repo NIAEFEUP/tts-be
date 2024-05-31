@@ -16,7 +16,7 @@ def get_student_schedule_url(username, semana_ini, semana_fim):
 def create_marketplace_exchange_on_db(exchanges, curr_student):
     marketplace_exchange = MarketplaceExchange.objects.create(issuer=curr_student, accepted=False)
     for exchange in exchanges:
-        MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
+        MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_id=exchange["course_unit_id"], course_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
    
 
 def build_marketplace_submission_schedule(schedule, submission, cookies, auth_student):
@@ -46,6 +46,9 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
         course_unit = curr_exchange["course_unit"]
         class_auth_student_goes_to = curr_exchange["old_class"]
         class_other_student_goes_to = curr_exchange["new_class"] # The other student goes to its new class
+
+        print("auth student goes to: ", class_auth_student_goes_to)
+        print("other student goes to: ", class_other_student_goes_to)
         
         # If participant is neither enrolled in that course unit or in that class
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
@@ -152,8 +155,8 @@ def course_unit_name(course_unit_id):
 """
     Returns name of course unit given its acronym
 """
-def course_unit_name_by_acronym(acronym):
-    course_units = CourseUnit.objects.filter(acronym=acronym)
+def course_unit_name_by_id(id):
+    course_units = CourseUnit.objects.filter(sigarra_id=id)
     if course_units.exists():
         return course_units.first().name
     return None
