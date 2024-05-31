@@ -21,6 +21,8 @@ urlpatterns = [
     path('verify_direct_exchange/<str:token>', views.verify_direct_exchange),
     path('students_per_course_unit/<int:course_unit_id>/', views.students_per_course_unit),
     path('submit_marketplace_exchange/', views.submit_marketplace_exchange_request),
-    path('marketplace_exchange/', views.marketplace_exchange)
+    path('marketplace_exchange/', views.marketplace_exchange),
+    path('direct_exchange/history/', views.direct_exchange_history),
+    path('direct_exchange/', views.DirectExchangeView.as_view())
 ]
 

@@ -77,7 +77,7 @@ def build_student_schedule_dicts(student_schedules, exchanges, semana_ini, seman
 
     return (ExchangeStatus.SUCCESS, None)
 
-def check_for_overlaps(student_schedules, exchanges, inserted_exchanges, exchange_db_model, auth_user):
+def create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_db_model, auth_user):
     if exchange_overlap(student_schedules, auth_user):
         return (ExchangeStatus.CLASSES_OVERLAP, None)
 
@@ -92,6 +92,7 @@ def check_for_overlaps(student_schedules, exchanges, inserted_exchanges, exchang
             old_class=curr_exchange["old_class"], 
             new_class=curr_exchange["new_class"],
             course_unit=curr_exchange["course_unit"],
+            course_unit_id=curr_exchange["course_unit_id"],
             direct_exchange=exchange_db_model,
             accepted=False
         ))
@@ -101,6 +102,7 @@ def check_for_overlaps(student_schedules, exchanges, inserted_exchanges, exchang
             old_class=curr_exchange["new_class"], # This is not a typo, the old class of the authenticted student is the new class of the other student
             new_class=curr_exchange["old_class"],
             course_unit=curr_exchange["course_unit"],
+            course_unit_id=curr_exchange["course_unit_id"],
             direct_exchange=exchange_db_model,
             accepted=False
         ))
@@ -202,10 +204,10 @@ def update_schedule_accepted_exchanges(student, schedule, cookies):
     direct_exchange_ids = DirectExchangeParticipants.objects.filter(
         participant=student, direct_exchange__accepted=True
     ).values_list('direct_exchange', flat=True)
-    direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids)
+    direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids).order_by('date')
 
     for exchange in direct_exchanges:
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant=student)
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant=student).order_by('date')
         (status, trailing) = update_schedule(schedule, participants, cookies) 
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
