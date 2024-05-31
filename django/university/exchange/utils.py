@@ -53,7 +53,7 @@ def build_student_schedule_dicts(student_schedules, exchanges, semana_ini, seman
 
     return (ExchangeStatus.SUCCESS, None)
 
-def check_for_overlaps(student_schedules, exchanges, inserted_exchanges, exchange_db_model, auth_user):
+def create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_db_model, auth_user):
     if exchange_overlap(student_schedules, auth_user):
         return (ExchangeStatus.CLASSES_OVERLAP, None)
 
@@ -68,6 +68,7 @@ def check_for_overlaps(student_schedules, exchanges, inserted_exchanges, exchang
             old_class=curr_exchange["old_class"], 
             new_class=curr_exchange["new_class"],
             course_unit=curr_exchange["course_unit"],
+            course_unit_id=curr_exchange["course_unit_id"],
             direct_exchange=exchange_db_model,
             accepted=False
         ))
@@ -77,6 +78,7 @@ def check_for_overlaps(student_schedules, exchanges, inserted_exchanges, exchang
             old_class=curr_exchange["new_class"], # This is not a typo, the old class of the authenticted student is the new class of the other student
             new_class=curr_exchange["old_class"],
             course_unit=curr_exchange["course_unit"],
+            course_unit_id=curr_exchange["course_unit_id"],
             direct_exchange=exchange_db_model,
             accepted=False
         ))

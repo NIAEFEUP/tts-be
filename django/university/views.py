@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule, update_schedule_accepted_exchanges
-from university.exchange.utils import ExchangeStatus, build_new_schedules, check_for_overlaps, convert_sigarra_schedule
+from university.exchange.utils import ExchangeStatus, build_new_schedules, create_direct_exchange_participants, convert_sigarra_schedule
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -332,10 +332,6 @@ def submit_direct_exchange(request):
     if(curr_student_schedule.status_code != 200):
         return HttpResponse(status=curr_student_schedule.status_code)
 
-    # TODO We need to change the fetched schedule with the exchange information we have in our database
-    # user_schedule_offset = DirectExchangeParticipants.objects.filter("""direct_exchange__accepted=True,""" participant=request.session["username"], accepted=True)
-    user_schedule_offset = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
-
     username = request.session["username"]
     schedule_data = json.loads(curr_student_schedule.content)["horario"]
 
@@ -360,7 +356,7 @@ def submit_direct_exchange(request):
         return JsonResponse({"error": "students-with-incorrect-classes"}, status=400, safe=False)
     
     inserted_exchanges = []
-    (status, trailing) = check_for_overlaps(student_schedules, exchanges, inserted_exchanges, exchange_model, request.session["username"])
+    (status, trailing) = create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_model, request.session["username"])
     if status == ExchangeStatus.CLASSES_OVERLAP:    
         return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
     
