@@ -6,7 +6,7 @@ from django.http.response import HttpResponse
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
-from university.exchange.utils import course_unit_name, course_unit_name_by_id, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
+from university.exchange.utils import course_unit_name, course_unit_by_id, curr_semester_weeks, get_student_data, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
 from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
 from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
@@ -299,8 +299,7 @@ def students_per_course_unit(request, course_unit_id):
 @api_view(["GET"])
 def student_data(request, codigo):
     try:
-        url = f"https://sigarra.up.pt/feup/pt/mob_fest_geral.perfil?pv_codigo={codigo}"
-        response = requests.get(url, cookies=request.COOKIES)
+        response = get_student_data(codigo, request.COOKIES)
 
         if(response.status_code != 200):
             return HttpResponse(status=response.status_code)
@@ -478,12 +477,14 @@ def marketplace_exchange(request):
         exchange_id = exchange['pk']  
         exchange_fields = exchange['fields']  
 
+        student = get_student_data(exchange_fields["issuer"], request.COOKIES)
+
         if exchange_id and exchanges_map.get(exchange_id):
             exchanges_map[exchange_id]['class_exchanges'].append(exchange_fields)
         elif exchange_id:
             exchanges_map[exchange_id] = {
                 'id' : exchange_id,
-                'issuer' : exchange_fields.get('issuer'),
+                'issuer' :  student.json(),
                 'accepted' : exchange_fields.get('accepted'),
                 'date' : exchange_fields.get('date'),
                 'class_exchanges' : []
@@ -492,13 +493,16 @@ def marketplace_exchange(request):
     for exchange_id, exchange in exchanges_map.items():
         class_exchanges = MarketplaceExchangeClass.objects.filter(marketplace_exchange=exchange_id)
         
+        
         for class_exchange in class_exchanges:
-            course_unit_name = course_unit_name_by_id(class_exchange.course_unit_id)
+            course_unit = course_unit_by_id(class_exchange.course_unit_id)
+            print("current class exchange is: ", class_exchange)
             exchange['class_exchanges'].append({
-                'course_unit' : course_unit_name,
+                'course_unit' : course_unit.name,
                 'course_unit_id': class_exchange.course_unit_id,
+                'course_unit_acronym': course_unit.acronym,
                 'old_class' : class_exchange.old_class,
-                'new_class' : class_exchange.new_class
+                'new_class' : class_exchange.new_class,
             })
 
     print("Resultado do pedido GET: ", list(exchanges_map.values()))

@@ -174,6 +174,7 @@ CREATE TABLE `marketplace_exchange_class` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `marketplace_exchange` INTEGER NOT NULL,
     `course_unit_name` varchar(256) NOT NULL,
+    `course_unit_acronym` varchar(256) NOT NULL,
     `course_unit_id` varchar(256) NOT NULL,
     `old_class` varchar(16) NOT NULL,
     `new_class` varchar(16) NOT NULL,

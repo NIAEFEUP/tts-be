@@ -10,13 +10,19 @@ class ExchangeStatus(Enum):
     CLASSES_OVERLAP = 3
     SUCCESS = 4
 
+def get_student_data(username, cookies):
+    url = f"https://sigarra.up.pt/feup/pt/mob_fest_geral.perfil?pv_codigo={username}"
+    response = requests.get(url, cookies=cookies)
+    return response
+
 def get_student_schedule_url(username, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
 
 def create_marketplace_exchange_on_db(exchanges, curr_student):
     marketplace_exchange = MarketplaceExchange.objects.create(issuer=curr_student, accepted=False)
     for exchange in exchanges:
-        MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_id=exchange["course_unit_id"], course_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
+        course_unit = course_unit_by_id(exchange["course_unit_id"])
+        MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_acronym=course_unit.acronym, course_unit_id=exchange["course_unit_id"], course_unitcourse_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
    
 
 def build_marketplace_submission_schedule(schedule, submission, cookies, auth_student):
@@ -42,17 +48,27 @@ def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
 
 def build_new_schedules(student_schedules, exchanges, auth_username):
     for curr_exchange in exchanges:
+        print("Other student is: ", curr_exchange["other_student"])
+        print("Auth student is: ", auth_username)
         other_student = curr_exchange["other_student"]
-        course_unit = curr_exchange["course_unit"]
+        course_unit = course_unit_by_id(curr_exchange["course_unit_id"])
+        course_unit = course_unit.acronym
         class_auth_student_goes_to = curr_exchange["old_class"]
         class_other_student_goes_to = curr_exchange["new_class"] # The other student goes to its new class
 
         print("auth student goes to: ", class_auth_student_goes_to)
         print("other student goes to: ", class_other_student_goes_to)
         
+        print("what in the hell? ", student_schedules[other_student])
+        print("course unit: ", course_unit)
+        
         # If participant is neither enrolled in that course unit or in that class
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
         auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[auth_username]
+        
+        print("other studenet valid: ", other_student_valid)
+        print("auth studenet valid: ", auth_user_valid)
+
         if not(other_student_valid) or not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
 
@@ -135,8 +151,6 @@ def exchange_overlap(student_schedules, student) -> bool:
             if key == other_key:
                 continue
 
-            print("other class schedule: ", other_class_schedule);
-
             (class_schedule_day, class_schedule_start, class_schedule_end) = (class_schedule["dia"], class_schedule["hora_inicio"], class_schedule["aula_duracao"] + class_schedule["hora_inicio"])
             (overlap_param_day, overlap_param_start, overlap_param_end) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"], other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"])
 
@@ -155,11 +169,9 @@ def course_unit_name(course_unit_id):
 """
     Returns name of course unit given its acronym
 """
-def course_unit_name_by_id(id):
+def course_unit_by_id(id):
     course_units = CourseUnit.objects.filter(sigarra_id=id)
-    if course_units.exists():
-        return course_units.first().name
-    return None
+    return course_units.first()
 
 def curr_semester_weeks():
     currdate = date.today()
