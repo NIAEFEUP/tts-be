@@ -1,5 +1,3 @@
-import random
-import string
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.http.response import HttpResponse
@@ -32,6 +30,7 @@ import datetime
 import time
 from django.utils import timezone
 from django.core.cache import cache
+import hashlib
 # Create your views here. 
 
 
@@ -230,10 +229,14 @@ def student_schedule(request, student):
             return HttpResponse(status=response.status_code)
 
         schedule_data = response.json()['horario']
+        old_schedule = hashlib.sha256(json.dumps(schedule_data, sort_keys=True).encode()).hexdigest()
 
         update_schedule_accepted_exchanges(student, schedule_data, request.COOKIES)
 
-        new_response = JsonResponse(convert_sigarra_schedule(schedule_data), safe=False)
+        new_schedule = hashlib.sha256(json.dumps(schedule_data, sort_keys=True).encode()).hexdigest()
+        sigarra_synchronized = old_schedule == new_schedule
+
+        new_response = JsonResponse({"schedule": convert_sigarra_schedule(schedule_data), "noChanges": sigarra_synchronized}, safe=False)
         new_response.status_code = response.status_code
         return new_response 
         
