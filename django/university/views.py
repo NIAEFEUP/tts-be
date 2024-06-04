@@ -9,16 +9,17 @@ from university.models import SlotProfessor
 from university.models import CourseMetadata
 from university.models import Statistics
 from university.models import Info
+from university.response.errors import course_unit_not_found_error
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
+from rest_framework import status
 from django.db.models import Max
 from django.db import transaction
 import json
 import os 
 from django.utils import timezone
-# Create your views here. 
-
+from django.forms.models import model_to_dict
 
 def get_field(value):
     return value.field
@@ -36,6 +37,14 @@ def faculty(request):
 def course(request, year):
     json_data = list(Course.objects.filter(year=year).values())
     return JsonResponse(json_data, safe=False)
+
+@api_view(['GET'])
+def course_unit_by_id(request, course_unit_id):
+    course_unit = CourseUnit.objects.filter(id=course_unit_id).first()
+    if(course_unit == None):
+        return JsonResponse(course_unit_not_found_error(course_unit_id), status=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(model_to_dict(course_unit), safe=False)
 
 """
     Return all the units from a course/major. 
