@@ -1,4 +1,5 @@
 from datetime import date
+import copy
 from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
 from enum import Enum
 import json
@@ -22,11 +23,10 @@ def create_marketplace_exchange_on_db(exchanges, curr_student):
     marketplace_exchange = MarketplaceExchange.objects.create(issuer=curr_student, accepted=False)
     for exchange in exchanges:
         course_unit = course_unit_by_id(exchange["course_unit_id"])
-        MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_acronym=course_unit.acronym, course_unit_id=exchange["course_unit_id"], course_unitcourse_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
+        MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_acronym=course_unit.acronym, course_unit_id=exchange["course_unit_id"], course_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
    
 
 def build_marketplace_submission_schedule(schedule, submission, cookies, auth_student):
-    
     for exchange in submission:
         course_unit = exchange["course_unit"]
         class_auth_student_goes_to = exchange["old_class"]
@@ -37,11 +37,13 @@ def build_marketplace_submission_schedule(schedule, submission, cookies, auth_st
         auth_user_valid = (class_auth_student_goes_from, course_unit) in schedule[auth_student]
         if not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
-        
-        schedule[(class_auth_student_goes_to, course_unit)] = get_class_from_sigarra(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to, cookies)# get class schedule
+
+        # print("Class from sigarra: ", get_class_from_sigarra(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to, cookies)[0])
+
+        schedule[auth_student][(class_auth_student_goes_to, course_unit)] = get_class_from_sigarra(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to, cookies)[0][0]# get class schedule
         del schedule[auth_student][(class_auth_student_goes_from, course_unit)] # remove old class of other student
 
-    return (ExchangeStatus.SUCCESS, None)     
+    return (ExchangeStatus.SUCCESS, None) 
 
 def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
@@ -144,10 +146,10 @@ def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: in
     return False
 
 
-def exchange_overlap(student_schedules, student) -> bool:
-    print("fogo: ", student_schedules)
-    for (key, class_schedule) in student_schedules[student].items():
-        for (other_key, other_class_schedule) in student_schedules[student].items():
+def exchange_overlap(student_schedules, username) -> bool:
+    for (key, class_schedule) in student_schedules[username].items():
+        for (other_key, other_class_schedule) in student_schedules[username].items():
+            print(f"({key}, {other_key})")
             if key == other_key:
                 continue
 
