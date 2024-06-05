@@ -477,8 +477,9 @@ def marketplace_exchange(request):
         exchange_fields = exchange['fields']  
 
         student = get_student_data(exchange_fields["issuer"], request.COOKIES)
-        
-        print("Current student: ", student.json())
+
+        if(student.json()["codigo"] == request.session["username"]):
+            continue
 
         if exchange_id and exchanges_map.get(exchange_id):
             exchanges_map[exchange_id]['class_exchanges'].append(exchange_fields)
