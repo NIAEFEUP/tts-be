@@ -1,5 +1,7 @@
+import csv
 from django.core.mail import send_mail
 from datetime import datetime, timedelta
+from types import new_class
 from django.utils import timezone
 from django.http.response import HttpResponse
 from rest_framework.views import APIView
@@ -419,6 +421,34 @@ def verify_direct_exchange(request, token):
 
     except Exception as e:
         return HttpResponse(status=500)
+
+@api_view(["GET"])
+def export_exchanges(request):
+
+    response = HttpResponse(
+        content_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="exchange_data.csv"'},
+    )
+
+    writer = csv.writer(response)
+    writer.writerow(["student", "course_unit", "old_class", "new_class"])
+
+    direct_exchange_ids = DirectExchangeParticipants.objects.filter(
+        direct_exchange__accepted=True
+    ).values_list('direct_exchange', flat=True)
+    direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids).order_by('date')
+
+    for exchange in direct_exchanges:
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange).order_by('date')
+        for participant in participants:
+            writer.writerow([
+                participant.participant,
+                participant.course_unit_id,
+                participant.old_class,
+                participant.new_class
+            ])
+
+    return response
 
 @api_view(["GET"])
 def direct_exchange_history(request):
