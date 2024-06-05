@@ -154,6 +154,7 @@ CREATE TABLE `direct_exchange_participants` (
   `old_class` varchar(16) NOT NULL,
   `new_class` varchar(16) NOT NULL,
   `course_unit` varchar(64) NOT NULL,
+  `course_unit_id` varchar(16) NOT NULL,
   `direct_exchange` INTEGER NOT NULL,
   `accepted` boolean NOT NULL,
   `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
