@@ -247,8 +247,8 @@ def update_schedule(student_schedule, exchanges, cookies):
 
     for exchange in exchanges:
         for i, schedule in enumerate(student_schedule):
-            ocorr_id = schedule["ocorrencia_id"]
-            if ocorr_id == exchange.course_unit_id:
+            if schedule["ucurr_sigla"] == exchange.course_unit:
+                ocorr_id = schedule["ocorrencia_id"]
                 class_type = schedule["tipo"]
 
                 unit_schedules = requests.get(get_unit_schedule_url(
