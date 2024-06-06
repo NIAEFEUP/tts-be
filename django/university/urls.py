@@ -23,6 +23,8 @@ urlpatterns = [
     path('student_data/<str:codigo>/', views.student_data),
     path('submit_marketplace_exchange/', views.submit_marketplace_exchange_request),
     path('marketplace_exchange/', views.marketplace_exchange),
+    path('is_admin/', views.is_admin),
+    path('export/', views.export_exchanges),
     path('direct_exchange/history/', views.direct_exchange_history),
     path('direct_exchange/', views.DirectExchangeView.as_view())
 ]

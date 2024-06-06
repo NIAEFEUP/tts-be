@@ -1,4 +1,7 @@
+import csv
+from django.core.mail import send_mail
 from datetime import datetime, timedelta
+from types import new_class
 from django.utils import timezone
 from django.http.response import HttpResponse
 from rest_framework.views import APIView
@@ -21,7 +24,7 @@ from university.models import DirectExchange
 from university.models import DirectExchangeParticipants
 from university.models import Statistics
 from university.models import Info
-from university.models import MarketplaceExchange
+from university.models import MarketplaceExchange, ExchangeAdmin
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
@@ -35,6 +38,7 @@ import datetime
 import time
 from django.utils import timezone
 from django.core.cache import cache
+import hashlib
 # Create your views here. 
 
 
@@ -202,6 +206,9 @@ def login(request):
             for cookie in response.cookies:
                 new_response.set_cookie(cookie.name, cookie.value, httponly=True, secure=True)
             
+            admin = ExchangeAdmin.objects.filter(username=username).exists()
+            request.session["admin"] = admin
+
             request.session["username"] = login_data["pv_login"]
             return new_response
         else:
@@ -233,10 +240,14 @@ def student_schedule(request, student):
             return HttpResponse(status=response.status_code)
 
         schedule_data = response.json()['horario']
+        old_schedule = hashlib.sha256(json.dumps(schedule_data, sort_keys=True).encode()).hexdigest()
 
         update_schedule_accepted_exchanges(student, schedule_data, request.COOKIES)
 
-        new_response = JsonResponse(convert_sigarra_schedule(schedule_data), safe=False)
+        new_schedule = hashlib.sha256(json.dumps(schedule_data, sort_keys=True).encode()).hexdigest()
+        sigarra_synchronized = old_schedule == new_schedule
+
+        new_response = JsonResponse({"schedule": convert_sigarra_schedule(schedule_data), "noChanges": sigarra_synchronized}, safe=False)
         new_response.status_code = response.status_code
         return new_response 
         
@@ -423,6 +434,12 @@ def submit_direct_exchange(request):
         if not(participant in tokens_to_generate):
             token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
             tokens_to_generate[participant] = token
+            send_mail(
+                'Confirmação de troca',
+                f'https://localhost:3100/tts/verify_direct_exchange/{token}',
+                'tts@exchange.com',
+                [f'up{participant}@up.pt'],
+                fail_silently=False)
         inserted_exchange.save()
     
     # 2. Send confirmation email
@@ -464,6 +481,44 @@ def verify_direct_exchange(request, token):
 
     except Exception as e:
         return HttpResponse(status=500)
+
+
+@api_view(["GET"])
+def is_admin(request):
+    return JsonResponse({"admin" : request.session["admin"]}, safe=False)
+
+@api_view(["GET"])
+def export_exchanges(request):
+
+    if not ExchangeAdmin.objects.filter(username=request.session["username"]).exists():
+        response = HttpResponse()
+        response.status_code = 403
+        return response
+
+    response = HttpResponse(
+        content_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="exchange_data.csv"'},
+    )
+
+    writer = csv.writer(response)
+    writer.writerow(["student", "course_unit", "old_class", "new_class"])
+
+    direct_exchange_ids = DirectExchangeParticipants.objects.filter(
+        direct_exchange__accepted=True
+    ).values_list('direct_exchange', flat=True)
+    direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids).order_by('date')
+
+    for exchange in direct_exchanges:
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange).order_by('date')
+        for participant in participants:
+            writer.writerow([
+                participant.participant,
+                participant.course_unit_id,
+                participant.old_class,
+                participant.new_class
+            ])
+
+    return response
 
 @api_view(["GET"])
 def marketplace_exchange(request):
