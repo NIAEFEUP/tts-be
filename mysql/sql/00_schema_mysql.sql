@@ -162,6 +162,26 @@ CREATE TABLE `direct_exchange_participants` (
   FOREIGN KEY (`direct_exchange`) REFERENCES `direct_exchange`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
+CREATE TABLE `marketplace_exchange` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `issuer` varchar(32) NOT NULL,
+  `accepted` boolean NOT NULL,
+  `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY(`id`)
+) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
+
+CREATE TABLE `marketplace_exchange_class` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `marketplace_exchange` INTEGER NOT NULL,
+    `course_unit_name` varchar(256) NOT NULL,
+    `course_unit_acronym` varchar(256) NOT NULL,
+    `course_unit_id` varchar(256) NOT NULL,
+    `old_class` varchar(16) NOT NULL,
+    `new_class` varchar(16) NOT NULL,
+    PRIMARY KEY(`id`),
+    FOREIGN KEY (`marketplace_exchange`) REFERENCES `marketplace_exchange`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
+
 CREATE TABLE `exchange_admin` (
   `id` INTEGER NOT NULL AUTO_INCREMENT,
   `username` varchar(32) NOT NULL UNIQUE,

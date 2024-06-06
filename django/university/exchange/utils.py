@@ -1,5 +1,6 @@
 from datetime import date
-from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, Professor, DirectExchange
+import copy
+from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
 from enum import Enum
 import json
 import requests
@@ -10,22 +11,66 @@ class ExchangeStatus(Enum):
     CLASSES_OVERLAP = 3
     SUCCESS = 4
 
+def get_student_data(username, cookies):
+    url = f"https://sigarra.up.pt/feup/pt/mob_fest_geral.perfil?pv_codigo={username}"
+    response = requests.get(url, cookies=cookies)
+    return response
+
 def get_student_schedule_url(username, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
+
+def create_marketplace_exchange_on_db(exchanges, curr_student):
+    marketplace_exchange = MarketplaceExchange.objects.create(issuer=curr_student, accepted=False)
+    for exchange in exchanges:
+        course_unit = course_unit_by_id(exchange["course_unit_id"])
+        MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_acronym=course_unit.acronym, course_unit_id=exchange["course_unit_id"], course_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
+   
+
+def build_marketplace_submission_schedule(schedule, submission, cookies, auth_student):
+    for exchange in submission:
+        course_unit = exchange["course_unit"]
+        class_auth_student_goes_to = exchange["old_class"]
+        class_auth_student_goes_from = exchange["new_class"]
+
+        print("schedule is: ", schedule[auth_student])
+        
+        auth_user_valid = (class_auth_student_goes_from, course_unit) in schedule[auth_student]
+        if not(auth_user_valid):
+            return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
+
+        # print("Class from sigarra: ", get_class_from_sigarra(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to, cookies)[0])
+
+        schedule[auth_student][(class_auth_student_goes_to, course_unit)] = get_class_from_sigarra(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to, cookies)[0][0]# get class schedule
+        del schedule[auth_student][(class_auth_student_goes_from, course_unit)] # remove old class of other student
+
+    return (ExchangeStatus.SUCCESS, None) 
 
 def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
 
 def build_new_schedules(student_schedules, exchanges, auth_username):
     for curr_exchange in exchanges:
+        print("Other student is: ", curr_exchange["other_student"])
+        print("Auth student is: ", auth_username)
         other_student = curr_exchange["other_student"]
-        course_unit = curr_exchange["course_unit"]
+        course_unit = course_unit_by_id(curr_exchange["course_unit_id"])
+        course_unit = course_unit.acronym
         class_auth_student_goes_to = curr_exchange["old_class"]
         class_other_student_goes_to = curr_exchange["new_class"] # The other student goes to its new class
+
+        print("auth student goes to: ", class_auth_student_goes_to)
+        print("other student goes to: ", class_other_student_goes_to)
+        
+        print("what in the hell? ", student_schedules[other_student])
+        print("course unit: ", course_unit)
         
         # If participant is neither enrolled in that course unit or in that class
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
         auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[auth_username]
+        
+        print("other studenet valid: ", other_student_valid)
+        print("auth studenet valid: ", auth_user_valid)
+
         if not(other_student_valid) or not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
 
@@ -101,9 +146,10 @@ def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: in
     return False
 
 
-def exchange_overlap(student_schedules, student) -> bool:
-    for (key, class_schedule) in student_schedules[student].items():
-        for (other_key, other_class_schedule) in student_schedules[student].items():
+def exchange_overlap(student_schedules, username) -> bool:
+    for (key, class_schedule) in student_schedules[username].items():
+        for (other_key, other_class_schedule) in student_schedules[username].items():
+            print(f"({key}, {other_key})")
             if key == other_key:
                 continue
 
@@ -116,11 +162,18 @@ def exchange_overlap(student_schedules, student) -> bool:
     return False
 
 """
-    Returns name of course unit
+    Returns name of course unit given its id
 """
 def course_unit_name(course_unit_id):
     course_unit = CourseUnit.objects.get(sigarra_id=course_unit_id)
     return course_unit.name
+
+"""
+    Returns name of course unit given its acronym
+"""
+def course_unit_by_id(id):
+    course_units = CourseUnit.objects.filter(sigarra_id=id)
+    return course_units.first()
 
 def curr_semester_weeks():
     currdate = date.today()
@@ -133,6 +186,16 @@ def curr_semester_weeks():
         semana_ini = "0101"
         semana_fim = "0601"
     return (year+semana_ini, year+semana_fim)
+
+def incorrect_class_error() -> str:
+    return "students-with-incorrect-classes"    
+
+def append_tts_info_to_sigarra_schedule(schedule):
+    course_unit = CourseUnit.objects.filter(sigarra_id=schedule['ocorrencia_id'])[0]
+            
+    schedule['url'] = course_unit.url
+    # The sigarra api does not return the course with the full name, just the acronym
+    schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
 
 def convert_sigarra_schedule(schedule_data):
     new_schedule_data = []
@@ -202,5 +265,28 @@ def update_schedule(student_schedule, exchanges, cookies):
 
     return (ExchangeStatus.SUCCESS, None)
 
+"""
+Util function to get the schedule of a class from sigarra
+"""
+def get_class_from_sigarra(course_unit_id, class_name, cookies):
+    (semana_ini, semana_fim) = curr_semester_weeks();
 
+    print("course unit id: ", course_unit_id)
 
+    response = requests.get(get_unit_schedule_url(
+            course_unit_id, 
+            semana_ini, 
+            semana_fim
+        ), cookies=cookies)
+
+    print("response is: ", response)
+
+    if(response.status_code != 200):
+        return None
+
+    schedule = json.loads(response.content)
+    classes = schedule["horario"]
+    class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))
+    theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
+        
+    return (class_schedule, theoretical_schedule)

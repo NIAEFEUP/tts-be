@@ -7,9 +7,13 @@ from django.http.response import HttpResponse
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
-from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule, update_schedule_accepted_exchanges
+from university.exchange.utils import course_unit_name, course_unit_by_id, curr_semester_weeks, get_student_data, get_student_schedule_url, build_student_schedule_dict, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
+from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
+from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
+from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
+from university.models import Faculty, MarketplaceExchangeClass
+from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, build_student_schedule_dicts, get_unit_schedule_url, update_schedule, update_schedule_accepted_exchanges
 from university.exchange.utils import ExchangeStatus, build_new_schedules, create_direct_exchange_participants, convert_sigarra_schedule
-from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
 from university.models import Schedule
@@ -20,7 +24,7 @@ from university.models import DirectExchange
 from university.models import DirectExchangeParticipants
 from university.models import Statistics
 from university.models import Info
-from university.models import ExchangeAdmin
+from university.models import MarketplaceExchange, ExchangeAdmin
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
@@ -297,34 +301,83 @@ def students_per_course_unit(request, course_unit_id):
 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
-
+    
+"""
+    Returns student data
+"""    
 @api_view(["GET"])
-def class_sigarra_schedule(request, course_unit_id, class_name):
-    (semana_ini, semana_fim) = curr_semester_weeks();
-
+def student_data(request, codigo):
     try:
-        response = requests.get(get_unit_schedule_url(
-            course_unit_id, 
-            semana_ini, 
-            semana_fim
-        ), cookies=request.COOKIES)
+        response = get_student_data(codigo, request.COOKIES)
 
         if(response.status_code != 200):
             return HttpResponse(status=response.status_code)
 
-        schedule = json.loads(response.content)
-        classes = schedule["horario"]
-        class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))
-        theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
+        new_response = JsonResponse(response.json(), safe=False)
 
-        new_response = JsonResponse(convert_sigarra_schedule(class_schedule + theoretical_schedule), safe=False)
         new_response.status_code = response.status_code
 
         return new_response
 
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
+    
 
+"""
+Gets schedule from a specific class from a course unit from sigarra
+"""
+@api_view(["GET"])
+def class_sigarra_schedule(request, course_unit_id, class_name):
+
+    try:
+        # return HttpResponse(status=response.status_code)
+        class_schedule_response = get_class_from_sigarra(course_unit_id, class_name, request.COOKIES)
+        
+        (class_schedule, theoretical_schedule) = class_schedule_response
+        new_response = JsonResponse(convert_sigarra_schedule(class_schedule + theoretical_schedule), safe=False)
+
+        return new_response
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": e}, safe=False)
+
+@api_view(["POST"])
+def submit_marketplace_exchange_request(request):
+    exchanges = request.POST.getlist('exchangeChoices[]')
+    exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
+
+    print("Marketplace exchange: ", exchanges)
+
+    (semana_ini, semana_fim) = curr_semester_weeks()
+    curr_student = request.session["username"]
+
+    curr_student_schedule = requests.get(get_student_schedule_url(
+        request.session["username"],
+        semana_ini,
+        semana_fim
+    ), cookies=request.COOKIES)
+
+    if(curr_student_schedule.status_code != 200):
+        return HttpResponse(status=curr_student_schedule.status_code)
+    
+    student_schedules = {}
+    student_schedules[curr_student] = build_student_schedule_dict(json.loads(curr_student_schedule.content)["horario"])
+    
+    student_schedule = list(student_schedules[curr_student].values())
+    update_schedule_accepted_exchanges(curr_student, student_schedule, request.COOKIES)
+    student_schedules[curr_student] = build_student_schedule_dict(student_schedule)
+
+    (status, new_marketplace_schedule) = build_marketplace_submission_schedule(student_schedules, exchanges, request.COOKIES, curr_student)
+    print("Student schedules: ", student_schedules[curr_student])
+    if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
+         return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
+
+    if exchange_overlap(student_schedules, curr_student):
+        return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+    
+    create_marketplace_exchange_on_db(exchanges, curr_student)
+    
+    return JsonResponse({"success": True}, safe=False)
 
 @api_view(["POST"])
 def submit_direct_exchange(request):
@@ -350,6 +403,9 @@ def submit_direct_exchange(request):
     exchange_choices = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
 
+    print("Direct exchhanges are: ", exchanges)
+
+    # Add the other students schedule to the dictionary
     (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, request.COOKIES)
     if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
         return HttpResponse(status=trailing)
@@ -363,7 +419,7 @@ def submit_direct_exchange(request):
 
     (status, trailing) = build_new_schedules(student_schedules, exchanges, request.session["username"])
     if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
-        return JsonResponse({"error": "students-with-incorrect-classes"}, status=400, safe=False)
+        return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
     
     inserted_exchanges = []
     (status, trailing) = create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_model, request.session["username"])
@@ -463,6 +519,49 @@ def export_exchanges(request):
             ])
 
     return response
+
+@api_view(["GET"])
+def marketplace_exchange(request):
+    exchanges = MarketplaceExchange.objects.all()
+
+    exchanges_json = json.loads(serializers.serialize('json', exchanges))
+
+    exchanges_map = dict()
+    for exchange in exchanges_json:
+        exchange_id = exchange['pk']  
+        exchange_fields = exchange['fields']  
+
+        student = get_student_data(exchange_fields["issuer"], request.COOKIES)
+
+        if(student.json()["codigo"] == request.session["username"]):
+            continue
+
+        if exchange_id and exchanges_map.get(exchange_id):
+            exchanges_map[exchange_id]['class_exchanges'].append(exchange_fields)
+        elif exchange_id:
+            exchanges_map[exchange_id] = {
+                'id' : exchange_id,
+                'issuer' :  student.json(),
+                'accepted' : exchange_fields.get('accepted'),
+                'date' : exchange_fields.get('date'),
+                'class_exchanges' : []
+            }
+
+    for exchange_id, exchange in exchanges_map.items():
+        class_exchanges = MarketplaceExchangeClass.objects.filter(marketplace_exchange=exchange_id)
+        
+        for class_exchange in class_exchanges:
+            course_unit = course_unit_by_id(class_exchange.course_unit_id)
+            print("current class exchange is: ", class_exchange)
+            exchange['class_exchanges'].append({
+                'course_unit' : course_unit.name,
+                'course_unit_id': class_exchange.course_unit_id,
+                'course_unit_acronym': course_unit.acronym,
+                'old_class' : class_exchange.old_class,
+                'new_class' : class_exchange.new_class,
+            })
+
+    return JsonResponse(list(exchanges_map.values()), safe=False)
 
 @api_view(["GET"])
 def direct_exchange_history(request):
