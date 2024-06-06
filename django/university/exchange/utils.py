@@ -105,6 +105,8 @@ def create_direct_exchange_participants(student_schedules, exchanges, inserted_e
     for curr_exchange in exchanges:
         other_student = curr_exchange["other_student"]
 
+        course_unit = course_unit_by_id(curr_exchange["course_unit_id"])
+
         if exchange_overlap(student_schedules, other_student):
             return (ExchangeStatus.CLASSES_OVERLAP, None)
     
@@ -112,7 +114,7 @@ def create_direct_exchange_participants(student_schedules, exchanges, inserted_e
             participant=curr_exchange["other_student"],
             old_class=curr_exchange["old_class"], 
             new_class=curr_exchange["new_class"],
-            course_unit=curr_exchange["course_unit"],
+            course_unit=course_unit.acronym,
             course_unit_id=curr_exchange["course_unit_id"],
             direct_exchange=exchange_db_model,
             accepted=False
@@ -122,7 +124,7 @@ def create_direct_exchange_participants(student_schedules, exchanges, inserted_e
             participant=auth_user,
             old_class=curr_exchange["new_class"], # This is not a typo, the old class of the authenticted student is the new class of the other student
             new_class=curr_exchange["old_class"],
-            course_unit=curr_exchange["course_unit"],
+            course_unit=course_unit.acronym,
             course_unit_id=curr_exchange["course_unit_id"],
             direct_exchange=exchange_db_model,
             accepted=False
