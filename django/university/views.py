@@ -218,7 +218,17 @@ def login(request):
 
 @api_view(["POST"])
 def logout(request):
-    del request.session["username"]
+
+    try:
+        del request.session["username"]
+    except KeyError:
+        pass
+
+    try:
+        del request.session["admin"]
+    except KeyError:
+        pass
+
     return HttpResponse(status=200)
 
 """
@@ -485,7 +495,7 @@ def verify_direct_exchange(request, token):
 
 @api_view(["GET"])
 def is_admin(request):
-    return JsonResponse({"admin" : request.session["admin"]}, safe=False)
+    return JsonResponse({"admin" : request.session.get("admin", False)}, safe=False)
 
 @api_view(["GET"])
 def export_exchanges(request):

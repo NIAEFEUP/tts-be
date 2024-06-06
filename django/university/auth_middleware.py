@@ -16,6 +16,8 @@ class AuthMiddleware:
             '/is_admin/',
             '/export/',
             '/direct_exchange/history/',
+            '/marketplace_exchange/',
+            '/submit_marketplace_exchange/',
         ]
 
     def __call__(self, request):
@@ -33,7 +35,7 @@ class AuthMiddleware:
         if not in_paths:
             return self.get_response(request)
 
-        if not request.session["username"]:
+        if not request.session.get("username", False):
             return HttpResponseForbidden()
 
         return self.get_response(request)
