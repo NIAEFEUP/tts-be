@@ -247,8 +247,8 @@ def update_schedule(student_schedule, exchanges, cookies):
 
     for exchange in exchanges:
         for i, schedule in enumerate(student_schedule):
-            if schedule["ucurr_sigla"] == exchange.course_unit:
-                ocorr_id = schedule["ocorrencia_id"]
+            ocorr_id = schedule["ocorrencia_id"]
+            if ocorr_id == exchange.course_unit_id:
                 class_type = schedule["tipo"]
 
                 unit_schedules = requests.get(get_unit_schedule_url(
@@ -259,6 +259,8 @@ def update_schedule(student_schedule, exchanges, cookies):
 
                 if unit_schedules.status_code != 200:
                     return (ExchangeStatus.FETCH_SCHEDULE_ERROR, unit_schedules.status_code)
+
+                # TODO if old_class schedule is different from current schedule, abort
 
                 for unit_schedule in unit_schedules.json()["horario"]:
                     for turma in unit_schedule["turmas"]:
