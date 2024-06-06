@@ -1,4 +1,6 @@
 import csv
+from django.utils.html import strip_tags
+from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from datetime import datetime, timedelta
 from types import new_class
@@ -6,7 +8,7 @@ from django.utils import timezone
 from django.http.response import HttpResponse
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
-from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
+from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, DOMAIN
 from university.exchange.utils import course_unit_name, course_unit_by_id, curr_semester_weeks, get_student_data, get_student_schedule_url, build_student_schedule_dict, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
 from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
@@ -415,8 +417,6 @@ def submit_direct_exchange(request):
     exchange_choices = request.POST.getlist('exchangeChoices[]')
     exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
 
-    print("Direct exchhanges are: ", exchanges)
-
     # Add the other students schedule to the dictionary
     (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, request.COOKIES)
     if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
@@ -450,16 +450,15 @@ def submit_direct_exchange(request):
         if not(participant in tokens_to_generate):
             token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
             tokens_to_generate[participant] = token
+            html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}tts/verify_direct_exchange/{token}"})
             send_mail(
                 'Confirmação de troca',
-                f'https://localhost:3100/tts/verify_direct_exchange/{token}',
+                strip_tags(html_message),
                 'tts@exchange.com',
                 [f'up{participant}@up.pt'],
                 fail_silently=False)
         inserted_exchange.save()
     
-    # 2. Send confirmation email
-
     return JsonResponse({"success": True}, safe=False)
 
 @api_view(["POST"])

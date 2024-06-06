@@ -35,6 +35,7 @@ JWT_KEY= CONFIG['JWT_KEY']
 DEBUG = True
 ALLOWED_HOSTS = ['0.0.0.0', 'localhost']
 
+DOMAIN = os.getenv('DOMAIN')
 
 # Application definition
 
@@ -68,7 +69,9 @@ ROOT_URLCONF = 'tts_be.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'university/exchange/emails')
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
