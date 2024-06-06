@@ -140,12 +140,22 @@ CREATE TABLE `statistics` (
   `last_updated` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE `direct_exchange` (
+CREATE TABLE `marketplace_exchange` (
   `id` INTEGER NOT NULL AUTO_INCREMENT,
   `issuer` varchar(32) NOT NULL,
   `accepted` boolean NOT NULL,
   `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY(`id`)
+) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
+
+CREATE TABLE `direct_exchange` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `issuer` varchar(32) NOT NULL,
+  `accepted` boolean NOT NULL,
+  `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `marketplace_exchange_id` INTEGER DEFAULT NULL,
+  PRIMARY KEY(`id`),
+  FOREIGN KEY (`marketplace_exchange_id`) REFERENCES `marketplace_exchange`(`id`)
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
 CREATE TABLE `direct_exchange_participants` (
@@ -160,14 +170,6 @@ CREATE TABLE `direct_exchange_participants` (
   `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY(`id`),
   FOREIGN KEY (`direct_exchange`) REFERENCES `direct_exchange`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
-
-CREATE TABLE `marketplace_exchange` (
-  `id` INTEGER NOT NULL AUTO_INCREMENT,
-  `issuer` varchar(32) NOT NULL,
-  `accepted` boolean NOT NULL,
-  `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY(`id`)
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
 CREATE TABLE `marketplace_exchange_class` (

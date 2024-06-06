@@ -396,6 +396,8 @@ def submit_direct_exchange(request):
 
     student_schedules = {}
 
+    marketplaceStartedExchangeId = request.POST.get("marketplaceId")
+
     curr_student_schedule = requests.get(get_student_schedule_url(
         request.session["username"],
         semana_ini,
@@ -425,7 +427,11 @@ def submit_direct_exchange(request):
         update_schedule_accepted_exchanges(student, student_schedule, request.COOKIES)
         student_schedules[student] = build_student_schedule_dict(student_schedule)
 
-    exchange_model = DirectExchange(accepted=False, issuer=request.session["username"])
+    marketplace_exchange = None
+    if(marketplaceStartedExchangeId != None):
+        marketplace_exchange = MarketplaceExchange.objects.filter(id=int(marketplaceStartedExchangeId)).first()
+
+    exchange_model = DirectExchange(accepted=False, issuer=request.session["username"], marketplace_exchange=marketplace_exchange)
 
     (status, trailing) = build_new_schedules(student_schedules, exchanges, request.session["username"])
     if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
@@ -475,7 +481,16 @@ def verify_direct_exchange(request, token):
             accepted_participants += participant.accepted
 
         if accepted_participants == len(all_participants):
-            DirectExchange.objects.filter(id=int(exchange_info["exchange_id"])).update(accepted=True)
+            direct_exchange = DirectExchange.objects.filter(id=int(exchange_info["exchange_id"]))
+            direct_exchange.update(accepted=True)
+
+            marketplace_exchange = direct_exchange.first().marketplace_exchange
+
+            if(marketplace_exchange != None):
+                direct_exchange_object = direct_exchange.first()
+                direct_exchange_object.marketplace_exchange = None
+                direct_exchange_object.save()
+                marketplace_exchange.delete()
 
         if cache.get(token) != None:
             return JsonResponse({"verified": False}, safe=False, status=403)
@@ -490,6 +505,7 @@ def verify_direct_exchange(request, token):
         return JsonResponse({"verified": True}, safe=False)
 
     except Exception as e:
+        print("Error: ", e)
         return HttpResponse(status=500)
 
 
