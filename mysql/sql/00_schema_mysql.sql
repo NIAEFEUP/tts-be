@@ -162,6 +162,12 @@ CREATE TABLE `direct_exchange_participants` (
   FOREIGN KEY (`direct_exchange`) REFERENCES `direct_exchange`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
+CREATE TABLE `exchange_admin` (
+  `id` INTEGER NOT NULL AUTO_INCREMENT,
+  `username` varchar(32) NOT NULL UNIQUE,
+  PRIMARY KEY(`id`)
+) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
+
 -- Add primary keys 
 alter TABLE faculty ADD PRIMARY KEY (`acronym`);
 

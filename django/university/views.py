@@ -20,6 +20,7 @@ from university.models import DirectExchange
 from university.models import DirectExchangeParticipants
 from university.models import Statistics
 from university.models import Info
+from university.models import ExchangeAdmin
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework.decorators import api_view
@@ -201,6 +202,9 @@ def login(request):
             for cookie in response.cookies:
                 new_response.set_cookie(cookie.name, cookie.value, httponly=True, secure=True)
             
+            admin = ExchangeAdmin.objects.filter(username=username).exists()
+            request.session["admin"] = admin
+
             request.session["username"] = login_data["pv_login"]
             return new_response
         else:
@@ -422,8 +426,18 @@ def verify_direct_exchange(request, token):
     except Exception as e:
         return HttpResponse(status=500)
 
+
+@api_view(["GET"])
+def is_admin(request):
+    return JsonResponse({"admin" : request.session["admin"]}, safe=False)
+
 @api_view(["GET"])
 def export_exchanges(request):
+
+    if not ExchangeAdmin.objects.filter(username=request.session["username"]).exists():
+        response = HttpResponse()
+        response.status_code = 403
+        return response
 
     response = HttpResponse(
         content_type="text/csv",
