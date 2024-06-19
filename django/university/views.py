@@ -590,29 +590,37 @@ def marketplace_exchange(request):
 
 @api_view(["GET"])
 def direct_exchange_history(request):
-    exchangesT = DirectExchange.objects.filter(
-        issuer=request.session["username"],
+    username = request.session["username"]
+    my_participations = DirectExchangeParticipants.objects.filter(
+         participant = username,
     )
 
-    exchanges_id =  list(map(lambda entry: entry.id, exchangesT))
+    direct_exchanges_id = list(map(lambda entry: entry.direct_exchange.id, my_participations))
 
-    q = Q(direct_exchange__in = exchanges_id) & ~Q(participant=request.session["username"])
-    exchanges = DirectExchangeParticipants.objects.filter(q)
+    direct_exchanges = DirectExchange.objects.filter(
+        Q(id__in = direct_exchanges_id)
+    )
 
     exchanges_map = dict();
-    exchanges_json = json.loads(serializers.serialize('json', exchanges))
-    exchanges_json = map(lambda entry: entry['fields'], exchanges_json)
-    for exchange in exchanges_json:
-        exchange['other_student'] = exchange.pop('participant')
-        print(exchange)
-        if exchanges_map.get(exchange['direct_exchange']):
-            exchanges_map[exchange['direct_exchange']]['class_exchanges'].append(exchange)
-        else:
-            exchanges_map[exchange['direct_exchange']] = {
-                'id' : exchange['direct_exchange'],
-                'class_exchanges' : [exchange],
-                'status' : 'accepted' if exchange['accepted'] else 'pending' 
-            }
+    for direct_exchange in direct_exchanges:
+        exchanges_map[direct_exchange.id] = {
+            'id' : direct_exchange.id,
+            'class_exchanges' : [],
+            'issuer' : direct_exchange.issuer,
+            'status' : 'accepted' if direct_exchange.accepted else 'pending'
+        }
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange = direct_exchange.id)
+        for participant in participants:
+            if(participant.participant == direct_exchange.issuer):
+                continue
+            exchanges_map[direct_exchange.id]['class_exchanges'].append({
+                'course_unit' : participant.course_unit,
+                'course_unit_id' : participant.course_unit_id,
+                'old_class' : participant.old_class,
+                'new_class' : participant.new_class,
+                'accepted' : participant.accepted,
+                'other_student' : participant.participant
+            })
 
     # exchange_status_filter: str = request.GET.get('filter')
     # accepted_filter_values = ["pending", "accepted", "rejected"]
