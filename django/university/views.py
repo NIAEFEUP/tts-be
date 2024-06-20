@@ -398,7 +398,7 @@ def submit_direct_exchange(request):
 
     student_schedules = {}
 
-    marketplaceStartedExchangeId = request.POST.get("marketplaceId")
+    marketplaceStartedExchangeId = request.POST.get("marketplace_exchange_id")
 
     curr_student_schedule = requests.get(get_student_schedule_url(
         request.session["username"],
