@@ -48,6 +48,17 @@ We need to clean the database to repopulate it, since the way the mysql containe
 
 #### Running the container
 
+Before running docker, you have to create an `.env` file with required environment variables for the backend to work.
+
+```bash
+cp .env.dev .env
+```
+
+And then you need to set the correct desired values in the `.env` file. 
+
+*The `.env` file is not already on the repository in order to prevent sensitive information to be leaked. This way, the file with default non important values (`.env.dev`) serves as a template, while the real file with important sensitive values is on `.gitignore` so it is never accidentally
+uploaded to `github` with sensitive information.*
+
 ```yaml
 docker compose up 
 ```
@@ -57,3 +68,10 @@ docker compose up
 
 - There are some times on the first execution of this command that django will start giving a`2` error. If that happens, you need to close the container with `docker compose down` and then turning it on with `docker compose up` again.
 
+#### Accessing the development database
+
+We are currently using `phpmyadmin` and you can access it
+
+1. Go to `localhost:4000`
+
+2. On the login screen, both the username and password are `root`. This is fine, since this is only a development environment
