@@ -95,7 +95,7 @@ CREATE TABLE `class` (
 --
 
 CREATE TABLE `slot` (
-  `id` INTEGER AUTO_INCREMENT PRIMARY KEY,
+  `id` INTEGER PRIMARY KEY,
   `lesson_type` varchar(3) NOT NULL,
   `day` tinyint(3) NOT NULL,
   `start_time` decimal(3,1) NOT NULL,
@@ -116,7 +116,7 @@ CREATE TABLE `slot` (
 
 CREATE TABLE `professor` (
   `id` INTEGER PRIMARY KEY,
-  `professor_acronym` varchar(16),
+  `professor_acronym` varchar(32),
   `professor_name` varchar(100)
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
