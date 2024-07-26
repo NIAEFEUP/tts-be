@@ -103,7 +103,7 @@ CREATE TABLE `slot` (
   `location` varchar(31) NOT NULL,
   `is_composed` boolean NOT NULL,
   `professor_id` int (11),
-  FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  `last_updated` datetime NOT NULL
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
 -- --------------------------------------------------------
@@ -111,12 +111,12 @@ CREATE TABLE `slot` (
 -- Table structure for table `slot_class`
 --
 CREATE TABLE `slot_class` (
-  `class_id` INTEGER,
-  `slot_id` INTEGER,
+  `slot_id` INTEGER NOT NULL,
+  `class_id` INTEGER NOT NULL,
   FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (`slot_id`) REFERENCES `slot` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   PRIMARY KEY (`slot_id`, `class_id`)
-)
+) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
 -- -------------------------------------------------------- 
 
@@ -190,11 +190,6 @@ CREATE INDEX `course_metadata_index` ON `course_metadata` (`course_id`, `course_
 --
 CREATE UNIQUE INDEX `class_uniqueness` ON `class` (`name`, `course_unit_id`);
 CREATE INDEX `class_course_unit_id` ON `class` (`course_unit_id`);
-
---
--- Indexes for table `slot`
---
-CREATE INDEX `slot_course_unit_id` ON `slot` (`class_id`);
 
 --
 -- Indexes for table `statistics`
