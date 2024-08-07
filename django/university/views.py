@@ -17,6 +17,7 @@ from rest_framework.decorators import api_view
 from rest_framework import status
 from django.db.models import Max
 from django.db import transaction
+from university.controllers.ClassController import ClassController
 import json
 import os
 from django.utils import timezone
@@ -34,7 +35,7 @@ def faculty(request):
 
 
 """
-    Returns all the major/major.  
+    Returns all the major/major.
     REQUEST: http://localhost:8000/course/<int:year>
 """
 
@@ -55,7 +56,7 @@ def course_unit_by_id(request, course_unit_id):
 
 
 """
-    Return all the units from a course/major. 
+    Return all the units from a course/major.
     REQUEST: course_units/<int:course_id>/<int:year>/<int:semester>/
 """
 
@@ -69,10 +70,13 @@ def course_units(request, course_id, year, semester):
     json_data = list()
 
     # For each object in those course unit year objects we append the CourseUnit dictionary
-    for course_units in course_units_metadata:
-        course_units.__dict__.update(course_units.course_unit.__dict__)
-        del course_units.__dict__["_state"]
-        json_data.append(course_units.__dict__)
+    for course_unit_metadata in course_units_metadata:
+        course_unit_metadata.__dict__.update(
+            course_unit_metadata.course_unit.__dict__)
+
+        del course_unit_metadata.__dict__["_state"]
+
+        json_data.append(course_unit_metadata.__dict__)
 
     course = Course.objects.get(id=course_id)
 
@@ -94,35 +98,9 @@ def course_units(request, course_id, year, semester):
 """
 
 
-@api_view(['GET'])
+@ api_view(['GET'])
 def classes(request, course_unit_id):
-    classes = list(Class.objects.filter(
-        course_unit=course_unit_id).order_by('name').values())
-    for class_obj in classes:
-        slot_ids = SlotClass.objects.filter(
-            class_field=class_obj['id']).values_list('slot_id', flat=True)
-        slots = list(Slot.objects.filter(id__in=slot_ids).values())
-
-        for slot_obj in slots:
-            slot_professors = list(SlotProfessor.objects.filter(
-                slot_id=slot_obj['id']).values())
-
-            professors = []
-
-            for slot_professor in slot_professors:
-                professor = Professor.objects.get(
-                    id=slot_professor['professor_id'])
-                professors.append({
-                    'id': professor.id,
-                    'acronym': professor.professor_acronym,
-                    'name': professor.professor_name
-                })
-
-            slot_obj['professors'] = professors
-
-        class_obj['slots'] = slots
-
-    return JsonResponse(classes, safe=False)
+    return JsonResponse(ClassController.get_classes(course_unit_id), safe=False)
 
 
 """
@@ -130,7 +108,7 @@ def classes(request, course_unit_id):
 """
 
 
-@api_view(['GET'])
+@ api_view(['GET'])
 def data(request):
     name = request.GET.get('name')
     password = request.GET.get('password')
@@ -146,7 +124,7 @@ def data(request):
 """
 
 
-@api_view(["GET"])
+@ api_view(["GET"])
 def professor(request, slot):
     slot_professors = list(SlotProfessor.objects.filter(slot_id=slot).values())
 
@@ -168,7 +146,7 @@ def professor(request, slot):
 """
 
 
-@api_view(["GET"])
+@ api_view(["GET"])
 def info(request):
     info = Info.objects.first()
     if info:
