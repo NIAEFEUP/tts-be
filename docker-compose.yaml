@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   db:
-    platform: linux/arm64
+    #platform: linux/arm64
     build: ./mysql
     container_name: tts_db
     volumes:
@@ -33,6 +33,12 @@ services:
       - ./django/:/usr/src/django/
     ports:
       - 8100:8000
+
+  fetcher:
+    build: ./fetcher
+    container_name: tts_fetcher
+    volumes:
+      - ./fetcher/:/fetcher/
 
   redis_service:
     image: redis:6.2-bullseye
