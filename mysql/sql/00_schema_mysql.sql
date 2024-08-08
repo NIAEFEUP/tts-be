@@ -156,18 +156,6 @@ CREATE TABLE `info` (
 
 -- --------------------------------------------------------
 
--- Table structure for table `statistics`
--- 
-
-CREATE TABLE `statistics` (
-  `id` INTEGER AUTO_INCREMENT PRIMARY KEY,
-  `course_unit_id` int(11) NOT NULL,
-  `acronym` varchar(10) NOT NULL,
-  `visited_times` int(11) NOT NULL,
-  `last_updated` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-
 --
 -- Indexes for table `course`
 --
@@ -190,8 +178,3 @@ CREATE INDEX `course_metadata_index` ON `course_metadata` (`course_id`, `course_
 --
 CREATE UNIQUE INDEX `class_uniqueness` ON `class` (`name`, `course_unit_id`);
 CREATE INDEX `class_course_unit_id` ON `class` (`course_unit_id`);
-
---
--- Indexes for table `statistics`
---
-CREATE INDEX `statistics` ON `statistics` (`course_unit_id`);

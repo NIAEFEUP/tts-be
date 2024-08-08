@@ -7,16 +7,13 @@ from university.models import Slot
 from university.models import Professor
 from university.models import SlotProfessor
 from university.models import CourseMetadata
-from university.models import Statistics
 from university.models import Info
 from university.models import SlotClass
 from university.response.errors import course_unit_not_found_error
 from django.http import JsonResponse
-from django.core import serializers
 from rest_framework.decorators import api_view
 from rest_framework import status
 from django.db.models import Max
-from django.db import transaction
 import json
 import os
 from django.utils import timezone
@@ -74,18 +71,6 @@ def course_units(request, course_id, year, semester):
         del course_units.__dict__["_state"]
         json_data.append(course_units.__dict__)
 
-    course = Course.objects.get(id=course_id)
-
-    with transaction.atomic():
-        statistics, created = Statistics.objects.select_for_update().get_or_create(
-            course_unit_id=course_id,
-            acronym=course.acronym,
-            defaults={"visited_times": 0, "last_updated": timezone.now()},
-        )
-        statistics.visited_times += 1
-        statistics.last_updated = timezone.now()
-        statistics.save()
-
     return JsonResponse(json_data, safe=False)
 
 
@@ -123,22 +108,6 @@ def classes(request, course_unit_id):
         class_obj['slots'] = slots
 
     return JsonResponse(classes, safe=False)
-
-
-"""
-    Returns the statistics of the requests.
-"""
-
-
-@api_view(['GET'])
-def data(request):
-    name = request.GET.get('name')
-    password = request.GET.get('password')
-    if name == os.environ['STATISTICS_NAME'] and password == os.environ['STATISTICS_PASS']:
-        json_data = serializers.serialize("json", Statistics.objects.all())
-        return HttpResponse(json_data, content_type='application/json')
-    else:
-        return HttpResponse(status=401)
 
 
 """
