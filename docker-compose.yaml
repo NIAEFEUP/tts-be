@@ -1,10 +1,11 @@
-version: "3.7" 
+version: "3.7"
 
 services:
   db:
+    #platform: linux/arm64
     build: ./mysql
     container_name: tts_db
-    volumes: 
+    volumes:
       - ./mysql/data:/var/lib/mysql
     env_file:
       - mysql/.env.dev
@@ -23,7 +24,7 @@ services:
       - 4000:80
 
   django:
-    build: ./django 
+    build: ./django
     container_name: tts_django
     env_file:
       - django/.env.dev
@@ -32,7 +33,6 @@ services:
       - ./django/:/usr/src/django/
     ports:
       - 8100:8000
-      
 
   fetcher:
     build: ./fetcher
@@ -44,5 +44,5 @@ services:
     image: redis:6.2-bullseye
     container_name: tts_redis
     restart: always
-    ports: 
-      - '6379:6379'
+    ports:
+      - "6379:6379"
