@@ -23,3 +23,5 @@ django/celerybeat-schedule
 
 # stats related graphs
 django/university/stats_graphs/*
+
+httpd/shibboleth/*.pem
