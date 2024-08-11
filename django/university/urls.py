@@ -27,5 +27,9 @@ urlpatterns = [
     path('export/', views.export_exchanges),
     path('direct_exchange/history/', views.direct_exchange_history),
     path('direct_exchange/', views.DirectExchangeView.as_view())
+    path('course_unit/<int:course_unit_id>/', views.course_unit_by_id),
+    path('class/<int:course_unit_id>/', views.classes),
+    path('professors/<int:slot>/', views.professor),
+    path('info/', views.info)
 ]
 
