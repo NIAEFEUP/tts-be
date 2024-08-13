@@ -70,8 +70,13 @@ docker compose up
 
 #### Accessing the development database
 
-We are currently using `phpmyadmin` and you can access it
+We are currently using `pgadmin` and you can access it
 
 1. Go to `localhost:4000`
 
-2. On the login screen, both the username and password are `root`. This is fine, since this is only a development environment
+2. On the login screen, both the credentials are as follows:
+   
+    - Email: admin@example.com
+    - Password: admin
+    
+    This is fine, since this is only a development environment.

@@ -25,7 +25,7 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     ports:
-      - 5050:80
+      - 4000:80
 
   django:
     build: ./django
