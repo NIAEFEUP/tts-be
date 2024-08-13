@@ -13,7 +13,7 @@ SET time_zone = "+00:00";
 
 
 CREATE TABLE `faculty` (
-  `acronym` varchar(10) PRIMARY KEY ,
+  `acronym` varchar(10) PRIMARY KEY,
   `name` text,
   `last_updated` datetime NOT NULL
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
@@ -55,7 +55,7 @@ CREATE TABLE `course_unit` (
   `year` smallint(6) NOT NULL,
   `schedule_url` varchar(2000) DEFAULT NULL,
   `last_updated` datetime NOT NULL,
-  `hash` varchar(2000),
+  `hash` varchar(64),
   FOREIGN KEY (`course_id`) REFERENCES `course`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
@@ -96,7 +96,7 @@ CREATE TABLE `class` (
 --
 
 CREATE TABLE `slot` (
-  `id` INTEGER AUTO_INCREMENT PRIMARY KEY,
+  `id` INTEGER PRIMARY KEY,
   `lesson_type` varchar(3) NOT NULL,
   `day` tinyint(3) NOT NULL,
   `start_time` decimal(3,1) NOT NULL,
@@ -104,24 +104,20 @@ CREATE TABLE `slot` (
   `location` varchar(31) NOT NULL,
   `is_composed` boolean NOT NULL,
   `professor_id` int (11),
-  `class_id` int(11) NOT NULL,
-  `last_updated` datetime NOT NULL,
-  FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  `last_updated` datetime NOT NULL
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
+-- --------------------------------------------------------
 --
 -- Table structure for table `slot_class`
 --
-
 CREATE TABLE `slot_class` (
   `slot_id` INTEGER NOT NULL,
   `class_id` INTEGER NOT NULL,
-  FOREIGN KEY (`slot_id`) REFERENCES `slot` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (`class_id`) REFERENCES `class` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`slot_id`) REFERENCES `slot` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   PRIMARY KEY (`slot_id`, `class_id`)
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
-
-
 
 -- -------------------------------------------------------- 
 
@@ -131,7 +127,7 @@ CREATE TABLE `slot_class` (
 
 CREATE TABLE `professor` (
   `id` INTEGER PRIMARY KEY,
-  `professor_acronym` varchar(16),
+  `professor_acronym` varchar(32),
   `professor_name` varchar(100)
 ) ENGINE=InnoDB CHARSET = utf8 COLLATE = utf8_general_ci;
 
@@ -161,18 +157,6 @@ CREATE TABLE `info` (
 
 -- --------------------------------------------------------
 
--- Table structure for table `statistics`
--- 
-
-CREATE TABLE `statistics` (
-  `int` INTEGER AUTO_INCREMENT PRIMARY KEY,
-  `course_unit_id` int(11) NOT NULL,
-  `acronym` varchar(10) NOT NULL,
-  `visited_times` int(11) NOT NULL,
-  `last_updated` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-
 --
 -- Indexes for table `course`
 --
@@ -195,13 +179,3 @@ CREATE INDEX `course_metadata_index` ON `course_metadata` (`course_id`, `course_
 --
 CREATE UNIQUE INDEX `class_uniqueness` ON `class` (`name`, `course_unit_id`);
 CREATE INDEX `class_course_unit_id` ON `class` (`course_unit_id`);
-
---
--- Indexes for table `slot`
---
-CREATE INDEX `slot_course_unit_id` ON `slot` (`class_id`);
-
---
--- Indexes for table `statistics`
---
-CREATE INDEX `statistics` ON `statistics` (`course_unit_id`);

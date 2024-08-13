@@ -121,16 +121,21 @@ def info(request):
     else:
         return JsonResponse({}, safe=False)
 
-@ api_view(['POST'])
+
+"""
+    Verifies if course units have the correct hash
+"""
+
+
+@ api_view(['GET'])
 def verify_course_units(request):
 
     results = []
 
-    for key in request.POST:
+    for key in request.data:
         try:
             course_unit_id = key
-            received_hash=request.POST[key]
-
+            received_hash=request.data[key]
 
             course_unit = CourseUnit.objects.get(id=key)
             latest_hash = course_unit.hash
