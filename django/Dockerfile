@@ -1,4 +1,5 @@
-FROM python:3.8-slim-buster
+# deps
+FROM python:3.8-slim-buster AS deps
 
 WORKDIR /usr/src/django/ 
 
@@ -26,3 +27,12 @@ EXPOSE 8000
 
 COPY ./entrypoint.sh ./entrypoint.sh  
 ENTRYPOINT ["/usr/src/django/entrypoint.sh"]
+
+# prod
+FROM deps AS prod
+
+COPY tts_be/ ./tts_be
+COPY university/ ./university
+COPY manage.py tasks.py ./
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
