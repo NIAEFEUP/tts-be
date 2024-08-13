@@ -120,3 +120,27 @@ def info(request):
         return JsonResponse(json_data, safe=False)
     else:
         return JsonResponse({}, safe=False)
+
+@ api_view(['GET'])
+def verify_course_units(request):
+
+    course_units_params = request.GET.getlist('course_unit')
+
+    results = []
+
+
+    for unit in course_units_params:
+        try:
+
+            course_unit_id, received_hash = unit.split(',')
+
+
+            course_unit = CourseUnit.objects.get(id=course_unit_id)
+            latest_hash = course_unit.hash
+
+            is_valid = (received_hash == latest_hash)
+            results.append({'course_unit_id': course_unit_id, 'valid': is_valid})
+        except (CourseUnit.DoesNotExist, ValueError):
+            results.append({'course_unit_id': course_unit_id, 'valid': False})
+
+    return JsonResponse(results, safe=False)
