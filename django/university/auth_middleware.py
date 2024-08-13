@@ -10,7 +10,7 @@ class AuthMiddleware:
             re.compile(r'^/student_schedule/\d+/$'),
             re.compile(r'^/schedule_sigarra/\d+/$'),
             re.compile(r'^/class_sigarra_schedule/\d+/.+/$'),
-            '/submit_direct_exchange/',
+            #'/submit_direct_exchange/',
             re.compile(r'^/verify_direct_exchange/.+/$'),
             re.compile(r'^/students_per_course_unit/\d+/$'),
             '/is_admin/',

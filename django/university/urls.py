@@ -1,6 +1,8 @@
 from django.urls import path, include
 
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
+from university.routes.auth.FederatedLogin import FederatedLogin
+from university.routes.auth.Csrf import Csrf
 from . import views
 
 # URLConf
@@ -8,15 +10,13 @@ urlpatterns = [
     path('faculty/', views.faculty),
     path('course/<int:year>', views.course),
     path('course_units/<int:course_id>/<int:year>/<int:semester>/', views.course_units),
-    # path('course_units_by_year/<int:course_id>/<int:year>/<int:semester>/',views.course_units_by_year),
-    # path('course_last_year/<int:course_id>/', views.course_last_year),
-    # path('schedule/<int:course_unit_id>/', views.schedule),
-    # path('statistics/', views.data),
     path('professors/<int:schedule>/', views.professor),
     path('info/', views.info),
+    path('csrf/', Csrf.as_view()),
     path('login/', views.login),
-    # path('saml_session/', views.saml_session),
-    # path('saml_response_handler/', views.federated_login),
+    path('login/federated/', FederatedLogin.as_view()),
+    # path('')
+    # path('session/', )
     path('logout/', views.logout),
     path('student_schedule/<int:student>/', views.student_schedule),
     path('schedule_sigarra/<int:course_unit_id>/', views.schedule_sigarra),

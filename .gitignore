@@ -24,7 +24,4 @@ django/celerybeat-schedule
 django/university/stats_graphs/*
 
 httpd/shibboleth/*.pem
-<<<<<<< HEAD
-=======
 
->>>>>>> 5939c49 (started basic saml2 configuration)
