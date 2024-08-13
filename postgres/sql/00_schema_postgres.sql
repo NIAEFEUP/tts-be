@@ -226,7 +226,7 @@ ALTER TABLE ONLY "public"."course_metadata"
 --
 
 ALTER TABLE ONLY "public"."course_metadata"
-    ADD CONSTRAINT "course_metadata_pkey" PRIMARY KEY ("course_id");
+    ADD CONSTRAINT "course_metadata_pkey" PRIMARY KEY ("course_id", "course_unit_id", "course_unit_year");
 
 
 --
@@ -289,7 +289,7 @@ ALTER TABLE ONLY "public"."professor"
 --
 
 ALTER TABLE ONLY "public"."slot_class"
-    ADD CONSTRAINT "slot_class_pkey" PRIMARY KEY ("slot_id");
+    ADD CONSTRAINT "slot_class_pkey" PRIMARY KEY ("slot_id", "class_id");
 
 
 --
@@ -316,7 +316,7 @@ ALTER TABLE ONLY "public"."slot"
 --
 
 ALTER TABLE ONLY "public"."slot_professor"
-    ADD CONSTRAINT "slot_professor_pkey" PRIMARY KEY ("slot_id");
+    ADD CONSTRAINT "slot_professor_pkey" PRIMARY KEY ("slot_id", "professor_id");
 
 
 --
