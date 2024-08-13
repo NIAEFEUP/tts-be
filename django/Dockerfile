@@ -8,12 +8,17 @@ ENV PYTHONUNBUFFERED 1
 # Copy requirements 
 COPY ./requirements.txt ./requirements.txt 
 
-# Dependencies for mysqlclient 
+# Dependencies for building the requirements
 RUN apt-get update
-RUN apt-get -y install build-essential default-libmysqlclient-dev
+RUN apt-get -y install build-essential
 
-# Install mysql command to wait for the database initialization 
-RUN apt -y install default-mysql-client
+# Install postgres dependencies (pgsql client and development files)
+
+# https://www.postgresql.org/download/linux/ubuntu/
+COPY ./etc/pgdg.sh /tmp/pgdg.sh
+RUN /tmp/pgdg.sh
+
+RUN apt -y install libpq-dev postgresql-client-16
 
 # Install the requirements
 RUN pip install -r requirements.txt
@@ -21,4 +26,4 @@ RUN pip install -r requirements.txt
 EXPOSE 8000
 
 COPY ./entrypoint.sh ./entrypoint.sh  
-ENTRYPOINT ["sh", "/usr/src/django/entrypoint.sh"]
+ENTRYPOINT ["/usr/src/django/entrypoint.sh"]
