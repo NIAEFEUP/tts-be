@@ -4,19 +4,15 @@
 
 # Configure the shell behaviour. 
 set -e
-if [[ ${DEBUG} == 1 ]]
+if [[ "${DEBUG}" == 1 ]]
 then set -x
 fi 
 
 # Get parameters.
-database_host="$1"    # The database host and should be provided the container name. 
-shift
 cmd="$@"
 
-export PGPASSWORD=${POSTGRES_PASSWORD}
-
 # Waits for PostgreSQL initialization. 
-until psql -h "$database_host" -U ${POSTGRES_USER} ${POSTGRES_DB} -c 'select 1'; do
+until PGPASSWORD="${POSTGRES_PASSWORD}" psql -h "${POSTGRES_HOST}" -U "${POSTGRES_USER}" "${POSTGRES_DB}" -c 'select 1'; do
   >&2 echo "PostgreSQL is unavailable - sleeping"
   sleep 4
 done

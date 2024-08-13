@@ -3,11 +3,11 @@
         "1": {
             "Name": "Development Server",
             "Group": "Servers",
+            "Host": "db",
             "Port": 5432,
             "Username": "root",
-            "Host": "db",
-            "SSLMode": "prefer",
-            "MaintenanceDB": "postgres"
+            "MaintenanceDB": "postgres",
+            "SSLMode": "prefer"
         }
     }
 }

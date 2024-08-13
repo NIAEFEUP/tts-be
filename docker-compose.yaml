@@ -32,7 +32,7 @@ services:
     container_name: tts_django
     env_file:
       - django/.env.dev
-    command: ["db", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:
       - ./django/:/usr/src/django/
     ports:
