@@ -26,8 +26,8 @@ SET row_security = off;
 CREATE TABLE "public"."class" (
     "id" bigint NOT NULL,
     "name" character varying(31) NOT NULL,
-    "last_updated" timestamp with time zone NOT NULL,
-    "course_unit_id" integer NOT NULL
+    "course_unit_id" integer NOT NULL,
+    "last_updated" timestamp with time zone NOT NULL
 );
 
 
@@ -60,14 +60,14 @@ ALTER SEQUENCE "public"."class_id_seq" OWNED BY "public"."class"."id";
 
 CREATE TABLE "public"."course" (
     "id" integer NOT NULL,
+    "faculty_id" character varying(10) NOT NULL,
     "name" character varying(200) NOT NULL,
     "acronym" character varying(10) NOT NULL,
     "course_type" character varying(2) NOT NULL,
     "year" integer NOT NULL,
     "url" character varying(2000) NOT NULL,
     "plan_url" character varying(2000) NOT NULL,
-    "last_updated" timestamp with time zone NOT NULL,
-    "faculty_id" character varying(10) NOT NULL
+    "last_updated" timestamp with time zone NOT NULL
 );
 
 
@@ -78,9 +78,9 @@ CREATE TABLE "public"."course" (
 
 CREATE TABLE "public"."course_metadata" (
     "course_id" integer NOT NULL,
+    "course_unit_id" integer NOT NULL,
     "course_unit_year" integer NOT NULL,
-    "ects" double precision NOT NULL,
-    "course_unit_id" integer NOT NULL
+    "ects" double precision NOT NULL
 );
 
 
@@ -91,14 +91,14 @@ CREATE TABLE "public"."course_metadata" (
 
 CREATE TABLE "public"."course_unit" (
     "id" integer NOT NULL,
+    "course_id" integer NOT NULL,
     "name" character varying(200) NOT NULL,
     "acronym" character varying(16) NOT NULL,
     "url" character varying(2000) NOT NULL,
     "semester" integer NOT NULL,
     "year" smallint NOT NULL,
     "schedule_url" character varying(2000),
-    "last_updated" timestamp with time zone NOT NULL,
-    "course_id" integer NOT NULL
+    "last_updated" timestamp with time zone NOT NULL
 );
 
 
