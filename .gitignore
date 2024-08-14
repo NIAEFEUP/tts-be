@@ -3,14 +3,14 @@ logs
 *.log
 
 # sigarra internal data cannot be committed
-mysql/sql/01_dump_mysql.sql 
+postgres/sql/01_dump_postgres.sql 
 
 # dotenv environment variables file
 .env
 
-# mysql data
-mysql/data/*
-mysql/sql/01_data.sql
+# postgres data
+postgres/data/*
+postgres/sql/01_data.sql
 **__pycache__
 
 # django 
