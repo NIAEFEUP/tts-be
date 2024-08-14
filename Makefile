@@ -12,7 +12,7 @@ download: clean_fetcher clean_database
 	@echo [DOWNLOADING] data from the source... 
 	@docker-compose run fetcher python ./update_data/download.py
 	@echo [REMOVING] data from postgres... 
-	@-rm $(postgres_DATA)/01_data.sql
+	@-rm $(POSTGRES_DATA)/01_data.sql
 	@echo [MOVING] data from fetcher to sql... 
 	@mv ./fetcher/data/* ./postgres/sql
 
@@ -27,5 +27,5 @@ clean_fetcher:
 	@-rm -r ./fetcher/data
 
 clean_database:
-	@echo [CLEANING] Removing folder postgres/data...
-	@-rm -r ./postgres/data/
+	@echo [CLEANING] Removing database data...
+	@-docker volume rm tts_postgres_data || true

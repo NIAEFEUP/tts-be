@@ -53,4 +53,5 @@ services:
 
 volumes:
   postgres_data:
+    name: tts_postgres_data
   pgadmin_data:
