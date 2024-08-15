@@ -128,7 +128,7 @@ def info(request):
 
 
 @api_view(['GET'])
-def verify_course_units(request):
+def get_course_unit_hashes(request):
 
     ids_param = request.query_params.get('ids', '')
 
