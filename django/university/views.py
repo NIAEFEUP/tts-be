@@ -120,3 +120,30 @@ def info(request):
         return JsonResponse(json_data, safe=False)
     else:
         return JsonResponse({}, safe=False)
+
+
+"""
+    Verifies if course units have the correct hash
+"""
+
+
+@api_view(['GET'])
+def get_course_unit_hashes(request):
+
+    ids_param = request.query_params.get('ids', '')
+
+    try:
+        course_unit_ids = [int(id) for id in ids_param.split(',') if id]
+    except ValueError:
+        return JsonResponse({'error': 'Invalid ID format'}, status=400)
+
+    results = {}
+
+    for course_unit_id in course_unit_ids:
+        try:
+            course_unit = CourseUnit.objects.get(id=course_unit_id)
+            results[course_unit_id] = course_unit.hash
+        except CourseUnit.DoesNotExist:
+            results[course_unit_id] = None
+
+    return JsonResponse(results, safe=False)
