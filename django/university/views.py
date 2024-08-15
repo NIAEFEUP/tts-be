@@ -127,22 +127,23 @@ def info(request):
 """
 
 
-@ api_view(['GET'])
+@api_view(['GET'])
 def verify_course_units(request):
 
-    results = []
+    ids_param = request.query_params.get('ids', '')
 
-    for key in request.data:
+    try:
+        course_unit_ids = [int(id) for id in ids_param.split(',') if id]
+    except ValueError:
+        return JsonResponse({'error': 'Invalid ID format'}, status=400)
+
+    results = {}
+
+    for course_unit_id in course_unit_ids:
         try:
-            course_unit_id = key
-            received_hash=request.data[key]
-
-            course_unit = CourseUnit.objects.get(id=key)
-            latest_hash = course_unit.hash
-
-            is_valid = (received_hash == latest_hash)
-            results.append({'course_unit_id': course_unit_id, 'valid': is_valid})
-        except (CourseUnit.DoesNotExist, ValueError):
-            results.append({'course_unit_id': course_unit_id, 'valid': False})
+            course_unit = CourseUnit.objects.get(id=course_unit_id)
+            results[course_unit_id] = course_unit.hash
+        except CourseUnit.DoesNotExist:
+            results[course_unit_id] = None
 
     return JsonResponse(results, safe=False)
