@@ -175,6 +175,47 @@ CREATE TABLE "public"."slot_professor" (
     "professor_id" integer NOT NULL
 );
 
+CREATE TABLE "public"."marketplace_exchange" (
+  "id" SERIAL PRIMARY KEY, 
+  "issuer" varchar(32) NOT NULL,
+  "accepted" boolean NOT NULL,
+  "date" TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE "public"."direct_exchange" (
+  "id" SERIAL PRIMARY KEY,
+  "issuer" varchar(32) NOT NULL,
+  "accepted" boolean NOT NULL,
+  "date" TIMESTAMP DEFAULT now(),
+  "marketplace_exchange_id" INTEGER DEFAULT NULL REFERENCES "public"."marketplace_exchange"("id")
+);
+
+CREATE TABLE "public"."direct_exchange_participants" (
+  "id" SERIAL PRIMARY KEY,
+  "participant" varchar(32) NOT NULL,
+  "old_class" varchar(16) NOT NULL,
+  "new_class" varchar(16) NOT NULL,
+  "course_unit" varchar(64) NOT NULL,
+  "course_unit_id" varchar(16) NOT NULL,
+  "direct_exchange" INTEGER NOT NULL REFERENCES "public"."direct_exchange"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "accepted" boolean NOT NULL,
+  "date" TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE "public"."marketplace_exchange_class" (
+    "id" SERIAL PRIMARY KEY, 
+    "marketplace_exchange" INTEGER NOT NULL REFERENCES "public"."marketplace_exchange"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "course_unit_name" varchar(256) NOT NULL,
+    "course_unit_acronym" varchar(256) NOT NULL,
+    "course_unit_id" varchar(256) NOT NULL,
+    "old_class" varchar(16) NOT NULL,
+    "new_class" varchar(16) NOT NULL
+); 
+
+CREATE TABLE "public"."exchange_admin" (
+  "id" SERIAL PRIMARY KEY,
+  "username" varchar(32) NOT NULL UNIQUE
+); 
 
 --
 -- TOC entry 3276 (class 2604 OID 16801)

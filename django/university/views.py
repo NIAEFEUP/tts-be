@@ -24,7 +24,6 @@ from university.models import SlotProfessor
 from university.models import CourseMetadata
 from university.models import DirectExchange
 from university.models import DirectExchangeParticipants
-from university.models import Statistics
 from university.models import Info
 from university.models import MarketplaceExchange, ExchangeAdmin
 from university.models import Info
