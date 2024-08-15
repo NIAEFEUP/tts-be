@@ -1,19 +1,24 @@
-FROM python:3.8-slim-buster
+# deps
+FROM python:3.8-slim-buster AS deps
 
 WORKDIR /usr/src/django/ 
 
 # Get's the output from the django in realtime. 
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 # Copy requirements 
 COPY ./requirements.txt ./requirements.txt 
 
-# Dependencies for mysqlclient 
+# Dependencies for building the requirements
 RUN apt-get update
-RUN apt-get -y install build-essential default-libmysqlclient-dev xmlsec1 libssl-dev libsasl2-dev
+RUN apt-get -y install build-essential
 
-# Install mysql command to wait for the database initialization 
-RUN apt -y install default-mysql-client
+# Install postgres dependencies (pgsql client and development files)
+COPY ./etc/pgdg.sh /tmp/pgdg.sh
+RUN /tmp/pgdg.sh
+
+RUN apt -y install libpq-dev postgresql-client-16
+RUN apt -y clean && rm -rf /var/lib/apt/lists/*
 
 # Install the requirements
 RUN pip install -r requirements.txt
@@ -21,4 +26,13 @@ RUN pip install -r requirements.txt
 EXPOSE 8000
 
 COPY ./entrypoint.sh ./entrypoint.sh  
-ENTRYPOINT ["sh", "/usr/src/django/entrypoint.sh"]
+ENTRYPOINT ["/usr/src/django/entrypoint.sh"]
+
+# prod
+FROM deps AS prod
+
+COPY tts_be/ ./tts_be
+COPY university/ ./university
+COPY manage.py tasks.py ./
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

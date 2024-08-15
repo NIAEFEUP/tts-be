@@ -20,9 +20,9 @@ The data is available at the NIAEFEUP drive (Only for NIAEFEUP members):
 
 https://drive.google.com/drive/folders/1hyiwPwwPWhbAPeJm03c0MAo1HTF6s_zK?usp=sharing
 
-- The ```00_schema_mysql.sql``` corresponds to the schema for the most recent data.
+- The ```00_schema_postgres.sql``` corresponds to the schema for the most recent data.
 
-- Copy the ```01_data.sql``` and ```00_schema_mysql.sql``` of year and semester you desire to the ```mysql/sql``` folder.
+- Copy the ```01_data.sql``` and ```00_schema_postgres.sql``` of year and semester you desire to the ```postgres/sql``` folder.
 
 ## Usage 
 
@@ -44,7 +44,7 @@ In case you have __already build the server before and want to repopulate the da
 sudo make clean
 ```
 
-We need to clean the database to repopulate it, since the way the mysql container works is that it only runs the `sql` files present in the `mysql/sql` folder if the database is clean. This is way we need to issue `sudo make clean` in order for the insert sql queries to be run.
+We need to clean the database to repopulate it, since the way the postgres container works is that it only runs the `sql` files present in the `postgres/sql` folder if the database is clean. This is way we need to issue `sudo make clean` in order for the insert sql queries to be run.
 
 #### Running the container
 
@@ -70,8 +70,13 @@ docker compose up
 
 #### Accessing the development database
 
-We are currently using `phpmyadmin` and you can access it
+We are currently using `pgadmin` and you can access it
 
 1. Go to `localhost:4000`
 
-2. On the login screen, both the username and password are `root`. This is fine, since this is only a development environment
+2. On the login screen, both the credentials are as follows:
+   
+    - Email: admin@example.com
+    - Password: admin
+    
+    This is fine, since this is only a development environment.

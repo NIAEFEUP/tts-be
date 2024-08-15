@@ -15,8 +15,6 @@ urlpatterns = [
     path('csrf/', Csrf.as_view()),
     path('login/', views.login),
     path('login/federated/', FederatedLogin.as_view()),
-    # path('')
-    # path('session/', )
     path('logout/', views.logout),
     path('student_schedule/<int:student>/', views.student_schedule),
     path('schedule_sigarra/<int:course_unit_id>/', views.schedule_sigarra),
