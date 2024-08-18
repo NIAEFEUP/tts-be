@@ -31,5 +31,6 @@ urlpatterns = [
     path('course_unit/<int:course_unit_id>/', views.course_unit_by_id),
     path('class/<int:course_unit_id>/', views.classes),
     path('professors/<int:slot>/', views.professor),
-    path('info/', views.info)
+    path('info/', views.info),
+    path('course_unit/hash', views.get_course_unit_hashes)
 ]

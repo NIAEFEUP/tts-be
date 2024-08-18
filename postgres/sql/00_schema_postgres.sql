@@ -98,7 +98,8 @@ CREATE TABLE "public"."course_unit" (
     "semester" integer NOT NULL,
     "year" smallint NOT NULL,
     "schedule_url" character varying(2000),
-    "last_updated" timestamp with time zone NOT NULL
+    "last_updated" timestamp with time zone NOT NULL,
+    "hash" character varying(64)
 );
 
 
