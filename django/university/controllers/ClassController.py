@@ -15,8 +15,8 @@ class ClassController:
             'id': slot_obj.id,
             'lesson_type': slot_obj.lesson_type,
             'day': slot_obj.day,
-            'start_time': slot_obj.start_time,
-            'duration': slot_obj.duration,
+            'start_time': float(slot_obj.start_time),
+            'duration': float(slot_obj.duration),
             'location': slot_obj.location,
             'is_composed': slot_obj.is_composed,
             'professors': professors
