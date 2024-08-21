@@ -178,7 +178,8 @@ CREATE TABLE "public"."slot_professor" (
 
 CREATE TABLE "public"."marketplace_exchange" (
   "id" SERIAL PRIMARY KEY, 
-  "issuer" varchar(32) NOT NULL,
+  "issuer_name" varchar(256) NOT NULL,
+  "issuer_nmec" varchar(32) NOT NULl,
   "accepted" boolean NOT NULL,
   "date" TIMESTAMP DEFAULT now()
 );
@@ -209,8 +210,8 @@ CREATE TABLE "public"."marketplace_exchange_class" (
     "course_unit_name" varchar(256) NOT NULL,
     "course_unit_acronym" varchar(256) NOT NULL,
     "course_unit_id" varchar(256) NOT NULL,
-    "old_class" varchar(16) NOT NULL,
-    "new_class" varchar(16) NOT NULL
+    "class_issuer_goes_from" varchar(16) NOT NULL,
+    "class_issuer_goes_to" varchar(16) NOT NULL
 ); 
 
 CREATE TABLE "public"."exchange_admin" (

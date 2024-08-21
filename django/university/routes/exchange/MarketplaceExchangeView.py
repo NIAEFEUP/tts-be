@@ -1,36 +1,17 @@
 import json
-from rest_framework.views import APIView
-from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
-from rest_framework.pagination import LimitOffsetPagination
 from django.views import View
-from django.forms.models import model_to_dict
 
 from university.exchange.utils import curr_semester_weeks
 from university.models import MarketplaceExchange, MarketplaceExchangeClass
 
-class MarketplaceExchangeView(APIView):
-    """
-        Returns all the current marketplace exchange requests paginated
-    """
-    def get(self, request):
-        marketplace_exchanges = list(MarketplaceExchange.objects.all().values())
+class MarketplaceExchangeView(View):
+    def get(self, request, *args, **kwargs):
+        print("request: ", request)
         
-        page_number = request.GET.get("page")
-        paginator = Paginator(marketplace_exchanges, 10)
-        page_obj = paginator.get_page(1)
-        payload = {
-            "page": {
-                "current": page_obj.number,
-                "has_next": page_obj.has_next(),
-                "has_previous": page_obj.has_previous(),
-            },
-            "data": marketplace_exchanges
-        }
+        return HttpResponse()
 
-        return JsonResponse(payload)
-
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         print("request: ", request)
         
         return HttpResponse()
