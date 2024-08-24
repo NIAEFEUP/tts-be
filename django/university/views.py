@@ -1,155 +1,116 @@
-from django.http.response import HttpResponse
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
-from university.models import Schedule
 from university.models import Professor
-from university.models import ScheduleProfessor
+from university.models import SlotProfessor
 from university.models import CourseMetadata
-from university.models import Statistics
 from university.models import Info
+from university.controllers.ClassController import ClassController
+from university.response.errors import course_unit_not_found_error
 from django.http import JsonResponse
-from django.core import serializers
 from rest_framework.decorators import api_view
-from django.db.models import Max
-from django.db import transaction
-import json
-import os 
+from rest_framework import status
+
+import os
 from django.utils import timezone
-# Create your views here. 
+from django.forms.models import model_to_dict
 
 
 def get_field(value):
     return value.field
-    
+
+
 @api_view(['GET'])
-def faculty(request): 
+def faculty(request):
     json_data = list(Faculty.objects.values())
     return JsonResponse(json_data, safe=False)
 
+
 """
-    Returns all the major/major.  
+    Returns all the major/major.
     REQUEST: http://localhost:8000/course/<int:year>
 """
+
+
 @api_view(['GET'])
 def course(request, year):
     json_data = list(Course.objects.filter(year=year).values())
     return JsonResponse(json_data, safe=False)
 
+
+@api_view(['GET'])
+def course_unit_by_id(request, course_unit_id):
+    course_unit = CourseUnit.objects.filter(id=course_unit_id).first()
+    if (course_unit == None):
+        return JsonResponse(course_unit_not_found_error(course_unit_id), status=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse(model_to_dict(course_unit), safe=False)
+
+
 """
-    Return all the units from a course/major. 
+    Return all the units from a course/major.
     REQUEST: course_units/<int:course_id>/<int:year>/<int:semester>/
 """
 
+
 @api_view(['GET'])
-def course_units(request, course_id, year, semester): 
+def course_units(request, course_id, year, semester):
     # Fetch CourseUnitYear model instances that match the attributes from the api url parameters.
-    course_units_metadata = CourseMetadata.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit').order_by('course_unit_year')
+    course_units_metadata = CourseMetadata.objects.filter(
+        course__id=course_id, course_unit__semester=semester, course__year=year).select_related('course_unit').order_by('course_unit_year')
 
     json_data = list()
 
     # For each object in those course unit year objects we append the CourseUnit dictionary
-    for course_units in course_units_metadata:
-        course_units.__dict__.update(course_units.course_unit.__dict__)
-        del course_units.__dict__["_state"]
-        json_data.append(course_units.__dict__)
-    
-    course = Course.objects.get(id = course_id)
+    for course_unit_metadata in course_units_metadata:
+        course_unit_metadata.__dict__.update(
+            course_unit_metadata.course_unit.__dict__)
 
-    with transaction.atomic():
-        statistics, created = Statistics.objects.select_for_update().get_or_create(
-            course_unit_id = course_id, 
-            acronym = course.acronym,
-            defaults = {"visited_times": 0, "last_updated": timezone.now()},
-        )
-        statistics.visited_times += 1
-        statistics.last_updated = timezone.now()
-        statistics.save()
+        del course_unit_metadata.__dict__["_state"]
+
+        json_data.append(course_unit_metadata.__dict__)
 
     return JsonResponse(json_data, safe=False)
 
-"""
-    Returns the last year of a course.
-"""
-@api_view(['GET'])
-def course_units_by_year(request, course_id, year, semester): 
-    course_units_metadata = CourseMetadata.objects.filter(course__id = course_id, course_unit__semester = semester, course__year = year).select_related('course_unit')
-
-    json_data = list()
-
-    # For each object in those course unit year objects we append the CourseUnit dictionary
-    for course_units in course_units_metadata:
-        course_units.__dict__.update(course_units.course_unit.__dict__)
-        del course_units.__dict__["_state"]
-        json_data.append(course_units.__dict__)
-
-    return JsonResponse(json_data, safe=False)
 
 """
-    Returns the last year of a course.
+    Returns the classes of a course unit.
 """
-@api_view(['GET'])
-def course_last_year(request, course_id):
-    max_year = CourseMetadata.objects.filter(course__id=course_id).aggregate(Max('course_unit_year')).get('course_unit_year__max')
-    json_data = {"max_year": max_year}
-    return JsonResponse(json_data, safe=False)
+
+
+@ api_view(['GET'])
+def classes(request, course_unit_id):
+    return JsonResponse(ClassController.get_classes(course_unit_id), safe=False)
+
 
 """
-    Returns the schedule of a course unit.
+    Returns all the professors of a class of the class id
 """
-@api_view(['GET'])
-def schedule(request, course_unit_id):
-    course_unit = CourseUnit.objects.get(pk=course_unit_id)
-    faculty = course_unit.url.split('/')[3]
-    schedules = list(Schedule.objects.filter(course_unit=course_unit_id).order_by('class_name').values())
-    for schedule in schedules:
-        schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule['id']).values())
-        professors_link = f'https://sigarra.up.pt/{faculty}/pt/{"hor_geral.composto_doc?p_c_doc=" if schedule["is_composed"] else "func_geral.FormView?p_codigo="}{schedule["professor_sigarra_id"]}'
-        schedule['professors_link'] = professors_link
-        del schedule['professor_sigarra_id']
-        professors_information = []
-        for schedule_professor in schedule_professors:
-            professors_information.append({
-                'acronym': Professor.objects.get(pk=schedule_professor['professor_sigarra_id']).professor_acronym,
-                'name': Professor.objects.get(pk=schedule_professor['professor_sigarra_id']).professor_name
-            })
-        schedule['professor_information'] = professors_information
-    return JsonResponse(schedules, safe=False)
 
-"""
-    Returns the statistics of the requests.
-"""
-@api_view(['GET'])
-def data(request):
-    name = request.GET.get('name')
-    password = request.GET.get('password')
-    if name == os.environ['STATISTICS_NAME'] and password == os.environ['STATISTICS_PASS']:
-        json_data = serializers.serialize("json", Statistics.objects.all())
-        return HttpResponse(json_data, content_type='application/json')
-    else:
-       return HttpResponse(status=401)
 
-"""
-    Returns all the professors of a class of the schedule id
-""" 
-@api_view(["GET"])
-def professor(request, schedule):
-    schedule_professors = list(ScheduleProfessor.objects.filter(schedule=schedule).values())
+@ api_view(["GET"])
+def professor(request, slot):
+    slot_professors = list(SlotProfessor.objects.filter(slot_id=slot).values())
+
     professors = []
-    for schedule_professor in schedule_professors:
-        professor = Professor.objects.get(pk=schedule_professor['professor_sigarra_id'])
+
+    for slot_professor in slot_professors:
+        professor = Professor.objects.get(id=slot_professor['professor_id'])
         professors.append({
-            'sigarra_id': professor.sigarra_id,
-            'professor_acronym': professor.professor_acronym,
-            'professor_name': professor.professor_name
+            'id': professor.id,
+            'acronym': professor.professor_acronym,
+            'name': professor.professor_name
         })
+
     return JsonResponse(professors, safe=False)
 
 
 """
     Returns the contents of the info table
 """
-@api_view(["GET"])
+
+
+@ api_view(["GET"])
 def info(request):
     info = Info.objects.first()
     if info:
@@ -159,3 +120,30 @@ def info(request):
         return JsonResponse(json_data, safe=False)
     else:
         return JsonResponse({}, safe=False)
+
+
+"""
+    Verifies if course units have the correct hash
+"""
+
+
+@api_view(['GET'])
+def get_course_unit_hashes(request):
+
+    ids_param = request.query_params.get('ids', '')
+
+    try:
+        course_unit_ids = [int(id) for id in ids_param.split(',') if id]
+    except ValueError:
+        return JsonResponse({'error': 'Invalid ID format'}, status=400)
+
+    results = {}
+
+    for course_unit_id in course_unit_ids:
+        try:
+            course_unit = CourseUnit.objects.get(id=course_unit_id)
+            results[course_unit_id] = course_unit.hash
+        except CourseUnit.DoesNotExist:
+            results[course_unit_id] = None
+
+    return JsonResponse(results, safe=False)

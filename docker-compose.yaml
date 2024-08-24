@@ -1,38 +1,42 @@
-version: "3.7" 
+version: "3.7"
 
 services:
   db:
-    build: ./mysql
+    build: ./postgres
     container_name: tts_db
-    volumes: 
-      - ./mysql/data:/var/lib/mysql
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
     env_file:
-      - mysql/.env.dev
+      - postgres/.env.dev
     ports:
-      - 3306:3306
+      - 5432:5432
     ulimits:
       nofile:
         soft: 262144
         hard: 262144
 
-  phpmyadmin:
-    image: phpmyadmin:5.1.1-apache
-    container_name: tts_phpmyadmin
+  pgadmin:
+    build:
+      context: ./pgadmin
+    container_name: tts_pgadmin
     restart: always
+    env_file:
+      - pgadmin/.env.dev
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
     ports:
       - 4000:80
 
   django:
-    build: ./django 
+    build: ./django
     container_name: tts_django
     env_file:
       - django/.env.dev
-    command: ["db", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:
       - ./django/:/usr/src/django/
     ports:
       - 8100:8000
-      
 
   fetcher:
     build: ./fetcher
@@ -42,6 +46,12 @@ services:
 
   redis_service:
     image: redis:6.2-bullseye
+    container_name: tts_redis
     restart: always
-    ports: 
-      - '6379:6379'
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
+    name: tts_postgres_data
+  pgadmin_data:
