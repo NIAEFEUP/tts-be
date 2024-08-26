@@ -35,4 +35,5 @@ COPY tts_be/ ./tts_be
 COPY university/ ./university
 COPY manage.py tasks.py ./
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+COPY ./entrypoint_prod.sh ./entrypoint_prod.sh
+ENTRYPOINT ["/usr/src/django/entrypoint_prod.sh"]

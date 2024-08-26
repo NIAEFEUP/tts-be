@@ -1,24 +1,29 @@
-from university.models import Class, SlotClass, Slot, SlotProfessor
+from university.models import Class, Professor, Slot, SlotProfessor
 
 
 class ClassController:
     @staticmethod
-    def get_professors(slot_obj):
-        try:
-            professor = slot_obj.slotprofessor.professor
-            professors = [
-                {'id': professor.id, 'acronym': professor.professor_acronym, 'name': professor.professor_name}]
-        except SlotProfessor.DoesNotExist:
-            professors = []
+    def get_professors(slot):
+        slot_professors = SlotProfessor.objects.filter(slot_id=slot.id).values()
+        
+        professors = []
+        
+        for slot_professor in slot_professors:
+            professor = Professor.objects.get(id=slot_professor['professor_id'])
+            professors.append({
+                'id': professor.id,
+                'acronym': professor.professor_acronym,
+                'name': professor.professor_name
+            })
 
         return {
-            'id': slot_obj.id,
-            'lesson_type': slot_obj.lesson_type,
-            'day': slot_obj.day,
-            'start_time': slot_obj.start_time,
-            'duration': slot_obj.duration,
-            'location': slot_obj.location,
-            'is_composed': slot_obj.is_composed,
+            'id': slot.id,
+            'lesson_type': slot.lesson_type,
+            'day': slot.day,
+            'start_time': float(slot.start_time),
+            'duration': float(slot.duration),
+            'location': slot.location,
+            'is_composed': slot.is_composed,
             'professors': professors
         }
 
@@ -30,8 +35,7 @@ class ClassController:
         result = []
         for class_obj in classes:
             slot_ids = [sc.slot_id for sc in class_obj.slotclass_set.all()]
-            slots = Slot.objects.filter(id__in=slot_ids).prefetch_related(
-                'slotprofessor__professor')
+            slots = Slot.objects.filter(id__in=slot_ids)
 
             slot_list = list(map(ClassController.get_professors, slots))
 

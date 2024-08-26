@@ -12,16 +12,12 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os 
-#import saml2
-#import saml2.saml
 from dotenv import dotenv_values
 
 CONFIG={
     **dotenv_values(".env"),  # load variables
     **os.environ,  # override loaded values with environment variables
 }
-
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,16 +26,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!d4s#a%mo7ou&nc+-b&qfx$nu&&vo_^z*kauh0-8@%)ni@ze+7'
+SECRET_KEY = CONFIG['SECRET_KEY']
 
 JWT_KEY= CONFIG['JWT_KEY']
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost']
-
 DOMAIN = os.getenv('DOMAIN')
+DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
+
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
 
 # Application definition
 
