@@ -3,29 +3,49 @@ from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.renderers import JSONRenderer
 from django.views import View
 from django.forms.models import model_to_dict
+from django.db.models import Prefetch
 
 from university.exchange.utils import curr_semester_weeks
 from university.models import MarketplaceExchange, MarketplaceExchangeClass
+from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
     """
         Returns all the current marketplace exchange requests paginated
     """
     def get(self, request):
-        marketplace_exchanges = list(MarketplaceExchange.objects.all().values())
+        marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
+            Prefetch(
+                'marketplaceexchangeclass_set',
+                queryset=MarketplaceExchangeClass.objects.all(),
+                to_attr='options'
+            )
+        ).all())
         
         page_number = request.GET.get("page")
         paginator = Paginator(marketplace_exchanges, 10)
         page_obj = paginator.get_page(1)
+        
         payload = {
             "page": {
                 "current": page_obj.number,
                 "has_next": page_obj.has_next(),
                 "has_previous": page_obj.has_previous(),
             },
-            "data": marketplace_exchanges
+            "data": [
+                {
+                    "id": exchange.id,
+                    "issuer_name": exchange.issuer_name,
+                    "issuer_nmec": exchange.issuer_nmec,
+                    "options": [
+                        MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options
+                    ],
+                    "date":  exchange.date
+                } for exchange in page_obj
+            ]
         }
 
         return JsonResponse(payload)
