@@ -26,29 +26,30 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     ports:
       - 4000:80
-
-  httpd:
-    build: httpd
-    image: httpd-shib2
-    ports:
-      - target: 80
-        published: 80
-        protocol: tcp
-        mode: host
-      - target: 443
-        published: 443
-        mode: host
-    # networks:
-    #   - internal-mail
-    volumes:
-      - ./httpd/apache2:/usr/local/apache2/conf:ro
-      - ./httpd/shibboleth:/etc/shibboleth
+  #
+  # httpd:
+  #   build: httpd
+  #   image: httpd:2.4
+  #   ports:
+  #     - target: 80
+  #       published: 80
+  #       protocol: tcp
+  #       mode: host
+  #     - target: 443
+  #       published: 443
+  #       mode: host
+  #   # networks:
+  #   #   - internal-mail
+  #   volumes:
+  #     - ./httpd/apache2:/usr/local/apache2/conf:ro
+  #     - ./httpd/shibboleth:/etc/shibboleth
 
   django:
     build: ./django
     container_name: tts_django
     env_file:
       - django/.env.dev
+    # command: ["python", "manage.py", "runserver_plus", "0.0.0.0:8000", "--cert-file", "certs/server.crt", "--key-file", "certs/server.key"]
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:
       - ./django/:/usr/src/django/

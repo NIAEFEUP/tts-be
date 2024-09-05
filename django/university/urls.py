@@ -1,9 +1,10 @@
 from django.urls import path, include
 
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
-from university.routes.auth.FederatedLogin import FederatedLogin
 from university.routes.auth.Csrf import Csrf
+from university.routes.auth.InfoView import InfoView
 from . import views
+from mozilla_django_oidc import views as oidc_views
 
 # URLConf
 urlpatterns = [
@@ -12,9 +13,9 @@ urlpatterns = [
     path('course_units/<int:course_id>/<int:year>/<int:semester>/', views.course_units),
     path('professors/<int:schedule>/', views.professor),
     path('info/', views.info),
+    path('auth/info/', InfoView.as_view()),
     path('csrf/', Csrf.as_view()),
     path('login/', views.login),
-    path('login/federated/', FederatedLogin.as_view()),
     path('logout/', views.logout),
     path('student_schedule/<int:student>/', views.student_schedule),
     path('schedule_sigarra/<int:course_unit_id>/', views.schedule_sigarra),
@@ -32,5 +33,6 @@ urlpatterns = [
     path('class/<int:course_unit_id>/', views.classes),
     path('professors/<int:slot>/', views.professor),
     path('info/', views.info),
-    path('course_unit/hash', views.get_course_unit_hashes)
+    path('course_unit/hash', views.get_course_unit_hashes),
+    path('oidc-auth/', include('mozilla_django_oidc.urls')),
 ]

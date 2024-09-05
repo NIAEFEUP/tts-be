@@ -1,4 +1,5 @@
 import csv
+from django.contrib.sessions.models import Session
 from django.utils.html import strip_tags
 from django.template.loader import render_to_string
 from django.core.mail import send_mail
@@ -67,6 +68,19 @@ def faculty(request):
 
 @api_view(['GET'])
 def course(request, year):
+    print("please, god: ", dict(request.session))
+    sigarra_token_endpoint = 'https://sigarra.up.pt/auth/oidc/token'
+    token = request.session.get("oidc_id_token")
+    response = requests.get(
+        sigarra_token_endpoint,
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json',
+        }
+    )
+
+    print("status code: ", response.status_code)
+
     json_data = list(Course.objects.filter(year=year).values())
     return JsonResponse(json_data, safe=False)
 

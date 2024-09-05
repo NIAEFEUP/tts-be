@@ -1,5 +1,5 @@
 # deps
-FROM python:3.8-slim-buster AS deps
+FROM python:3.11-slim AS deps
 
 WORKDIR /usr/src/django/ 
 
