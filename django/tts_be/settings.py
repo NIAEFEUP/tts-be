@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import os 
 from dotenv import dotenv_values
+# from university.auth import CustomOIDCAuthentationBackend
+
 
 CONFIG={
     **dotenv_values(".env"),  # load variables
@@ -33,14 +35,14 @@ JWT_KEY= CONFIG['JWT_KEY']
 DOMAIN = os.getenv('DOMAIN')
 DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'tts.niaefeup.pt', 'tts-staging.niaefeup.pt', 'tts-dev.niaefeup.pt']
 
 # Application definition
 
 INSTALLED_APPS = [ 
+    # 'django_extensions',
     'corsheaders',
     'django.contrib.admin',
-   # 'djangosaml2',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions', # legacy
@@ -48,6 +50,7 @@ INSTALLED_APPS = [
     'rest_framework', 
     'django.contrib.staticfiles',
     'university',
+    'mozilla_django_oidc'
 ]
 
 MIDDLEWARE = [
@@ -56,13 +59,21 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'university.auth_middleware.AuthMiddleware',
+    'mozilla_django_oidc.middleware.SessionRefresh',
+    'django.middleware.csrf.CsrfViewMiddleware'
     #'djangosaml2.middleware.SamlSessionMiddleware'
 ]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
+# SECURE_SSL_REDIRECT = True
 
 ROOT_URLCONF = 'tts_be.urls'
 
@@ -84,13 +95,33 @@ TEMPLATES = [
     },
 ]
 
+
+
 WSGI_APPLICATION = 'tts_be.wsgi.application'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
+    # CustomOIDCAuthentationBackend,
+    'mozilla_django_oidc.auth.OIDCAuthenticationBackend'
     #'djangosaml2.backends.Saml2Backend'
 )
 
+OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
+OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
+OIDC_RP_SIGN_ALGO = "RS256"
+
+OIDC_STORE_ID_TOKEN = True
+OIDC_STORE_ACCESS_TOKEN = True
+
+OIDC_OP_AUTHORIZATION_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/auth"
+OIDC_OP_TOKEN_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/token"
+OIDC_OP_USER_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/userinfo"
+OIDC_OP_JWKS_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/certs"
+OIDC_OP_LOGOUT_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/logout"
+
+OIDC_RP_SCOPES = "openid email profile uporto_data" #profile offline_access audience uporto_data"
+
+LOGIN_REDIRECT_URL = "/"
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -167,7 +198,7 @@ CACHES = {
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3100',
 ]
-CSRF_COOKIE_SECURE = False
+# CSRF_COOKIE_SECURE = False
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOWED_ORIGINS = [

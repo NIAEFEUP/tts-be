@@ -16,6 +16,7 @@ postgres/sql/01_data.sql
 # django 
 django/**/migrations/**
 django/university/models.py
+django/.env.dev
 
 # celery
 django/celerybeat-schedule
