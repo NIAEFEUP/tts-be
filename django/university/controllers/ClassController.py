@@ -1,4 +1,4 @@
-from university.models import Class, Professor, Slot, SlotProfessor
+from university.models import Class, Professor, Slot, SlotProfessor, ProfessorLink
 
 
 class ClassController:
@@ -9,11 +9,14 @@ class ClassController:
         professors = []
         
         for slot_professor in slot_professors:
+            professor_link = ProfessorLink.objects.get(pk=slot_professor.link_id)
+
             professor = Professor.objects.get(id=slot_professor['professor_id'])
             professors.append({
                 'id': professor.id,
                 'acronym': professor.professor_acronym,
-                'name': professor.professor_name
+                'name': professor.professor_name,
+                'link': professor_link.link
             })
 
         return {

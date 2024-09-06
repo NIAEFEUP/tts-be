@@ -165,6 +165,10 @@ CREATE TABLE "public"."slot_class" (
     "class_id" bigint NOT NULL
 );
 
+CREATE TABLE "public"."professor_link" (
+  id SERIAL PRIMARY KEY,
+  "link" varchar(256) NOT NULL
+);
 
 --
 -- TOC entry 225 (class 1259 OID 16806)
@@ -173,7 +177,8 @@ CREATE TABLE "public"."slot_class" (
 
 CREATE TABLE "public"."slot_professor" (
     "slot_id" integer NOT NULL,
-    "professor_id" integer NOT NULL
+    "professor_id" integer NOT NULL,
+    "link_id" integer NOT NULL
 );
 
 
@@ -317,7 +322,7 @@ ALTER TABLE ONLY "public"."slot"
 --
 
 ALTER TABLE ONLY "public"."slot_professor"
-    ADD CONSTRAINT "slot_professor_pkey" PRIMARY KEY ("slot_id", "professor_id");
+    ADD CONSTRAINT "slot_professor_pkey" PRIMARY KEY ("slot_id", "professor_id", "link_id");
 
 
 --
