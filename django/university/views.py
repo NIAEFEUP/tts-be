@@ -155,16 +155,19 @@ def info(request):
 
 @api_view(["POST"])
 def login(request):
-    username = request.POST.get('pv_login')
-    password = request.POST.get('pv_password')
+    # username = request.POST.get('pv_login')
+    # password = request.POST.get('pv_password')
 
     login_data = {
-        'pv_login': username,
-        'pv_password': password
+        'pv_login': os.getenv("MOCK_USERNAME"),
+        'pv_password': os.getenv("MOCK_PASSWORD")
     }
 
-    if not username or not password:
-        return JsonResponse({"error": "Missing credentials"}, safe=False)
+    # if not username or not password:
+    #     return JsonResponse({"error": "Missing credentials"}, safe=False)
+
+    if "username" in request.session:
+        return HttpResponse()
 
     try:
         response = requests.post("https://sigarra.up.pt/feup/pt/mob_val_geral.autentica/", data=login_data)
@@ -176,8 +179,8 @@ def login(request):
             for cookie in response.cookies:
                 new_response.set_cookie(cookie.name, cookie.value, httponly=True, secure=True)
             
-            admin = ExchangeAdmin.objects.filter(username=username).exists()
-            request.session["admin"] = admin
+            # admin = ExchangeAdmin.objects.filter(username=username).exists()
+            # request.session["admin"] = admin
 
             request.session["username"] = login_data["pv_login"]
             return new_response

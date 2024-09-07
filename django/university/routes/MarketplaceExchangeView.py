@@ -27,7 +27,7 @@ class MarketplaceExchangeView(APIView):
         
         page_number = request.GET.get("page")
         paginator = Paginator(marketplace_exchanges, 10)
-        page_obj = paginator.get_page(1)
+        page_obj = paginator.get_page(page_number if page_number != None else 1)
         
         payload = {
             "page": {

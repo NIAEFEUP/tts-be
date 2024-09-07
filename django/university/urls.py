@@ -3,6 +3,7 @@ from django.urls import path, include
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
 from university.routes.auth.FederatedLogin import FederatedLogin
 from university.routes.auth.Csrf import Csrf
+from university.routes.student.schedule.StudentScheduleView import StudentScheduleView
 from . import views
 
 # URLConf
@@ -16,7 +17,7 @@ urlpatterns = [
     path('login/', views.login),
     path('login/federated/', FederatedLogin.as_view()),
     path('logout/', views.logout),
-    path('student_schedule/<int:student>/', views.student_schedule),
+    path('student/schedule', StudentScheduleView.as_view()),
     path('schedule_sigarra/<int:course_unit_id>/', views.schedule_sigarra),
     path('class_sigarra_schedule/<int:course_unit_id>/<str:class_name>/', views.class_sigarra_schedule),
     path('submit_direct_exchange/', views.submit_direct_exchange),
