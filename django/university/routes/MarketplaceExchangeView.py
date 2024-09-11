@@ -2,10 +2,6 @@ import json
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.renderers import JSONRenderer
-from django.views import View
-from django.forms.models import model_to_dict
 from django.db.models import Prefetch
 
 from university.exchange.utils import curr_semester_weeks

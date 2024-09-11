@@ -1,5 +1,6 @@
 from datetime import date
 import copy
+from university.controllers.ClassController import ClassController
 from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
 from enum import Enum
 import json
@@ -180,7 +181,7 @@ def course_unit_by_id(id):
 def curr_semester_weeks():
     currdate = date.today()
     year = str(currdate.year)
-    primeiro_semestre = currdate.month >= 10 and currdate.month <= 12
+    primeiro_semestre = currdate.month >= 9 and currdate.month <= 12
     if primeiro_semestre: 
         semana_ini = "1001"
         semana_fim = "1201"
@@ -203,25 +204,37 @@ def convert_sigarra_schedule(schedule_data):
     new_schedule_data = []
         
     for schedule in schedule_data:
-        course_unit = CourseUnit.objects.filter(sigarra_id=schedule['ocorrencia_id'])[0]
+        course_unit = CourseUnit.objects.filter(id=schedule['ocorrencia_id'])[0]
         professors = []
         for docente in schedule['docentes']:
-            professor = Professor.objects.filter(sigarra_id=docente['doc_codigo'])
+            professor = Professor.objects.filter(id=docente['doc_codigo'])
             if(len(professor) < 1):
                 continue
             professors.append({"name": docente['doc_nome'], "acronym": professor[0].professor_acronym})
 
         new_schedule = {
-            'acronym': schedule['ucurr_sigla'],
-            'name': course_unit.name,
-            'class': schedule['turma_sigla'],
-            'code': schedule['ocorrencia_id'],
-            'type': schedule['tipo'],
-            'duration': schedule['aula_duracao'],
-            'room': schedule['sala_sigla'],
-            'start': str(schedule['hora_inicio'] / 3600),
-            'day': schedule['dia'] - 2,
-            'professors': professors
+            'courseInfo': {
+                'id': schedule['ocorrencia_id'],
+                'course_unit_id': schedule['ocorrencia_id'],
+                'acronym': course_unit.acronym,
+                'name': course_unit.name,
+                'url': course_unit.url
+            },
+            'classInfo': {
+                'id': schedule['ocorrencia_id'],
+                'name': schedule['turma_sigla'],
+                'filteredTeachers': [],
+                'slots': [{
+                    'id': schedule['ocorrencia_id'],
+                    'lesson_type': schedule["tipo"],
+                    'day': schedule['dia'] - 2,
+                    'start_time': str(schedule['hora_inicio'] / 3600),
+                    'duration': schedule['aula_duracao'],
+                    'location': schedule['sala_sigla'],
+                    'professors_link': '',
+                    'professors': professors
+                }],
+            }
         }
 
         new_schedule_data.append(new_schedule)

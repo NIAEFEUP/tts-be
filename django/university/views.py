@@ -168,6 +168,8 @@ def login(request):
 
     if "username" in request.session:
         return HttpResponse()
+    
+    print("login data: ", login_data)
 
     try:
         response = requests.post("https://sigarra.up.pt/feup/pt/mob_val_geral.autentica/", data=login_data)
