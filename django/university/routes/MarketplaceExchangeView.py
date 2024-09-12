@@ -9,10 +9,20 @@ from university.models import MarketplaceExchange, MarketplaceExchangeClass
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
+    def courseUnitNameFilterInExchangeOptions(self, options, courseUnitNameFilter):
+        for courseUnitId in courseUnitNameFilter:
+            for option in options:
+                if courseUnitId == option.course_unit_id:
+                    return True
+
+        return False
+
     """
         Returns all the current marketplace exchange requests paginated
     """
     def get(self, request):
+        courseUnitNameFilter = request.query_params.get('courseUnitNameFilter', None)
+            
         marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
             Prefetch(
                 'marketplaceexchangeclass_set',
@@ -20,6 +30,12 @@ class MarketplaceExchangeView(APIView):
                 to_attr='options'
             )
         ).all())
+
+        if courseUnitNameFilter:
+            marketplace_exchanges = list(filter(
+                lambda x: self.courseUnitNameFilterInExchangeOptions(x.options, courseUnitNameFilter), 
+                marketplace_exchanges
+            ))
         
         page_number = request.GET.get("page")
         paginator = Paginator(marketplace_exchanges, 10)
