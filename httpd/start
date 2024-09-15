@@ -1,8 +1,0 @@
-#!/bin/bash
-
-set -e
-set -o pipefail
-set -u
-
-service shibd start
-/usr/local/bin/httpd-foreground $@

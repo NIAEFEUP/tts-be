@@ -70,12 +70,12 @@ def faculty(request):
 def course(request, year):
     # print("please, god: ", dict(request.session))
     # sigarra_token_endpoint = 'https://sigarra.up.pt/auth/oidc/token'
-    # token = request.session.get("oidc_id_token")
+    # token = request.session.get("oidc_access_token")
+    # print("token: ", token)
     # response = requests.get(
     #     sigarra_token_endpoint,
     #     headers={
-    #         'Authorization': f'Bearer {token}',
-    #         'Content-Type': 'application/json',
+    #         "Authorization": "Bearer {token}"
     #     }
     # )
     #

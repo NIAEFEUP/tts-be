@@ -41,6 +41,7 @@ ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'tts.niaefeup.pt', 'tts-staging.niaefeu
 
 INSTALLED_APPS = [ 
     # 'django_extensions',
+    'university',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -49,7 +50,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'rest_framework', 
     'django.contrib.staticfiles',
-    'university',
     'mozilla_django_oidc'
 ]
 
@@ -101,8 +101,8 @@ WSGI_APPLICATION = 'tts_be.wsgi.application'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    # CustomOIDCAuthentationBackend,
-    'mozilla_django_oidc.auth.OIDCAuthenticationBackend'
+    'university.auth.CustomOIDCAuthentationBackend',
+    # 'mozilla_django_oidc.auth.OIDCAuthenticationBackend'
     #'djangosaml2.backends.Saml2Backend'
 )
 
@@ -119,9 +119,11 @@ OIDC_OP_USER_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-co
 OIDC_OP_JWKS_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/certs"
 OIDC_OP_LOGOUT_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/logout"
 
-OIDC_RP_SCOPES = "openid email profile uporto_data" #profile offline_access audience uporto_data"
+OIDC_RP_SCOPES = "openid email profile uporto_data"
 
 LOGIN_REDIRECT_URL = "/"
+
+# AUTH_USER_MODEL = 'university.TTSUser'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases

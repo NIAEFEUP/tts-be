@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Prefetch
 
+from university.controllers.ClassController import ClassController
 from university.exchange.utils import curr_semester_weeks
 from university.models import MarketplaceExchange, MarketplaceExchangeClass
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
@@ -22,21 +23,32 @@ class MarketplaceExchangeView(APIView):
     """
     def get(self, request):
         courseUnitNameFilter = request.query_params.get('courseUnitNameFilter', None)
+        requestTypeFilter = request.query_params.get('typeFilter')  
             
-        marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
-            Prefetch(
-                'marketplaceexchangeclass_set',
-                queryset=MarketplaceExchangeClass.objects.all(),
-                to_attr='options'
-            )
-        ).all())
+        marketplace_exchanges = []
+        if requestTypeFilter and requestTypeFilter == 'received':
+            pass
+        else:
+            marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
+                Prefetch(
+                    'marketplaceexchangeclass_set',
+                    queryset=MarketplaceExchangeClass.objects.all(),
+                    to_attr='options'
+                )
+            ).all())
+
+            if requestTypeFilter and requestTypeFilter == 'mine':
+                marketplace_exchanges = list(filter(
+                    lambda x: x.issuer_nmec == 202108880,
+                    marketplace_exchanges
+                ))
 
         if courseUnitNameFilter:
             marketplace_exchanges = list(filter(
                 lambda x: self.courseUnitNameFilterInExchangeOptions(x.options, courseUnitNameFilter), 
                 marketplace_exchanges
             ))
-        
+
         page_number = request.GET.get("page")
         paginator = Paginator(marketplace_exchanges, 10)
         page_obj = paginator.get_page(page_number if page_number != None else 1)
@@ -55,6 +67,7 @@ class MarketplaceExchangeView(APIView):
                     "options": [
                         MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options
                     ],
+                    "classes": list(self.getExchangeOptionClasses(exchange.options)),
                     "date":  exchange.date
                 } for exchange in page_obj
             ]
@@ -66,6 +79,10 @@ class MarketplaceExchangeView(APIView):
         print("request: ", request)
         
         return HttpResponse()
+
+    def getExchangeOptionClasses(self, options):
+        classes = sum(list(map(lambda option: ClassController.get_classes(option.course_unit_id), options)), [])
+        return filter(lambda currentClass: any(currentClass["name"] == option.class_issuer_goes_from for option in options), classes)
 
     def submit_marketplace_exchange_request(request):
         exchanges = request.POST.getlist('exchangeChoices[]')
