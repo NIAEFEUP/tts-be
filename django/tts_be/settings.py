@@ -24,7 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = int(os.getenv('DEBUG')) != 0
+DEBUG = os.getenv('DEBUG')
+DEBUG = int(DEBUG) != 0 if DEBUG else False
 
 ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
 
