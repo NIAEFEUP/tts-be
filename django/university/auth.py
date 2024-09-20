@@ -1,5 +1,4 @@
-
-from mozilla_django_oidc.auth import OIDCAuthenticationBackend
+from django.contrib.auth.models import AbstractUser
 
 class CustomOIDCAuthentationBackend(OIDCAuthenticationBackend):
     
@@ -10,7 +9,7 @@ class CustomOIDCAuthentationBackend(OIDCAuthenticationBackend):
 
         user.first_name = claims.get('given_name', '')
         user.last_name = claims.get('family_name', '')
-        user.skill = False
+        user.username = claims.get('nmec', '')
         user.save()
 
         return user
