@@ -322,7 +322,7 @@ ALTER TABLE ONLY "public"."slot"
 --
 
 ALTER TABLE ONLY "public"."slot_professor"
-    ADD CONSTRAINT "slot_professor_pkey" PRIMARY KEY ("slot_id", "professor_id", "link_id");
+    ADD CONSTRAINT "slot_professor_pkey" PRIMARY KEY ("slot_id", "professor_id");
 
 
 --
@@ -477,6 +477,10 @@ ALTER TABLE ONLY "public"."slot_professor"
 
 ALTER TABLE ONLY "public"."slot_professor"
     ADD CONSTRAINT "slot_professor_slot_id_ddc4b9c2_fk_slot_id" FOREIGN KEY ("slot_id") REFERENCES "public"."slot"("id") DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE ONLY "public"."slot_professor"
+    ADD CONSTRAINT "slot_professor_professor_link_id" FOREIGN KEY ("link_id") REFERENCES "public"."professor_link"("id") DEFERRABLE INITIALLY DEFERRED;
+
 
 
 -- Completed on 2024-08-13 22:21:25 UTC
