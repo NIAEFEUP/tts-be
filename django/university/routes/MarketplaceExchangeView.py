@@ -6,30 +6,60 @@ from django.db.models import Prefetch
 
 from university.controllers.ClassController import ClassController
 from university.exchange.utils import curr_semester_weeks
-from university.models import MarketplaceExchange, MarketplaceExchangeClass
+from university.models import DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
-    def courseUnitNameFilterInExchangeOptions(self, options, courseUnitNameFilter):
-        for courseUnitId in courseUnitNameFilter:
-            for option in options:
-                if courseUnitId == option.course_unit_id:
-                    return True
+    def __init__(self):
+        self.filterAction = {
+            "mine": self.filterMineExchanges,
+            "all": self.filterAllExchanges
+        }
 
-        return False
+    
+    def build_pagination_payload(self, request, exchanges):
+        page_number = request.GET.get("page")
+        paginator = Paginator(exchanges, 10)
+        page_obj = paginator.get_page(page_number if page_number != None else 1)
 
-    """
-        Returns all the current marketplace exchange requests paginated
-    """
-    def get(self, request):
-        courseUnitNameFilter = request.query_params.get('courseUnitNameFilter', None)
-        requestTypeFilter = request.query_params.get('typeFilter')  
-            
-        marketplace_exchanges = []
-        if requestTypeFilter and requestTypeFilter == 'received':
-            pass
-        else:
-            marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
+        return {
+            "page": {
+                "current": page_obj.number,
+                "has_next": page_obj.has_next(),
+                "has_previous": page_obj.has_previous(),
+            },
+            "data": [{
+                "id": exchange.id,
+                "issuer_name": exchange.issuer_name,
+                "issuer_nmec": exchange.issuer_nmec,
+                "options": [
+                    MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options
+                ],
+                "classes": list(self.getExchangeOptionClasses(exchange.options)),
+                "date":  exchange.date
+            } for exchange in page_obj]
+        }
+
+
+    def filterMineExchanges(self, request, course_unit_name_filter):
+        marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
+                Prefetch(
+                    'marketplaceexchangeclass_set',
+                    queryset=MarketplaceExchangeClass.objects.all(),
+                    to_attr='options'
+                )
+            ).filter(issuer_nmec=request.user.username).all())
+
+        if course_unit_name_filter:
+            marketplace_exchanges = list(filter(
+                lambda x: self.courseUnitNameFilterInExchangeOptions(x.options, course_unit_name_filter),
+                marketplace_exchanges
+            ))
+
+        return self.build_pagination_payload(request, marketplace_exchanges)
+
+    def filterAllExchanges(self, request, course_unit_name_filter):
+        marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
                 Prefetch(
                     'marketplaceexchangeclass_set',
                     queryset=MarketplaceExchangeClass.objects.all(),
@@ -37,44 +67,36 @@ class MarketplaceExchangeView(APIView):
                 )
             ).all())
 
-            if requestTypeFilter and requestTypeFilter == 'mine':
-                marketplace_exchanges = list(filter(
-                    lambda x: x.issuer_nmec == 202108880,
-                    marketplace_exchanges
-                ))
+        print("what the hell: ", marketplace_exchanges)
 
-        if courseUnitNameFilter:
+        if course_unit_name_filter:
+            print("entered here?")
             marketplace_exchanges = list(filter(
-                lambda x: self.courseUnitNameFilterInExchangeOptions(x.options, courseUnitNameFilter), 
+                lambda x: self.courseUnitNameFilterInExchangeOptions(x.options, course_unit_name_filter),
                 marketplace_exchanges
             ))
 
-        page_number = request.GET.get("page")
-        paginator = Paginator(marketplace_exchanges, 10)
-        page_obj = paginator.get_page(page_number if page_number != None else 1)
+        return self.build_pagination_payload(request, marketplace_exchanges)
+   
+    def courseUnitNameFilterInExchangeOptions(self, options, courseUnitNameFilter):
+        matches = []
+        for courseUnitId in courseUnitNameFilter:
+            for option in options:
+                if courseUnitId == option.course_unit_id:
+                    matches.append(1)
+
+        return len(matches) == len(courseUnitNameFilter)
+   
+
+    """
+        Returns all the current marketplace exchange requests paginated
+    """
+    def get(self, request):
+        courseUnitNameFilter = request.query_params.get('courseUnitNameFilter', None)
+        requestTypeFilter = request.query_params.get('typeFilter')  
+
+        return JsonResponse(self.filterAction[requestTypeFilter](request, courseUnitNameFilter.split(',') if courseUnitNameFilter else None), safe=False)
         
-        payload = {
-            "page": {
-                "current": page_obj.number,
-                "has_next": page_obj.has_next(),
-                "has_previous": page_obj.has_previous(),
-            },
-            "data": [
-                {
-                    "id": exchange.id,
-                    "issuer_name": exchange.issuer_name,
-                    "issuer_nmec": exchange.issuer_nmec,
-                    "options": [
-                        MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options
-                    ],
-                    "classes": list(self.getExchangeOptionClasses(exchange.options)),
-                    "date":  exchange.date
-                } for exchange in page_obj
-            ]
-        }
-
-        return JsonResponse(payload)
-
     def post(self, request):
         print("request: ", request)
         

@@ -123,8 +123,6 @@ OIDC_RP_SCOPES = "openid email profile uporto_data"
 
 LOGIN_REDIRECT_URL = "/"
 
-# AUTH_USER_MODEL = 'university.TTSUser'
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 

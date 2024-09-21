@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
 class CustomOIDCAuthentationBackend(OIDCAuthenticationBackend):
     
