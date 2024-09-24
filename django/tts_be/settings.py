@@ -123,6 +123,8 @@ OIDC_RP_SCOPES = "openid email profile uporto_data"
 
 LOGIN_REDIRECT_URL = "/"
 
+OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 3600 * 60
+
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 

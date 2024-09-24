@@ -5,7 +5,7 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import Prefetch
 
 from university.controllers.ClassController import ClassController
-from university.exchange.utils import curr_semester_weeks
+from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, curr_semester_weeks, exchange_overlap, incorrect_class_error, update_schedule_accepted_exchanges
 from university.models import DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
@@ -98,15 +98,13 @@ class MarketplaceExchangeView(APIView):
         return JsonResponse(self.filterAction[requestTypeFilter](request, courseUnitNameFilter.split(',') if courseUnitNameFilter else None), safe=False)
         
     def post(self, request):
-        print("request: ", request)
-        
-        return HttpResponse()
+        return self.submit_marketplace_exchange_request(request)
 
     def getExchangeOptionClasses(self, options):
         classes = sum(list(map(lambda option: ClassController.get_classes(option.course_unit_id), options)), [])
         return filter(lambda currentClass: any(currentClass["name"] == option.class_issuer_goes_from for option in options), classes)
 
-    def submit_marketplace_exchange_request(request):
+    def submit_marketplace_exchange_request(self, request):
         exchanges = request.POST.getlist('exchangeChoices[]')
         exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
@@ -129,7 +127,7 @@ class MarketplaceExchangeView(APIView):
     
         student_schedule = list(student_schedules[curr_student].values())
         update_schedule_accepted_exchanges(curr_student, student_schedule, request.COOKIES)
-        student_schedules[curr_student] = build_student_schedule_dict(student_schedule)
+        student_schedules[curr_student] = build_student_schedule_dict(student_schedule, request.COOKIES)
 
         (status, new_marketplace_schedule) = build_marketplace_submission_schedule(student_schedules, exchanges, request.COOKIES, curr_student)
         print("Student schedules: ", student_schedules[curr_student])
@@ -142,45 +140,3 @@ class MarketplaceExchangeView(APIView):
         # create_marketplace_exchange_on_db(exchanges, curr_student)
     
         return JsonResponse({"success": True}, safe=False)
-
-    def marketplace_exchange(request):
-        exchanges = MarketplaceExchange.objects.all()
-
-        exchanges_json = json.loads(serializers.serialize('json', exchanges))
-
-        exchanges_map = dict()
-        for exchange in exchanges_json:
-            exchange_id = exchange['pk']  
-            exchange_fields = exchange['fields']  
-
-            student = get_student_data(exchange_fields["issuer"], request.COOKIES)
-
-            if(student.json()["codigo"] == request.session["username"]):
-                continue
-
-            if exchange_id and exchanges_map.get(exchange_id):
-                exchanges_map[exchange_id]['class_exchanges'].append(exchange_fields)
-            elif exchange_id:
-                exchanges_map[exchange_id] = {
-                    'id' : exchange_id,
-                    'issuer' :  student.json(),
-                    'accepted' : exchange_fields.get('accepted'),
-                    'date' : exchange_fields.get('date'),
-                    'class_exchanges' : []
-                }
-
-        for exchange_id, exchange in exchanges_map.items():
-            class_exchanges = MarketplaceExchangeClass.objects.filter(marketplace_exchange=exchange_id)
-        
-            for class_exchange in class_exchanges:
-                course_unit = course_unit_by_id(class_exchange.course_unit_id)
-                print("current class exchange is: ", class_exchange)
-                exchange['class_exchanges'].append({
-                    'course_unit' : course_unit.name,
-                    'course_unit_id': class_exchange.course_unit_id,
-                    'course_unit_acronym': course_unit.acronym,
-                    'old_class' : class_exchange.old_class,
-                    'new_class' : class_exchange.new_class,
-                })
-
-        return JsonResponse(list(exchanges_map.values()), safe=False)
