@@ -14,11 +14,6 @@ RUN apt-get update
 RUN apt-get -y install build-essential
 RUN apt-get -y install protobuf-compiler
 
-# Generating the python files from the protobufs
-COPY ./tts-protobufs/protos/ ./protos
-RUN mkdir -p ./generated
-RUN protoc --python_out=./generated ./protos
-
 # Install postgres dependencies (pgsql client and development files)
 COPY ./etc/pgdg.sh /tmp/pgdg.sh
 RUN /tmp/pgdg.sh

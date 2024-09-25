@@ -7,6 +7,11 @@ until PGPASSWORD="${POSTGRES_PASSWORD}" psql -h "${POSTGRES_HOST}" -U "${POSTGRE
 done
 >&2 echo "PostgreSQL is up - executing command"
 
+# Compile protobuf files
+echo "Compiling protobuf files..."
+protoc --python_out=generated -I=./protos/ ./protos/*.proto
+echo "Protobuf files compiled successfully."
+
 # Migrate the Django.
 python manage.py inspectdb >university/models.py
 python manage.py makemigrations

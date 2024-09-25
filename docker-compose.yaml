@@ -35,7 +35,8 @@ services:
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:
       - ./django/:/usr/src/django/
-      - ./tts-protobufs/protos:/usr/src/django/protos
+      - ./tts-protobufs/protos/:/usr/src/django/protos/
+      - ./tts-protobufs/generated/:/usr/src/django/generated/
     ports:
       - 8100:8000
 
