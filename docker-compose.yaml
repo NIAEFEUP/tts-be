@@ -36,7 +36,7 @@ services:
     volumes:
       - ./django/:/usr/src/django/
       - ./tts-protobufs/protos/:/usr/src/django/protos/
-      - ./tts-protobufs/generated/:/usr/src/django/generated/
+      - ./protos/:/usr/src/django/generated/
     ports:
       - 8100:8000
 
