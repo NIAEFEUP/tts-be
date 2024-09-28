@@ -1,12 +1,13 @@
 import json
+import requests
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Prefetch
 
 from university.controllers.ClassController import ClassController
-from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, curr_semester_weeks, exchange_overlap, incorrect_class_error, update_schedule_accepted_exchanges
-from university.models import DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
+from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, curr_semester_weeks, exchange_overlap, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
+from university.models import CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
@@ -127,7 +128,7 @@ class MarketplaceExchangeView(APIView):
     
         student_schedule = list(student_schedules[curr_student].values())
         update_schedule_accepted_exchanges(curr_student, student_schedule, request.COOKIES)
-        student_schedules[curr_student] = build_student_schedule_dict(student_schedule, request.COOKIES)
+        student_schedules[curr_student] = build_student_schedule_dict(student_schedule)
 
         (status, new_marketplace_schedule) = build_marketplace_submission_schedule(student_schedules, exchanges, request.COOKIES, curr_student)
         print("Student schedules: ", student_schedules[curr_student])
@@ -136,7 +137,26 @@ class MarketplaceExchangeView(APIView):
 
         if exchange_overlap(student_schedules, curr_student):
             return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
-    
-        # create_marketplace_exchange_on_db(exchanges, curr_student)
+
+        self.insert_marketplace_exchange(exchanges, request.user)
     
         return JsonResponse({"success": True}, safe=False)
+
+    def insert_marketplace_exchange(self, exchanges, user):
+        issuer_name = f"{user.first_name} {user.last_name.split(' ')[-1]}"
+        marketplace_exchange = MarketplaceExchange.objects.create(
+            issuer_name=issuer_name,
+            issuer_nmec=user.username, 
+            accepted=False
+        )
+        for exchange in exchanges:
+            course_unit_id = int(exchange["courseUnitId"])
+            course_unit = CourseUnit.objects.get(pk=course_unit_id)
+            MarketplaceExchangeClass.objects.create(
+                marketplace_exchange=marketplace_exchange,
+                course_unit_acronym=course_unit.acronym,
+                course_unit_id=course_unit_id,
+                course_unit_name=course_unit.name,
+                class_issuer_goes_from=exchange["classNameRequesterGoesFrom"],
+                class_issuer_goes_to=exchange["classNameRequesterGoesTo"]
+            )

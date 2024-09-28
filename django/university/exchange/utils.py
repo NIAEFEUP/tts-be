@@ -28,10 +28,11 @@ def create_marketplace_exchange_on_db(exchanges, curr_student):
    
 
 def build_marketplace_submission_schedule(schedule, submission, cookies, auth_student):
+    print("Current auth student: ", auth_student)
     for exchange in submission:
-        course_unit = exchange["course_unit"]
-        class_auth_student_goes_to = exchange["old_class"]
-        class_auth_student_goes_from = exchange["new_class"]
+        course_unit = exchange["courseUnitId"]
+        class_auth_student_goes_to = exchange["classNameRequesterGoesTo"]
+        class_auth_student_goes_from = exchange["classNameRequesterGoesFrom"]
 
         print("schedule is: ", schedule[auth_student])
         
@@ -53,11 +54,11 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
     for curr_exchange in exchanges:
         print("Other student is: ", curr_exchange["other_student"])
         print("Auth student is: ", auth_username)
-        other_student = curr_exchange["other_student"]
-        course_unit = course_unit_by_id(curr_exchange["course_unit_id"])
+        other_student = curr_exchange["other_student"]["mecNumber"]
+        course_unit = CourseUnit.objects.get(pk=curr_exchange["courseUnitId"])
         course_unit = course_unit.acronym
-        class_auth_student_goes_to = curr_exchange["old_class"]
-        class_other_student_goes_to = curr_exchange["new_class"] # The other student goes to its new class
+        class_auth_student_goes_to = curr_exchange["classNameRequesterGoesTo"]
+        class_other_student_goes_to = curr_exchange["classNameRequesterGoesFrom"] # The other student goes to its new class
 
         print("auth student goes to: ", class_auth_student_goes_to)
         print("other student goes to: ", class_other_student_goes_to)
@@ -87,8 +88,10 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
 
 def build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, cookies):
     for curr_exchange in exchanges:
-        curr_username = curr_exchange["other_student"]
-        if not(curr_username in student_schedules):
+        curr_username = curr_exchange["other_student"]["mecNumber"]
+        print("CURR USERNAME: ", curr_username)
+        print("student schedules: ", student_schedules.keys())
+        if not curr_username in student_schedules.keys():
             schedule_request = requests.get(get_student_schedule_url(curr_username, semana_ini, semana_fim), cookies=cookies)
             if(schedule_request.status_code != 200):
                 return (ExchangeStatus.FETCH_SCHEDULE_ERROR, schedule_request.status_code)
@@ -136,7 +139,7 @@ def create_direct_exchange_participants(student_schedules, exchanges, inserted_e
 
 def build_student_schedule_dict(schedule: list):
     return {
-        (class_schedule["turma_sigla"], class_schedule["ucurr_sigla"]): class_schedule for class_schedule in schedule if class_schedule["tipo"] == "TP"
+        (class_schedule["turma_sigla"], class_schedule["ocorrencia_id"]): class_schedule for class_schedule in schedule if class_schedule["tipo"] == "TP"
     }
 
 def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: int, start_2: int, end_2: int) -> bool:

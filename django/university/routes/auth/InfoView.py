@@ -10,7 +10,9 @@ class InfoView(View):
     def get(self, request):
         if request.user.is_authenticated:
             return JsonResponse({
-                "signed": True
+                "signed": True,
+                "username": request.user.username,
+                "name": f"{request.user.first_name} {request.user.last_name}",
             }, safe=False)
         else:
             return JsonResponse({

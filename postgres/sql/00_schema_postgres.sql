@@ -188,8 +188,7 @@ CREATE TABLE "public"."direct_exchange" (
   "id" SERIAL PRIMARY KEY,
   "issuer" varchar(32) NOT NULL,
   "accepted" boolean NOT NULL,
-  "date" TIMESTAMP DEFAULT now(),
-  "marketplace_exchange_id" INTEGER DEFAULT NULL REFERENCES "public"."marketplace_exchange"("id")
+  "date" TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE "public"."direct_exchange_participants" (

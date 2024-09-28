@@ -8,7 +8,7 @@ class CustomOIDCAuthentationBackend(OIDCAuthenticationBackend):
         print("claims: ", claims)
 
         user.first_name = claims.get('given_name', '')
-        user.last_name = claims.get('family_name', '')
+        user.last_name = claims.get('family_name', '').split(' ')[-1] 
         user.username = claims.get('nmec', '')
         user.save()
 

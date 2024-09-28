@@ -386,78 +386,6 @@ def submit_marketplace_exchange_request(request):
     return JsonResponse({"success": True}, safe=False)
 
 @api_view(["POST"])
-def submit_direct_exchange(request):
-
-    (semana_ini, semana_fim) = curr_semester_weeks();
-
-    student_schedules = {}
-
-    marketplaceStartedExchangeId = request.POST.get("marketplace_exchange_id")
-
-    curr_student_schedule = requests.get(get_student_schedule_url(
-        request.session["username"],
-        semana_ini,
-        semana_fim
-    ), cookies=request.COOKIES)
-
-    if (curr_student_schedule.status_code != 200):
-        return HttpResponse(status=curr_student_schedule.status_code)
-
-    username = request.session["username"]
-    schedule_data = json.loads(curr_student_schedule.content)["horario"]
-
-    student_schedules[username] = build_student_schedule_dict(schedule_data)
-
-    exchange_choices = request.POST.getlist('exchangeChoices[]')
-    exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
-
-    # Add the other students schedule to the dictionary
-    (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, request.COOKIES)
-    if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
-        return HttpResponse(status=trailing)
-
-    for student in student_schedules.keys():
-        student_schedule = list(student_schedules[student].values())
-        update_schedule_accepted_exchanges(student, student_schedule, request.COOKIES)
-        student_schedules[student] = build_student_schedule_dict(student_schedule)
-
-    marketplace_exchange = None
-    if(marketplaceStartedExchangeId != None):
-        marketplace_exchange = MarketplaceExchange.objects.filter(id=int(marketplaceStartedExchangeId)).first()
-
-    exchange_model = DirectExchange(accepted=False, issuer=request.session["username"], marketplace_exchange=marketplace_exchange)
-
-    (status, trailing) = build_new_schedules(
-        student_schedules, exchanges, request.session["username"])
-    if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
-        return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
-    
-    inserted_exchanges = []
-    (status, trailing) = create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_model, request.session["username"])
-    if status == ExchangeStatus.CLASSES_OVERLAP:    
-        return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
-
-    exchange_model.save()
-    
-    tokens_to_generate = {}
-    for inserted_exchange in inserted_exchanges:
-        participant = inserted_exchange.participant;
-        if not(participant in tokens_to_generate):
-            token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
-            tokens_to_generate[participant] = token
-            html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}tts/verify_direct_exchange/{token}"})
-            send_mail(
-                'Confirmação de troca',
-                strip_tags(html_message),
-                'tts@exchange.com',
-                [f'up{participant}@up.pt'],
-                fail_silently=False)
-        inserted_exchange.save()
-    
-    return JsonResponse({"success": True}, safe=False)
-
-
-@api_view(["POST"])
 def verify_direct_exchange(request, token):
     try:
         exchange_info = jwt.decode(token, JWT_KEY, algorithms=["HS256"])
@@ -627,20 +555,6 @@ def direct_exchange_history(request):
 
     return JsonResponse(list(exchanges_map.values()), safe=False)
 
-class DirectExchangeView(APIView):
-    def delete(self, request):
-        exchange_id = request.POST.get('exchange_id')
-        exchange = DirectExchange.objects.get(pk=exchange_id)
-        exchange_participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange_id)
-        
-        for participant in exchange_participants: 
-            # avisar os participantes
-            pass
-
-        # Apagar a troca direta
-        exchange.delete()
-        return JsonResponse({"status": "refactoring"}, safe=False)
-        
 """
     Verifies if course units have the correct hash
 """
