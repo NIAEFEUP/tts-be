@@ -6,33 +6,29 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
+from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import convert_sigarra_schedule, curr_semester_weeks, get_student_schedule_url, update_schedule_accepted_exchanges
 
 class StudentScheduleView(APIView):
-    def get(self, request, format=None):
-
-        (semana_ini, semana_fim) = curr_semester_weeks();
+    def get(self, request):
+        sigarra_controller = SigarraController()
 
         try:
-            response = requests.get(get_student_schedule_url(
-                request.user.username, 
-                semana_ini,
-                semana_fim
-            ), cookies=request.COOKIES)
+            sigarra_res = sigarra_controller.get_student_schedule(request.user.username)
+            
+            if sigarra_res.status_code != 200:
+                return HttpResponse(status=sigarra_res.status_code)
 
-            if (response.status_code != 200):
-                return HttpResponse(status=response.status_code)
-
-            schedule_data = response.json()['horario']
+            schedule_data = sigarra_res.data
             old_schedule = hashlib.sha256(json.dumps(schedule_data, sort_keys=True).encode()).hexdigest()
 
-            update_schedule_accepted_exchanges(request.session["username"], schedule_data, request.COOKIES)
+            update_schedule_accepted_exchanges(request.user.username, schedule_data)
 
             new_schedule = hashlib.sha256(json.dumps(schedule_data, sort_keys=True).encode()).hexdigest()
             sigarra_synchronized = old_schedule == new_schedule
 
             new_response = JsonResponse({"schedule": convert_sigarra_schedule(schedule_data), "noChanges": sigarra_synchronized}, safe=False)
-            new_response.status_code = response.status_code
+            new_response.status_code = sigarra_res.status_code
             
             return new_response 
         

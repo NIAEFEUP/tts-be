@@ -6,6 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import Prefetch
 
 from university.controllers.ClassController import ClassController
+from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, curr_semester_weeks, exchange_overlap, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
 from university.models import CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
@@ -110,27 +111,20 @@ class MarketplaceExchangeView(APIView):
         exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
         print("Marketplace exchange: ", exchanges)
-
-        (semana_ini, semana_fim) = curr_semester_weeks()
-        curr_student = request.session["username"]
-
-        curr_student_schedule = requests.get(get_student_schedule_url(
-            request.session["username"], # type: ignore
-            semana_ini,
-            semana_fim
-        ), cookies=request.COOKIES)
-
-        if(curr_student_schedule.status_code != 200):
-            return HttpResponse(status=curr_student_schedule.status_code)
+        curr_student = request.user.username
+        sigarra_res = SigarraController().get_student_schedule(curr_student)
+        
+        if(sigarra_res.status_code != 200):
+            return HttpResponse(status=sigarra_res.status_code)
     
         student_schedules = {}
-        student_schedules[curr_student] = build_student_schedule_dict(json.loads(curr_student_schedule.content)["horario"])
+        student_schedules[curr_student] = build_student_schedule_dict(sigarra_res.data)
     
         student_schedule = list(student_schedules[curr_student].values())
-        update_schedule_accepted_exchanges(curr_student, student_schedule, request.COOKIES)
+        update_schedule_accepted_exchanges(curr_student, student_schedule)
         student_schedules[curr_student] = build_student_schedule_dict(student_schedule)
 
-        (status, new_marketplace_schedule) = build_marketplace_submission_schedule(student_schedules, exchanges, request.COOKIES, curr_student)
+        (status, new_marketplace_schedule) = build_marketplace_submission_schedule(student_schedules, exchanges, curr_student)
         print("Student schedules: ", student_schedules[curr_student])
         if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
             return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
@@ -159,4 +153,4 @@ class MarketplaceExchangeView(APIView):
                 course_unit_name=course_unit.name,
                 class_issuer_goes_from=exchange["classNameRequesterGoesFrom"],
                 class_issuer_goes_to=exchange["classNameRequesterGoesTo"]
-            )
+            ) 

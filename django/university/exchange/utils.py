@@ -1,6 +1,7 @@
 from datetime import date
 import copy
 from university.controllers.ClassController import ClassController
+from university.controllers.SigarraController import SigarraController
 from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
 from enum import Enum
 import json
@@ -27,7 +28,7 @@ def create_marketplace_exchange_on_db(exchanges, curr_student):
         MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_acronym=course_unit.acronym, course_unit_id=exchange["course_unit_id"], course_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
    
 
-def build_marketplace_submission_schedule(schedule, submission, cookies, auth_student):
+def build_marketplace_submission_schedule(schedule, submission, auth_student):
     print("Current auth student: ", auth_student)
     for exchange in submission:
         course_unit = exchange["courseUnitId"]
@@ -42,7 +43,7 @@ def build_marketplace_submission_schedule(schedule, submission, cookies, auth_st
 
         # print("Class from sigarra: ", get_class_from_sigarra(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to, cookies)[0])
 
-        schedule[auth_student][(class_auth_student_goes_to, course_unit)] = get_class_from_sigarra(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to, cookies)[0][0]# get class schedule
+        schedule[auth_student][(class_auth_student_goes_to, course_unit)] = SigarraController().get_class_schedule(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to).data[0][0]# get class schedule
         del schedule[auth_student][(class_auth_student_goes_from, course_unit)] # remove old class of other student
 
     return (ExchangeStatus.SUCCESS, None) 
@@ -86,17 +87,17 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
 
     return (ExchangeStatus.SUCCESS, None)     
 
-def build_student_schedule_dicts(student_schedules, exchanges, semana_ini, semana_fim, cookies):
+def build_student_schedule_dicts(student_schedules, exchanges):
     for curr_exchange in exchanges:
         curr_username = curr_exchange["other_student"]["mecNumber"]
         print("CURR USERNAME: ", curr_username)
         print("student schedules: ", student_schedules.keys())
         if not curr_username in student_schedules.keys():
-            schedule_request = requests.get(get_student_schedule_url(curr_username, semana_ini, semana_fim), cookies=cookies)
-            if(schedule_request.status_code != 200):
-                return (ExchangeStatus.FETCH_SCHEDULE_ERROR, schedule_request.status_code)
+            sigarra_res = SigarraController().get_student_schedule(curr_username)
+            if(sigarra_res.status_code != 200):
+                return (ExchangeStatus.FETCH_SCHEDULE_ERROR, sigarra_res.status_code)
 
-            schedule = json.loads(schedule_request.content)["horario"]
+            schedule = sigarra_res.data
 
             student_schedules[curr_username] = build_student_schedule_dict(schedule)
 
@@ -244,7 +245,7 @@ def convert_sigarra_schedule(schedule_data):
 
     return new_schedule_data
 
-def update_schedule_accepted_exchanges(student, schedule, cookies):
+def update_schedule_accepted_exchanges(student, schedule):
     direct_exchange_ids = DirectExchangeParticipants.objects.filter(
         participant=student, direct_exchange__accepted=True
     ).values_list('direct_exchange', flat=True)
@@ -252,33 +253,27 @@ def update_schedule_accepted_exchanges(student, schedule, cookies):
 
     for exchange in direct_exchanges:
         participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant=student).order_by('date')
-        (status, trailing) = update_schedule(schedule, participants, cookies) 
+        (status, trailing) = update_schedule(schedule, participants) 
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
 
     return (ExchangeStatus.SUCCESS, None)
 
-def update_schedule(student_schedule, exchanges, cookies):
-    (semana_ini, semana_fim) = curr_semester_weeks();
-
+def update_schedule(student_schedule, exchanges):
     for exchange in exchanges:
         for i, schedule in enumerate(student_schedule):
             if schedule["ucurr_sigla"] == exchange.course_unit:
                 ocorr_id = schedule["ocorrencia_id"]
                 class_type = schedule["tipo"]
 
-                unit_schedules = requests.get(get_unit_schedule_url(
-                    ocorr_id,
-                    semana_ini,
-                    semana_fim
-                ), cookies=cookies)
+                sigarra_res = SigarraController().get_course_unit_classes(ocorr_id)
 
-                if unit_schedules.status_code != 200:
-                    return (ExchangeStatus.FETCH_SCHEDULE_ERROR, unit_schedules.status_code)
+                if sigarra_res.status_code != 200:
+                    return (ExchangeStatus.FETCH_SCHEDULE_ERROR, sigarra_res.status_code)
 
                 # TODO if old_class schedule is different from current schedule, abort
-
-                for unit_schedule in unit_schedules.json()["horario"]:
+                schedule = sigarra_res.data
+                for unit_schedule in schedule:
                     for turma in unit_schedule["turmas"]:
                         if turma["turma_sigla"] == exchange.new_class and unit_schedule["tipo"] == class_type:
                             student_schedule[i] = unit_schedule
@@ -289,24 +284,18 @@ def update_schedule(student_schedule, exchanges, cookies):
 Util function to get the schedule of a class from sigarra
 """
 def get_class_from_sigarra(course_unit_id, class_name, cookies):
-    (semana_ini, semana_fim) = curr_semester_weeks();
-
-    print("course unit id: ", course_unit_id)
-
-    response = requests.get(get_unit_schedule_url(
-            course_unit_id, 
-            semana_ini, 
-            semana_fim
-        ), cookies=cookies)
-
-    print("response is: ", response)
-
-    if(response.status_code != 200):
-        return None
-
-    schedule = json.loads(response.content)
-    classes = schedule["horario"]
-    class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))
-    theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
-        
-    return (class_schedule, theoretical_schedule)
+    pass
+    # (semana_ini, semana_fim) = curr_semester_weeks();
+    #
+    # print("course unit id: ", course_unit_id)
+    # # sigarra_res = SigarraController().get_class_schedule(course_unit_id, class_name)
+    #
+    # # if(sigarra_res.status_code != 200):
+    # #     return None
+    # #
+    # # schedule = sigarra_res.data
+    # classes = schedule["horario"]
+    # class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))
+    # theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
+    #
+    # return (class_schedule, theoretical_schedule)
