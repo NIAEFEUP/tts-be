@@ -15,7 +15,7 @@ class StudentScheduleView(APIView):
 
         try:
             response = requests.get(get_student_schedule_url(
-                202208817, #request.session["username"],
+                request.user.username,
                 semana_ini,
                 semana_fim
             ), cookies=request.COOKIES)
