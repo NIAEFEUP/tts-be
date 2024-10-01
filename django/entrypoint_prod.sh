@@ -9,7 +9,7 @@ done
 
 # Compile protobuf files
 echo "Compiling protobuf files..."
-protoc --python_out=generated -I=./protos/ ./protos/*.proto
+protoc --python_out=generated -I=./protos/ ./protos/**/*.proto
 echo "Protobuf files compiled successfully."
 
 # Migrate the Django.
