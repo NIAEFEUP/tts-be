@@ -11,10 +11,14 @@ import os
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 from university.routing import websocket_urlpatterns
+from channels.auth import AuthMiddlewareStack
+from channels.security.websocket import AllowedHostsOriginValidator
+
+import socketio
+from university.socket.views import sio
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tts_be.settings')
 
-application = ProtocolTypeRouter({
-    'http': get_asgi_application(),
-    'websocket': URLRouter(websocket_urlpatterns),
-})
+django_app = get_asgi_application()
+
+application = socketio.ASGIApp(sio, django_app)
