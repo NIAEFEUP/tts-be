@@ -38,7 +38,8 @@ class MarketplaceExchangeView(APIView):
                     MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options
                 ],
                 "classes": list(self.getExchangeOptionClasses(exchange.options)),
-                "date":  exchange.date
+                "date":  exchange.date,
+                "accepted": exchange.accepted
             } for exchange in page_obj]
         }
 
