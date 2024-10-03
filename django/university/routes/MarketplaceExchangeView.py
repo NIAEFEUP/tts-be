@@ -62,7 +62,7 @@ class MarketplaceExchangeView(APIView):
         return self.build_pagination_payload(request, marketplace_exchanges)
 
     def filterAllExchanges(self, request, course_unit_name_filter):
-        marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
+        marketplace_exchanges = list(MarketplaceExchange.objects.exclude(issuer_nmec=request.user.username).prefetch_related(
                 Prefetch(
                     'marketplaceexchangeclass_set',
                     queryset=MarketplaceExchangeClass.objects.all(),
