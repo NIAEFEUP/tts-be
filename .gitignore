@@ -16,9 +16,15 @@ postgres/sql/01_data.sql
 # django 
 django/**/migrations/**
 django/university/models.py
+django/.env.dev
+
+nginx/certs/*.key
 
 # celery
 django/celerybeat-schedule
 
 # stats related graphs
 django/university/stats_graphs/*
+
+httpd/shibboleth/*.pem
+
