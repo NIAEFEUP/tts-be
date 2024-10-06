@@ -24,6 +24,14 @@ https://drive.google.com/drive/folders/1hyiwPwwPWhbAPeJm03c0MAo1HTF6s_zK?usp=sha
 
 - Copy the ```01_data.sql``` and ```00_schema_postgres.sql``` of year and semester you desire to the ```postgres/sql``` folder.
 
+Then you can run
+
+```bash
+make populate
+```
+
+This will down the container, clearing the data from the database and then build and running the container again. This can be both used for people who are first running the project as well as for people that have already run the project but want to insert a new sql data file.
+
 ## Usage 
 
 ### Development environment 
@@ -35,17 +43,6 @@ After you installed docker, go to the folder where you cloned this repository an
 ```yaml
 docker compose build
 ```
-
-This will build the docker container for the backend.
-
-In case you have __already build the server before and want to repopulate the database__, make sure you run 
-
-```bash
-sudo make clean
-```
-
-We need to clean the database to repopulate it, since the way the postgres container works is that it only runs the `sql` files present in the `postgres/sql` folder if the database is clean. This is way we need to issue `sudo make clean` in order for the insert sql queries to be run.
-
 #### Running the container
 
 Before running docker, you have to create an `.env` file with required environment variables for the backend to work.
