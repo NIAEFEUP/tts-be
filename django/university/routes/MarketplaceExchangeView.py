@@ -1,14 +1,16 @@
+from functools import reduce
 import json
 import requests
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
-from django.db.models import Prefetch
+from django.db.models import Q, Prefetch
 
 from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
-from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, curr_semester_weeks, exchange_overlap, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
+from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, convert_sigarra_schedule, curr_semester_weeks, exchange_overlap, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
 from university.models import CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
+from university.routes.student.schedule.StudentScheduleView import StudentScheduleView
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
@@ -62,18 +64,24 @@ class MarketplaceExchangeView(APIView):
         return self.build_pagination_payload(request, marketplace_exchanges)
 
     def filterAllExchanges(self, request, course_unit_name_filter):
-        marketplace_exchanges = list(MarketplaceExchange.objects.exclude(issuer_nmec=request.user.username).prefetch_related(
+        courseUnitClasses = StudentScheduleView.retrieveCourseUnitClasses(SigarraController(), request.user.username)
+        marketplace_exchanges = list(MarketplaceExchange.objects
+                .exclude(issuer_nmec=request.user.username).prefetch_related(
                 Prefetch(
                     'marketplaceexchangeclass_set',
-                    queryset=MarketplaceExchangeClass.objects.all(),
+                    queryset=MarketplaceExchangeClass.objects.filter(
+                        reduce(lambda x, y: x | y, [
+                            Q(class_issuer_goes_to=k) & Q(course_unit_acronym=v)
+                            for k, v in courseUnitClasses.items()
+                        ])
+                    ),
                     to_attr='options'
                 )
             ).all())
 
-        print("what the hell: ", marketplace_exchanges)
-
+        marketplace_exchanges = list(filter(lambda x: len(x.options) > 0, marketplace_exchanges))
+        
         if course_unit_name_filter:
-            print("entered here?")
             marketplace_exchanges = list(filter(
                 lambda x: self.courseUnitNameFilterInExchangeOptions(x.options, course_unit_name_filter),
                 marketplace_exchanges

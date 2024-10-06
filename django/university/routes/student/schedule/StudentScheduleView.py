@@ -34,3 +34,24 @@ class StudentScheduleView(APIView):
         
         except requests.exceptions.RequestException as e:
             return JsonResponse({"error": e}, safe=False)
+    
+    @staticmethod
+    def retrieveCourseUnitClasses(sigarra_controller, username):
+        sigarra_res = sigarra_controller.get_student_schedule(username)
+            
+        if sigarra_res.status_code != 200:
+            return HttpResponse(status=sigarra_res.status_code)
+
+        schedule_data = sigarra_res.data
+
+        update_schedule_accepted_exchanges(username, schedule_data)
+        
+        courseUnitClass = {}
+        for slot in schedule_data:
+            if slot["tipo"] == "T":
+                continue
+
+            courseUnitClass[slot["turma_sigla"]] = slot["ucurr_sigla"]
+
+        return courseUnitClass
+
