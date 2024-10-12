@@ -1,4 +1,5 @@
 from functools import reduce
+import base64
 import json
 import requests
 from rest_framework.views import APIView
@@ -46,7 +47,7 @@ class MarketplaceExchangeView(APIView):
         }
 
 
-    def filterMineExchanges(self, request, course_unit_name_filter):
+    def filterMineExchanges(self, request, course_unit_name_filter, classes_filter):
         marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
                 Prefetch(
                     'marketplaceexchangeclass_set',
@@ -63,23 +64,24 @@ class MarketplaceExchangeView(APIView):
 
         return self.build_pagination_payload(request, marketplace_exchanges)
 
-    def filterAllExchanges(self, request, course_unit_name_filter):
-        courseUnitClasses = StudentScheduleView.retrieveCourseUnitClasses(SigarraController(), request.user.username)
+    def filterAllExchanges(self, request, course_unit_name_filter, classes_filter):
+        print("classes filter: ", classes_filter)
+        # courseUnitClasses = StudentScheduleView.retrieveCourseUnitClasses(SigarraController(), request.user.username)
         marketplace_exchanges = list(MarketplaceExchange.objects
                 .exclude(issuer_nmec=request.user.username).prefetch_related(
                 Prefetch(
                     'marketplaceexchangeclass_set',
-                    queryset=MarketplaceExchangeClass.objects.filter(
-                        reduce(lambda x, y: x | y, [
-                            Q(class_issuer_goes_to=k) & Q(course_unit_acronym=v)
-                            for k, v in courseUnitClasses.items()
-                        ])
-                    ),
+                    # queryset=MarketplaceExchangeClass.objects.filter(
+                    #     reduce(lambda x, y: x | y, [
+                    #         Q(class_issuer_goes_to=k) 
+                    #         for k, v in courseUnitClasses.items()
+                    #     ])
+                    # ),
                     to_attr='options'
                 )
             ).all())
 
-        marketplace_exchanges = list(filter(lambda x: len(x.options) > 0, marketplace_exchanges))
+        marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
         
         if course_unit_name_filter:
             marketplace_exchanges = list(filter(
@@ -88,7 +90,21 @@ class MarketplaceExchangeView(APIView):
             ))
 
         return self.build_pagination_payload(request, marketplace_exchanges)
-   
+
+    def advanced_classes_filter(self, marketplace_exchanges, classes_filter):
+        filtered_marketplace_exchanges = []
+        for exchange in marketplace_exchanges:
+            exchange_tainted = False
+            for option in exchange.options:
+                if option.course_unit_acronym in classes_filter.keys():
+                    correct_class_included = option.class_issuer_goes_to in classes_filter[option.course_unit_acronym]
+                    exchange_tainted = not correct_class_included
+
+            if not exchange_tainted:
+                filtered_marketplace_exchanges.append(exchange)
+        
+        return filtered_marketplace_exchanges
+
     def courseUnitNameFilterInExchangeOptions(self, options, courseUnitNameFilter):
         matches = []
         for courseUnitId in courseUnitNameFilter:
@@ -105,9 +121,18 @@ class MarketplaceExchangeView(APIView):
     def get(self, request):
         courseUnitNameFilter = request.query_params.get('courseUnitNameFilter', None)
         requestTypeFilter = request.query_params.get('typeFilter')  
+        classesFilter = self.parseClassesFilter(request.query_params.get('classesFilter', None))
+    
+        return JsonResponse(self.filterAction[requestTypeFilter](request, courseUnitNameFilter.split(',') if courseUnitNameFilter else None, classesFilter), safe=False)
 
-        return JsonResponse(self.filterAction[requestTypeFilter](request, courseUnitNameFilter.split(',') if courseUnitNameFilter else None), safe=False)
-        
+    def parseClassesFilter(self, classesFilter: str) -> dict:
+        if not classesFilter:
+            return {}
+
+        b64_decoded = base64.b64decode(classesFilter)
+        string = b64_decoded.decode('utf-8')
+        return dict(json.loads(string))
+
     def post(self, request):
         return self.submit_marketplace_exchange_request(request)
 
