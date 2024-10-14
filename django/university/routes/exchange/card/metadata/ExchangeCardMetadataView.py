@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Prefetch
 
+from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
 from university.models import Class
 
@@ -19,7 +20,7 @@ class ExchangeCardMetadataView(APIView):
 
             students = sigarra_res.data
             new_response = JsonResponse({
-                "classes": list(Class.objects.filter(course_unit_id=course_unit_id).all().values()),
+                "classes": list(ClassController.get_classes(course_unit_id)),
                 "students": students
             }, safe=False)
 
