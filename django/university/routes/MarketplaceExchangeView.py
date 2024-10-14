@@ -97,7 +97,7 @@ class MarketplaceExchangeView(APIView):
             exchange_tainted = False
             for option in exchange.options:
                 if option.course_unit_acronym in classes_filter.keys():
-                    correct_class_included = option.class_issuer_goes_to in classes_filter[option.course_unit_acronym]
+                    correct_class_included = option.class_issuer_goes_from in classes_filter[option.course_unit_acronym]
                     exchange_tainted = not correct_class_included
 
             if not exchange_tainted:
