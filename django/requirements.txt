@@ -8,3 +8,6 @@ psycopg2==2.9.9
 celery==5.2.7
 redis==3.5.3
 python-dotenv==1.0.1
+requests==2.31.0
+pyjwt==2.8.0
+mozilla-django-oidc==4.0.1

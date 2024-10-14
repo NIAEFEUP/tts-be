@@ -1,0 +1,11 @@
+DELETE FROM marketplace_exchange;
+DELETE FROM marketplace_exchange_class;
+INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (1, 'Armindo Santos', '202208001', false);
+INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (1, 'Fundamentos de Segurança Informática', 'FSI', 541886, '3LEIC15', '3LEIC07');
+INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (1, 'Laboratório de Bases de Dados e Aplicações Web', 'LBAW', 541888 , '3LEIC13', '3LEIC01');
+INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (3, 'Joao Esteves', '202208001', false);
+INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (3, 'Interação Pessoa Computador', 'IPC', 541887 , '3LEIC09', '3LEIC04');
+INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (5, 'Jose Malheiro', '202208001', false);
+INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (5, 'Fundamentos de Segurança Informática', 'FSI', 541886, '3LEIC15', '3LEIC07');
+INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (6, 'Lamine Yamal', '202208001', false);
+INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (6, 'Laboratório de Bases de Dados e Aplicações Web', 'LBAW', 541888 , '3LEIC13', '3LEIC01');
