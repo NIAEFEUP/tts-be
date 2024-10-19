@@ -90,7 +90,7 @@ CREATE TABLE "public"."course_metadata" (
 --
 
 CREATE TABLE "public"."course_unit" (
-    "id" integer NOT NULL,
+    "id" integer NOT NULL UNIQUE,
     "course_id" integer NOT NULL,
     "name" character varying(200) NOT NULL,
     "acronym" character varying(16) NOT NULL,
@@ -212,6 +212,13 @@ CREATE TABLE "public"."marketplace_exchange_class" (
     "class_issuer_goes_from" varchar(16) NOT NULL,
     "class_issuer_goes_to" varchar(16) NOT NULL
 ); 
+
+CREATE TABLE "public"."exchange_expirations"(
+  "id" SERIAL PRIMARY KEY,
+  "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "active_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+  "end_date" TIMESTAMP WITH TIME ZONE NOT NULL
+);
 
 CREATE TABLE "public"."exchange_admin" (
   "id" SERIAL PRIMARY KEY,
