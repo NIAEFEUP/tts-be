@@ -26,7 +26,6 @@ class AuthMiddleware:
         ]
 
     def __call__(self, request):
-
         in_paths = False
 
         for path in self.auth_paths:

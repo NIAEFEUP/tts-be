@@ -4,6 +4,7 @@ from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
 from university.routes.auth.Csrf import Csrf
 from university.routes.exchange.DirectExchangeView import DirectExchangeView
 from university.routes.exchange.options.ExchangeOptionsView import ExchangeOptionsView
+from university.routes.student.course_units.eligible.StudentEligibleCourseUnits import StudentEligibleCourseUnits
 from university.routes.student.schedule.StudentScheduleView import StudentScheduleView
 from university.routes.auth.InfoView import InfoView
 from university.routes.student.StudentPhotoView import StudentPhotoView
@@ -23,6 +24,7 @@ urlpatterns = [
     path('login/', views.login),
     path('logout/', views.logout),
     path('student/schedule', StudentScheduleView.as_view()),
+    path('student/course_units/eligible', StudentEligibleCourseUnits.as_view()),
     path('student/<str:nmec>/photo', StudentPhotoView.as_view()),
     path('schedule_sigarra/<int:course_unit_id>/', views.schedule_sigarra),
     path('class_sigarra_schedule/<int:course_unit_id>/<str:class_name>/', views.class_sigarra_schedule),

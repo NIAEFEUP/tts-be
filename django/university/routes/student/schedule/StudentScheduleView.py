@@ -12,7 +12,7 @@ from university.exchange.utils import convert_sigarra_schedule, curr_semester_we
 class StudentScheduleView(APIView):
     def get(self, request):
         sigarra_controller = SigarraController()
-
+        
         try:
             sigarra_res = sigarra_controller.get_student_schedule(request.user.username)
             

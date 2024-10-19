@@ -18,9 +18,12 @@ class MarketplaceExchangeView(APIView):
     def __init__(self):
         self.filterAction = {
             "mine": self.filterMineExchanges,
-            "all": self.filterAllExchanges
+            "all": self.filterAllExchanges,
+            "received": self.filterReceivedExchanges
         }
-
+    
+    def filterReceivedExchanges(self, request, course_unit_name_filter, classes_filter):
+        pass
     
     def build_pagination_payload(self, request, exchanges):
         page_number = request.GET.get("page")
