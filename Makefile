@@ -20,6 +20,12 @@ upload:
 	@echo [UPLOADING] data...
 	@docker-compose run fetcher python ./update_data/upload.py
 
+populate:
+	@-docker compose down
+	@-docker compose build --no-cache
+	@-docker volume rm tts_postgres_data || true
+	@-docker compose up
+
 clean: clean_fetcher clean_database
 
 clean_fetcher: 

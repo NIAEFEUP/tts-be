@@ -19,7 +19,6 @@ services:
     build:
       context: ./pgadmin
     container_name: tts_pgadmin
-    restart: always
     env_file:
       - pgadmin/.env.dev
     volumes:
@@ -58,7 +57,6 @@ services:
   redis_service:
     image: redis:6.2-bullseye
     container_name: tts_redis
-    restart: always
     ports:
       - "6379:6379"
 
