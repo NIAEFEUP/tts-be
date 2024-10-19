@@ -14,10 +14,14 @@ from university.models import ExchangeExpirations
 class InfoView(View):
     def get(self, request):
         if request.user.is_authenticated:
+            eligible_course_units = request.session.get("eligible_course_units")
+            eligible_exchange = False if not eligible_course_units else len(eligible_course_units) > 0
+
             return JsonResponse({
                 "signed": True,
                 "username": request.user.username,
                 "name": f"{request.user.first_name} {request.user.last_name}",
+                "eligible_exchange": eligible_exchange
             }, safe=False)
         else:
             return JsonResponse({
