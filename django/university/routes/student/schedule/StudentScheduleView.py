@@ -46,9 +46,9 @@ class StudentScheduleView(APIView):
 
         update_schedule_accepted_exchanges(username, schedule_data)
         
-        courseUnitClass = {}
+        courseunitclass = {}
         for slot in schedule_data:
-            if slot["tipo"] == "T":
+            if slot["tipo"] == "t":
                 continue
 
             courseUnitClass[slot["turma_sigla"]] = slot["ucurr_sigla"]

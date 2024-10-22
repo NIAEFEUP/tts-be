@@ -8,6 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import Q, Prefetch
 
 from university.controllers.ClassController import ClassController
+from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, convert_sigarra_schedule, curr_semester_weeks, exchange_overlap, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
 from university.models import CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
@@ -15,16 +16,6 @@ from university.routes.student.schedule.StudentScheduleView import StudentSchedu
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
-    def __init__(self):
-        self.filterAction = {
-            "mine": self.filterMineExchanges,
-            "all": self.filterAllExchanges,
-            "received": self.filterReceivedExchanges
-        }
-    
-    def filterReceivedExchanges(self, request, course_unit_name_filter, classes_filter):
-        pass
-    
     def build_pagination_payload(self, request, exchanges):
         page_number = request.GET.get("page")
         paginator = Paginator(exchanges, 10)
@@ -92,7 +83,7 @@ class MarketplaceExchangeView(APIView):
                 marketplace_exchanges
             ))
 
-        return self.build_pagination_payload(request, marketplace_exchanges)
+        return ExchangeController.build_pagination_payload(request, marketplace_exchanges)
 
     def advanced_classes_filter(self, marketplace_exchanges, classes_filter):
         filtered_marketplace_exchanges = []
@@ -123,10 +114,9 @@ class MarketplaceExchangeView(APIView):
     """
     def get(self, request):
         courseUnitNameFilter = request.query_params.get('courseUnitNameFilter', None)
-        requestTypeFilter = request.query_params.get('typeFilter')  
         classesFilter = self.parseClassesFilter(request.query_params.get('classesFilter', None))
     
-        return JsonResponse(self.filterAction[requestTypeFilter](request, courseUnitNameFilter.split(',') if courseUnitNameFilter else None, classesFilter), safe=False)
+        return JsonResponse(self.filterAllExchanges(request, courseUnitNameFilter.split(',') if courseUnitNameFilter else None, classesFilter), safe=False)
 
     def parseClassesFilter(self, classesFilter: str) -> dict:
         if not classesFilter:

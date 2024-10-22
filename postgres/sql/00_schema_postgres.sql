@@ -186,14 +186,16 @@ CREATE TABLE "public"."marketplace_exchange" (
 
 CREATE TABLE "public"."direct_exchange" (
   "id" SERIAL PRIMARY KEY,
-  "issuer" varchar(32) NOT NULL,
+  "issuer_name" varchar(32) NOT NULL,
+  "issuer_nmec" varchar(32) NOT NULL,
   "accepted" boolean NOT NULL,
   "date" TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE "public"."direct_exchange_participants" (
   "id" SERIAL PRIMARY KEY,
-  "participant" varchar(32) NOT NULL,
+  "participant_name" varchar(32) NOT NULL,
+  "participant_nmec" varchar(32) NOT NULL,
   "old_class" varchar(16) NOT NULL,
   "new_class" varchar(16) NOT NULL,
   "course_unit" varchar(64) NOT NULL,

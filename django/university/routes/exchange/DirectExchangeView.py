@@ -11,8 +11,9 @@ from django.template.loader import render_to_string
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, DOMAIN
 
 
+from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, create_direct_exchange_participants, curr_semester_weeks, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
+from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, curr_semester_weeks, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
 from university.models import DirectExchange, MarketplaceExchange, MarketplaceExchangeClass
 
 class DirectExchangeView(View):
@@ -46,7 +47,7 @@ class DirectExchangeView(View):
             update_schedule_accepted_exchanges(student, student_schedule)
             student_schedules[student] = build_student_schedule_dict(student_schedule)
 
-        exchange_model = DirectExchange(accepted=False, issuer=request.user.username)
+        exchange_model = DirectExchange(accepted=False, issuer_name=f"{request.user.first_name} {request.user.last_name}", issuer_nmec=request.user.username)
 
         (status, trailing) = build_new_schedules(
             student_schedules, exchanges, request.user.username)
@@ -55,7 +56,7 @@ class DirectExchangeView(View):
             return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
     
         inserted_exchanges = []
-        (status, trailing) = create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_model, request.user.username)
+        (status, trailing) = ExchangeController.create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_model, request.user.username)
         
         if status == ExchangeStatus.CLASSES_OVERLAP:    
             return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)

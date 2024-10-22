@@ -16,7 +16,7 @@ from university.exchange.utils import course_unit_name, curr_semester_weeks, get
 from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
 from university.models import Faculty, MarketplaceExchangeClass
 from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, build_student_schedule_dicts, get_unit_schedule_url, update_schedule, update_schedule_accepted_exchanges
-from university.exchange.utils import ExchangeStatus, build_new_schedules, create_direct_exchange_participants, convert_sigarra_schedule
+from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
