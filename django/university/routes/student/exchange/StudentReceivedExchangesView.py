@@ -36,7 +36,8 @@ class StudentReceivedExchangesView(APIView):
                 "has_previous": page_obj.has_previous(),
             },
             "data": [{
-                "issuer": exchange.issuer_nmec,
+                "issuer_name": exchange.issuer_name,
+                "issuer_nmec": exchange.issuer_nmec,
                 "accepted": exchange.accepted,
                 "participants": [
                     DirectExchangeParticipantsSerializer(participant).data for participant in exchange.participants
