@@ -14,7 +14,7 @@ class StudentReceivedExchangesView(APIView):
             Prefetch(
                 'directexchangeparticipants_set',
                 queryset=DirectExchangeParticipants.objects.all(),
-                to_attr='participants'
+                to_attr='options'
             )
         ).filter(
             directexchangeparticipants__participant_nmec=request.user.username
@@ -36,10 +36,11 @@ class StudentReceivedExchangesView(APIView):
                 "has_previous": page_obj.has_previous(),
             },
             "data": [{
+                "id": exchange.id,
                 "issuer_name": exchange.issuer_name,
                 "issuer_nmec": exchange.issuer_nmec,
                 "accepted": exchange.accepted,
-                "participants": [
+                "options": [
                     DirectExchangeParticipantsSerializer(participant).data for participant in exchange.participants
                 ],
                 "date": exchange.date
