@@ -15,6 +15,14 @@ class InfoView(View):
     def get(self, request):
         if request.user.is_authenticated:
             eligible_course_units = request.session.get("eligible_course_units")
+            
+            if not eligible_course_units:
+                eligible_course_units = ExchangeController.eligible_course_units(
+                    SigarraController(),
+                    request.user.username
+                )
+
+
             eligible_exchange = False if not eligible_course_units else len(eligible_course_units) > 0
 
             return JsonResponse({

@@ -29,6 +29,7 @@ class MarketplaceExchangeView(APIView):
             },
             "data": [{
                 "id": exchange.id,
+                "type": "marketplaceexchange",
                 "issuer_name": exchange.issuer_name,
                 "issuer_nmec": exchange.issuer_nmec,
                 "options": [
@@ -83,7 +84,7 @@ class MarketplaceExchangeView(APIView):
                 marketplace_exchanges
             ))
 
-        return ExchangeController.build_pagination_payload(request, marketplace_exchanges)
+        return self.build_pagination_payload(request, marketplace_exchanges)
 
     def advanced_classes_filter(self, marketplace_exchanges, classes_filter):
         filtered_marketplace_exchanges = []

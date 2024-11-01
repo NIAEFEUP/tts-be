@@ -15,5 +15,5 @@ INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES
 INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (6, 'Aprendizagem Computacional', 'AC',540676 , '1MEIC01', '1MEIC01');
 
 INSERT INTO direct_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (1, 'Armindo Santos', '202108881', false);
-INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, old_class, new_class, course_unit, course_unit_id, direct_exchange, accepted) VALUES (1, 'Participante 1', 202108881, '1MEIC06', '1MEIC05', 'AC', 540676, 1, false);
-INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, old_class, new_class, course_unit, course_unit_id, direct_exchange, accepted) VALUES (2, 'Participante 2', 202108880, '1MEIC05', '1MEIC06', 'AC', 540676, 1, false);
+INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (1, 'Participante 1', 202108881, '1MEIC06', '1MEIC05', 'AC', 540676, 1, false);
+INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (2, 'Participante 2', 202108880, '1MEIC05', '1MEIC06', 'AC', 540676, 1, false);

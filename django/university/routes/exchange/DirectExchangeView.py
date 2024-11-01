@@ -31,7 +31,6 @@ class DirectExchangeView(View):
         username = request.user.username
         schedule_data = sigarra_res.data
         
-        print("schedule_data: ", schedule_data)
         student_schedules[username] = build_student_schedule_dict(schedule_data)
 
         exchange_choices = request.POST.getlist('exchangeChoices[]')

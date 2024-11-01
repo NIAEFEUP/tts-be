@@ -166,147 +166,6 @@ def info(request):
     else:
         return JsonResponse({}, safe=False)
 
-
-@api_view(["POST"])
-def login(request):
-    # username = request.POST.get('pv_login')
-    # password = request.POST.get('pv_password')
-
-    login_data = {
-        'pv_login': os.getenv("MOCK_USERNAME"),
-        'pv_password': os.getenv("MOCK_PASSWORD")
-    }
-
-    # if not username or not password:
-    #     return JsonResponse({"error": "Missing credentials"}, safe=False)
-
-    if "username" in request.session:
-        return HttpResponse()
-    
-    print("login data: ", login_data)
-
-    try:
-        response = requests.post("https://sigarra.up.pt/feup/pt/mob_val_geral.autentica/", data=login_data)
-
-        new_response = HttpResponse(response.content)
-        new_response.status_code = response.status_code
-
-        if response.status_code == 200:
-            for cookie in response.cookies:
-                new_response.set_cookie(cookie.name, cookie.value, httponly=True, secure=True)
-            
-            # admin = ExchangeAdmin.objects.filter(username=username).exists()
-            # request.session["admin"] = admin
-
-            request.session["username"] = login_data["pv_login"]
-            return new_response
-        else:
-            return new_response
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({"error": e}, safe=False)
-
-
-@api_view(["POST"])
-def logout(request):
-
-    try:
-        del request.session["username"]
-    except KeyError:
-        pass
-
-    try:
-        del request.session["admin"]
-    except KeyError:
-        pass
-
-    return HttpResponse(status=200)
-
-
-"""
-    Returns schedule of student
-"""
-
-
-@api_view(["GET"])
-def student_schedule(request, student):
-
-    (semana_ini, semana_fim) = curr_semester_weeks();
-
-    try:
-        response = requests.get(get_student_schedule_url(
-            request.session["username"],
-            semana_ini,
-            semana_fim
-        ), cookies=request.COOKIES)
-
-        if (response.status_code != 200):
-            return HttpResponse(status=response.status_code)
-
-        schedule_data = response.json()['horario']
-        old_schedule = hashlib.sha256(json.dumps(schedule_data, sort_keys=True).encode()).hexdigest()
-
-        update_schedule_accepted_exchanges(student, schedule_data, request.COOKIES)
-
-        new_schedule = hashlib.sha256(json.dumps(schedule_data, sort_keys=True).encode()).hexdigest()
-        sigarra_synchronized = old_schedule == new_schedule
-
-        new_response = JsonResponse({"schedule": convert_sigarra_schedule(schedule_data), "noChanges": sigarra_synchronized}, safe=False)
-        new_response.status_code = response.status_code
-        return new_response 
-        
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({"error": e}, safe=False)
-
-
-"""
-    Returns all classes of a course unit from sigarra
-"""
-
-
-@api_view(["GET"])
-def schedule_sigarra(request, course_unit_id):
-    (semana_ini, semana_fim) = curr_semester_weeks();
-
-    try:
-        response = requests.get(get_unit_schedule_url(
-            course_unit_id, 
-            semana_ini, 
-            semana_fim
-        ), cookies=request.COOKIES)
-
-        if(response.status_code != 200):
-            return HttpResponse(status=response.status_code)
-
-        new_response = JsonResponse(convert_sigarra_schedule(response.json()['horario']), safe=False)
-        new_response.status_code = response.status_code
-
-        return new_response
-
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({"error": e}, safe=False)
-    
-"""
-    Returns all students enrolled in a course unit
-""" 
-@api_view(["GET"])
-def students_per_course_unit(request, course_unit_id):
-
-    try:
-        url = f"https://sigarra.up.pt/feup/pt/mob_ucurr_geral.uc_inscritos?pv_ocorrencia_id={course_unit_id}"
-        response = requests.get(url, cookies=request.COOKIES)
-
-        if (response.status_code != 200):
-            return HttpResponse(status=response.status_code)
-
-        new_response = JsonResponse(response.json(), safe=False)
-
-        new_response.status_code = response.status_code
-
-        return new_response
-
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({"error": e}, safe=False)
-    
 """
     Returns student data
 """    
@@ -327,26 +186,6 @@ def student_data(request, codigo):
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": e}, safe=False)
     
-
-"""
-Gets schedule from a specific class from a course unit from sigarra
-"""
-@api_view(["GET"])
-def class_sigarra_schedule(request, course_unit_id, class_name):
-
-    try:
-        # return HttpResponse(status=response.status_code)
-        class_schedule_response = get_class_from_sigarra(course_unit_id, class_name, request.COOKIES)
-        
-        (class_schedule, theoretical_schedule) = class_schedule_response
-        new_response = JsonResponse(convert_sigarra_schedule(class_schedule + theoretical_schedule), safe=False)
-
-        return new_response
-
-    except requests.exceptions.RequestException as e:
-        return JsonResponse({"error": e}, safe=False)
-
-
 @api_view(["POST"])
 def submit_marketplace_exchange_request(request):
     exchanges = request.POST.getlist('exchangeChoices[]')
@@ -431,44 +270,6 @@ def verify_direct_exchange(request, token):
         print("Error: ", e)
         return HttpResponse(status=500)
 
-
-@api_view(["GET"])
-def is_admin(request):
-    return JsonResponse({"admin" : request.session.get("admin", False)}, safe=False)
-
-@api_view(["GET"])
-def export_exchanges(request):
-
-    if not ExchangeAdmin.objects.filter(username=request.session["username"]).exists():
-        response = HttpResponse()
-        response.status_code = 403
-        return response
-
-    response = HttpResponse(
-        content_type="text/csv",
-        headers={"Content-Disposition": 'attachment; filename="exchange_data.csv"'},
-    )
-
-    writer = csv.writer(response)
-    writer.writerow(["student", "course_unit", "old_class", "new_class"])
-
-    direct_exchange_ids = DirectExchangeParticipants.objects.filter(
-        direct_exchange__accepted=True
-    ).values_list('direct_exchange', flat=True)
-    direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids).order_by('date')
-
-    for exchange in direct_exchanges:
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange).order_by('date')
-        for participant in participants:
-            writer.writerow([
-                participant.participant,
-                participant.course_unit_id,
-                participant.old_class,
-                participant.new_class
-            ])
-
-    return response
-
 @api_view(["GET"])
 def marketplace_exchange(request):
     exchanges = MarketplaceExchange.objects.all()
@@ -512,54 +313,9 @@ def marketplace_exchange(request):
 
     return JsonResponse(list(exchanges_map.values()), safe=False)
 
-@api_view(["GET"])
-def direct_exchange_history(request):
-    username = request.session["username"]
-    my_participations = DirectExchangeParticipants.objects.filter(
-         participant = username,
-    )
-
-    direct_exchanges_id = list(map(lambda entry: entry.direct_exchange.id, my_participations))
-
-    direct_exchanges = DirectExchange.objects.filter(
-        Q(id__in = direct_exchanges_id)
-    )
-
-    exchanges_map = dict();
-    for direct_exchange in direct_exchanges:
-        exchanges_map[direct_exchange.id] = {
-            'id' : direct_exchange.id,
-            'class_exchanges' : [],
-            'issuer' : direct_exchange.issuer,
-            'status' : 'accepted' if direct_exchange.accepted else 'pending'
-        }
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange = direct_exchange.id)
-        for participant in participants:
-            if(participant.participant == direct_exchange.issuer):
-                continue
-            exchanges_map[direct_exchange.id]['class_exchanges'].append({
-                'course_unit' : participant.course_unit,
-                'course_unit_id' : participant.course_unit_id,
-                'old_class' : participant.old_class,
-                'new_class' : participant.new_class,
-                'accepted' : participant.accepted,
-                'other_student' : participant.participant
-            })
-
-    # exchange_status_filter: str = request.GET.get('filter')
-    # accepted_filter_values = ["pending", "accepted", "rejected"]
-    # if exchange_status_filter != None and exchange_status_filter in accepted_filter_values:
-    #     exchanges.filter(accepted=exchange_status_filter)  
-    # 
-    # paginator = Paginator(exchanges, 15)
-
-    return JsonResponse(list(exchanges_map.values()), safe=False)
-
 """
     Verifies if course units have the correct hash
 """
-
-
 @api_view(['GET'])
 def get_course_unit_hashes(request):
 

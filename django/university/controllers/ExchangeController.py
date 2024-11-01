@@ -14,12 +14,15 @@ class ExchangeController:
     @staticmethod
     def eligible_course_units(sigarra_controller, nmec):
         course_units = sigarra_controller.get_student_course_units(nmec).data
+        print("CURRENT COURSE UNITS: ", course_units)
 
         exchange_expirations = ExchangeExpirations.objects.filter(
             course_unit_id__in=course_units, 
             active_date__lte=timezone.now(),
             end_date__gte=timezone.now(),
         ).values_list("course_unit_id", flat=True)
+
+        print("CURRENT EXCHANGE EXPIRATIONS: ", exchange_expirations)
     
         return list(exchange_expirations)
 
@@ -48,31 +51,6 @@ class ExchangeController:
         return dict(json.loads(string))
 
     @staticmethod
-    def build_pagination_payload(request, exchanges):
-        page_number = request.GET.get("page")
-        paginator = Paginator(exchanges, 10)
-        page_obj = paginator.get_page(page_number if page_number != None else 1)
-
-        return {
-            "page": {
-                "current": page_obj.number,
-                "has_next": page_obj.has_next(),
-                "has_previous": page_obj.has_previous(),
-            },
-            "data": [{
-                "id": exchange.id,
-                "issuer_name": exchange.issuer_name,
-                "issuer_nmec": exchange.issuer_nmec,
-                "options": [
-                    MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options
-                ],
-                "classes": list(ExchangeController.getExchangeOptionClasses(exchange.options)),
-                "date":  exchange.date,
-                "accepted": exchange.accepted
-            } for exchange in page_obj]
-        }
-  
-    @staticmethod
     def create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_db_model, auth_user):
         if ExchangeController.exchange_overlap(student_schedules, auth_user):
             return (ExchangeStatus.CLASSES_OVERLAP, None)
@@ -88,8 +66,8 @@ class ExchangeController:
             inserted_exchanges.append(DirectExchangeParticipants(
                 participant_name=curr_exchange["other_student"],
                 participant_nmec=curr_exchange["other_student"],
-                old_class=curr_exchange["old_class"], 
-                new_class=curr_exchange["new_class"],
+                class_participant_goes_from=curr_exchange["class_participant_goes_from"],
+                class_participant_goes_to=curr_exchange["class_participant_goes_to"],
                 course_unit=course_unit.acronym,
                 course_unit_id=curr_exchange["course_unit_id"],
                 direct_exchange=exchange_db_model,
@@ -99,8 +77,8 @@ class ExchangeController:
             inserted_exchanges.append(DirectExchangeParticipants(
                 participant_name=auth_user,
                 participant_nmec=auth_user,
-                old_class=curr_exchange["new_class"], # This is not a typo, the old class of the authenticted student is the new class of the other student
-                new_class=curr_exchange["old_class"],
+                class_participant_goes_from=curr_exchange["class_participant_goes_to"], # This is not a typo, the old class of the authenticted student is the new class of the other student
+                class_participant_goes_to=curr_exchange["class_participant_goes_from"],
                 course_unit=course_unit.acronym,
                 course_unit_id=curr_exchange["course_unit_id"],
                 direct_exchange=exchange_db_model,

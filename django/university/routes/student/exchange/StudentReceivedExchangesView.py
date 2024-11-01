@@ -20,8 +20,6 @@ class StudentReceivedExchangesView(APIView):
             directexchangeparticipants__participant_nmec=request.user.username
         ).all()
 
-        print("CURRENT EXCHANGES: ", exchanges)
-
         return JsonResponse(self.build_pagination_payload(request, exchanges), safe=False)
 
     def build_pagination_payload(self, request, exchanges):
@@ -37,11 +35,12 @@ class StudentReceivedExchangesView(APIView):
             },
             "data": [{
                 "id": exchange.id,
+                "type": "directexchange",
                 "issuer_name": exchange.issuer_name,
                 "issuer_nmec": exchange.issuer_nmec,
                 "accepted": exchange.accepted,
                 "options": [
-                    DirectExchangeParticipantsSerializer(participant).data for participant in exchange.participants
+                    DirectExchangeParticipantsSerializer(participant).data for participant in exchange.options
                 ],
                 "date": exchange.date
             } for exchange in page_obj]
