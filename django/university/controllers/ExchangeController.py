@@ -4,10 +4,32 @@ import json
 from django.core.paginator import Paginator
 from university.controllers.ClassController import ClassController
 from university.exchange.utils import ExchangeStatus, check_class_schedule_overlap, course_unit_by_id
-from university.models import DirectExchangeParticipants, ExchangeExpirations
+from university.models import DirectExchange, DirectExchangeParticipants, ExchangeExpirations
 from django.utils import timezone
+from enum import Enum
 
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
+
+class DirectExchangePendingMotive(Enum):
+    USER_DID_NOT_ACCEPT = 1
+    OTHERS_DID_NOT_ACCEPT = 2
+    
+    @staticmethod
+    def get_pending_motive(curr_user_nmec: str, direct_exchange: DirectExchange):
+        participants = list(DirectExchangeParticipants.objects.filter(
+            participant_nmec=curr_user_nmec, direct_exchange=direct_exchange).all()
+        )
+
+        for participant in participants:
+            if not participant.accepted:
+                return DirectExchangePendingMotive.USER_DID_NOT_ACCEPT
+
+        if not direct_exchange.accepted:
+            return DirectExchangePendingMotive.OTHERS_DID_NOT_ACCEPT
+    
+    @staticmethod
+    def get_value(pending_motive):
+        return pending_motive.value
 
 
 class ExchangeController:

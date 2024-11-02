@@ -3,6 +3,7 @@ from django.http.response import HttpResponse, JsonResponse
 from rest_framework.views import APIView
 from django.db.models import Prefetch
 
+from university.controllers.ExchangeController import DirectExchangePendingMotive
 from university.controllers.SigarraController import SigarraController
 from university.models import DirectExchange, DirectExchangeParticipants
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
@@ -39,6 +40,7 @@ class StudentReceivedExchangesView(APIView):
                 "issuer_name": exchange.issuer_name,
                 "issuer_nmec": exchange.issuer_nmec,
                 "accepted": exchange.accepted,
+                "pending_motive": DirectExchangePendingMotive.get_value(DirectExchangePendingMotive.get_pending_motive(request.user.username, exchange)),
                 "options": [
                     DirectExchangeParticipantsSerializer(participant).data for participant in exchange.options
                 ],

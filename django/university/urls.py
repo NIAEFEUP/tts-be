@@ -34,7 +34,7 @@ urlpatterns = [
     path('exchange/marketplace/', MarketplaceExchangeView.as_view()),
     path('exchange/direct/', DirectExchangeView.as_view()),
     path('exchange/options/', ExchangeOptionsView.as_view()),
-    path('exchange/export/', ExchangeExportView.as_view()),
+    path('exchange/export/csv', ExchangeExportView.as_view()),
     path('course_unit/<int:course_unit_id>/exchange/metadata', ExchangeCardMetadataView.as_view()),
     path('course_unit/<int:course_unit_id>/', views.course_unit_by_id),
     path('class/<int:course_unit_id>/', views.classes),
