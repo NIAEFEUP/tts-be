@@ -97,7 +97,7 @@ class MarketplaceExchangeView(APIView):
 
             if not exchange_tainted:
                 filtered_marketplace_exchanges.append(exchange)
-        
+
         return filtered_marketplace_exchanges
 
     def courseUnitNameFilterInExchangeOptions(self, options, courseUnitNameFilter):
@@ -167,6 +167,7 @@ class MarketplaceExchangeView(APIView):
     def insert_marketplace_exchange(self, exchanges, user):
         issuer_name = f"{user.first_name} {user.last_name.split(' ')[-1]}"
         marketplace_exchange = MarketplaceExchange.objects.create(
+            id=MarketplaceExchange.objects.latest("id").id + 1,
             issuer_name=issuer_name,
             issuer_nmec=user.username, 
             accepted=False
@@ -175,6 +176,7 @@ class MarketplaceExchangeView(APIView):
             course_unit_id = int(exchange["courseUnitId"])
             course_unit = CourseUnit.objects.get(pk=course_unit_id)
             MarketplaceExchangeClass.objects.create(
+                id=MarketplaceExchangeClass.objects.latest("id").id + 1,
                 marketplace_exchange=marketplace_exchange,
                 course_unit_acronym=course_unit.acronym,
                 course_unit_id=course_unit_id,

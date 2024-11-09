@@ -34,7 +34,7 @@ class StudentSentExchangesView(APIView):
         ).all())
 
         exchanges = marketplace_exchanges + direct_exchanges
-        exchanges = sorted(exchanges, key=lambda request: request.date)
+        # exchanges = sorted(exchanges, key=lambda request: request.date)
 
         if course_unit_name_filter:
             marketplace_exchanges = list(filter(
