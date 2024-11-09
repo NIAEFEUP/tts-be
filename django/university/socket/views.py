@@ -15,11 +15,13 @@ session_server = SessionsServer(sio)
         
 @session_server.event
 async def connect(sid, environ, auth):
-    if session_server.valid_token(auth['token']):
+    if auth is None or 'token' not in auth:
+        raise ConnectionRefusedError('Authentication failed: No token provided')
+    elif not session_server.valid_token(auth['token']):
+        raise ConnectionRefusedError('Authentication failed: Invalid token')
+    else:
         print('Client connected')
         await sio.emit('my_response', {'data': 'Connected', 'count': 0}, room=sid)
-    else:
-        raise ConnectionRefusedError('Authentication failed: Invalid token')
 
 
 @session_server.event
