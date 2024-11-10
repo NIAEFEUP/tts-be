@@ -24,7 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = False if int(os.getenv('DEBUG')) == 0 else True
+DEBUG = os.getenv('DEBUG')
+DEBUG = int(DEBUG) != 0 if DEBUG else False
 
 ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
 
@@ -32,6 +33,7 @@ ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'tts.niaefeup.pt', 'tts-staging.niaefeu
 
 INSTALLED_APPS = [ 
     'corsheaders',
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework', 
     'django.contrib.staticfiles',
     'university',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -73,6 +76,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'tts_be.wsgi.application'
+
+ASGI_APPLICATION = 'tts_be.asgi.application'
 
 
 # Database
