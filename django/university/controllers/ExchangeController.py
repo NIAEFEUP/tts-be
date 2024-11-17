@@ -4,11 +4,19 @@ import json
 from django.core.paginator import Paginator
 from university.controllers.ClassController import ClassController
 from university.exchange.utils import ExchangeStatus, check_class_schedule_overlap, course_unit_by_id
-from university.models import DirectExchange, DirectExchangeParticipants, ExchangeExpirations
+from university.models import DirectExchange, DirectExchangeParticipants, ExchangeExpirations, MarketplaceExchange
 from django.utils import timezone
 from enum import Enum
 
+from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
+
+class ExchangeType(Enum):
+    MARKETPLACE_EXCHANGE = 1
+    DIRECT_EXCHANGE = 2
+
+    def toString(self):
+        return "marketplaceexchange" if self == ExchangeType.MARKETPLACE_EXCHANGE else "directexchange"
 
 class DirectExchangePendingMotive(Enum):
     USER_DID_NOT_ACCEPT = 1
@@ -44,9 +52,21 @@ class ExchangeController:
             end_date__gte=timezone.now(),
         ).values_list("course_unit_id", flat=True)
 
-        print("CURRENT EXCHANGE EXPIRATIONS: ", exchange_expirations)
-    
         return list(exchange_expirations)
+
+    @staticmethod
+    def getExchangeType(exchange) -> ExchangeType:
+        if type(exchange) == MarketplaceExchange:
+            return ExchangeType.MARKETPLACE_EXCHANGE
+        
+        return ExchangeType.DIRECT_EXCHANGE
+
+    @staticmethod
+    def getOptionsDependinOnExchangeType(exchange):
+        if type(exchange) == MarketplaceExchange:
+            return [MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options]
+        elif type(exchange) == DirectExchange:
+            return [DirectExchangeParticipantsSerializer(participant).data for participant in exchange.options]
 
     @staticmethod
     def getExchangeOptionClasses(options):

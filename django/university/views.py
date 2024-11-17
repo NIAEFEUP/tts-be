@@ -68,19 +68,6 @@ def faculty(request):
 
 @api_view(['GET'])
 def course(request, year):
-    # print("please, god: ", dict(request.session))
-    # sigarra_token_endpoint = 'https://sigarra.up.pt/auth/oidc/token'
-    # token = request.session.get("oidc_access_token")
-    # print("token: ", token)
-    # response = requests.get(
-    #     sigarra_token_endpoint,
-    #     headers={
-    #         "Authorization": "Bearer {token}"
-    #     }
-    # )
-    #
-    # print("status code: ", response.status_code)
-    #
     json_data = list(Course.objects.filter(year=year).values())
     return JsonResponse(json_data, safe=False)
 
