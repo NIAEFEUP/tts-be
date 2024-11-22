@@ -12,6 +12,7 @@ from university.routes.student.schedule.StudentScheduleView import StudentSchedu
 from university.routes.auth.InfoView import InfoView
 from university.routes.student.StudentPhotoView import StudentPhotoView
 from university.routes.exchange.card.metadata.ExchangeCardMetadataView import ExchangeCardMetadataView
+from university.routes.exchange.verify.ExchangeVerifyView import ExchangeVerifyView
 from . import views
 from mozilla_django_oidc import views as oidc_views
 
@@ -29,10 +30,11 @@ urlpatterns = [
     path('student/exchange/received/', StudentReceivedExchangesView.as_view()),
     path('student/course_units/eligible', StudentEligibleCourseUnits.as_view()),
     path('student/<str:nmec>/photo', StudentPhotoView.as_view()),
-    path('verify_direct_exchange/<str:token>', views.verify_direct_exchange),
+    path('exchange/verify/<str:token>', ExchangeVerifyView.as_view()),
     path('student_data/<str:codigo>/', views.student_data),
     path('exchange/marketplace/', MarketplaceExchangeView.as_view()),
-    path('exchange/direct/', DirectExchangeView.as_view()),
+    path('exchange/direct/', DirectExchangeView.as_view(), name="direct_exchange"),
+    path('exchange/direct/<int:id>', DirectExchangeView.as_view(), name="direct_exchange-id"),
     path('exchange/options/', ExchangeOptionsView.as_view()),
     path('exchange/export/csv', ExchangeExportView.as_view()),
     path('course_unit/<int:course_unit_id>/exchange/metadata', ExchangeCardMetadataView.as_view()),

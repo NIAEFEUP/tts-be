@@ -14,7 +14,7 @@ from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, D
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, curr_semester_weeks, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
-from university.models import DirectExchange, MarketplaceExchange, MarketplaceExchangeClass
+from university.models import DirectExchange, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants
 
 class DirectExchangeView(View):
     def get(self, request):
@@ -80,3 +80,19 @@ class DirectExchangeView(View):
     
         return JsonResponse({"success": True}, safe=False)
 
+    def put(self, request, id):
+        exchange = DirectExchange.objects.get(id=id)
+
+        auth_user_is_participant = False
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+        for participant in participants:
+            if participant.participant_nmec == request.user.username:
+                auth_user_is_participant = True
+                participant.accepted = True
+                participant.save()
+
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+        if all(participant.accepted for participant in participants):
+            exchange.accepted = True
+
+        return JsonResponse({"success": True}, safe=False)
