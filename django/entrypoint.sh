@@ -18,12 +18,14 @@ until PGPASSWORD="${POSTGRES_PASSWORD}" psql -h "${POSTGRES_HOST}" -U "${POSTGRE
 done
 >&2 echo "PostgreSQL is up - executing command"
 
+echo "ENTRYPOINT RAN"
+
 # Migrate the Django.
+python manage.py makemigrations
+python manage.py migrate
 python manage.py migrate --fake sessions zero
 python manage.py migrate university --fake
 python manage.py migrate --fake-initial
-python manage.py makemigrations
-python manage.py migrate
 python manage.py inspectdb >university/models.py
 
 # Initialize redis worker for celery and celery's beat scheduler in the background
