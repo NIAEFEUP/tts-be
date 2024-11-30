@@ -32,6 +32,9 @@ SECRET_KEY = CONFIG['SECRET_KEY']
 
 JWT_KEY= CONFIG['JWT_KEY']
 
+DEBUG = os.getenv('DEBUG')
+DEBUG = int(DEBUG) != 0 if DEBUG else False
+
 DOMAIN = os.getenv('DOMAIN')
 DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
 
@@ -43,6 +46,7 @@ INSTALLED_APPS = [
     # 'django_extensions',
     'university',
     'corsheaders',
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,7 +54,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'rest_framework', 
     'django.contrib.staticfiles',
+<<<<<<< HEAD
     'mozilla_django_oidc'
+=======
+    'university',
+    'channels',
+>>>>>>> develop
 ]
 
 MIDDLEWARE = [
@@ -124,6 +133,8 @@ OIDC_RP_SCOPES = "openid email profile uporto_data"
 LOGIN_REDIRECT_URL = "/"
 
 OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 3600 * 60
+
+ASGI_APPLICATION = 'tts_be.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
