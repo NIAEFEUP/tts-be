@@ -43,8 +43,6 @@ ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'tts.niaefeup.pt', 'tts-staging.niaefeu
 # Application definition
 
 INSTALLED_APPS = [ 
-    # 'django_extensions',
-    'university',
     'corsheaders',
     'daphne',
     'django.contrib.admin',
@@ -54,12 +52,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'rest_framework', 
     'django.contrib.staticfiles',
-<<<<<<< HEAD
-    'mozilla_django_oidc'
-=======
+    'mozilla_django_oidc',
     'university',
     'channels',
->>>>>>> develop
 ]
 
 MIDDLEWARE = [
