@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import os 
 from dotenv import dotenv_values
-# from university.auth import CustomOIDCAuthentationBackend
 
 
 CONFIG={
@@ -69,15 +68,9 @@ MIDDLEWARE = [
     'university.auth_middleware.AuthMiddleware',
     'mozilla_django_oidc.middleware.SessionRefresh',
     'django.middleware.csrf.CsrfViewMiddleware'
-    #'djangosaml2.middleware.SamlSessionMiddleware'
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
-# SECURE_SSL_REDIRECT = True
 
 ROOT_URLCONF = 'tts_be.urls'
 
@@ -105,9 +98,7 @@ WSGI_APPLICATION = 'tts_be.wsgi.application'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'university.auth.CustomOIDCAuthentationBackend',
-    # 'mozilla_django_oidc.auth.OIDCAuthenticationBackend'
-    #'djangosaml2.backends.Saml2Backend'
+    'university.auth.CustomOIDCAuthentationBackend'
 )
 
 OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']

@@ -1,7 +1,5 @@
-from functools import reduce
 import base64
 import json
-import requests
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
@@ -61,20 +59,8 @@ class MarketplaceExchangeView(APIView):
 
     def filterAllExchanges(self, request, course_unit_name_filter, classes_filter):
         print("classes filter: ", classes_filter)
-        # courseUnitClasses = StudentScheduleView.retrieveCourseUnitClasses(SigarraController(), request.user.username)
         marketplace_exchanges = list(MarketplaceExchange.objects
-                .exclude(issuer_nmec=request.user.username).prefetch_related(
-                Prefetch(
-                    'marketplaceexchangeclass_set',
-                    # queryset=MarketplaceExchangeClass.objects.filter(
-                    #     reduce(lambda x, y: x | y, [
-                    #         Q(class_issuer_goes_to=k) 
-                    #         for k, v in courseUnitClasses.items()
-                    #     ])
-                    # ),
-                    to_attr='options'
-                )
-            ).all())
+                .exclude(issuer_nmec=request.user.username).all())
 
         marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
         

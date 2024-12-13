@@ -1,10 +1,7 @@
 from datetime import date
-import copy
-from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
-from university.models import CourseMetadata, CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
+from university.models import CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
 from enum import Enum
-import json
 import requests
 
 class ExchangeStatus(Enum):
@@ -41,8 +38,6 @@ def build_marketplace_submission_schedule(schedule, submission, auth_student):
         if not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
 
-        # print("Class from sigarra: ", get_class_from_sigarra(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to, cookies)[0])
-
         schedule[auth_student][(class_auth_student_goes_to, course_unit)] = SigarraController().get_class_schedule(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to).data[0][0]# get class schedule
         del schedule[auth_student][(class_auth_student_goes_from, course_unit)] # remove old class of other student
 
@@ -53,19 +48,11 @@ def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
 
 def build_new_schedules(student_schedules, exchanges, auth_username):
     for curr_exchange in exchanges:
-        print("Other student is: ", curr_exchange["other_student"])
-        print("Auth student is: ", auth_username)
         other_student = curr_exchange["other_student"]["mecNumber"]
         course_unit = CourseUnit.objects.get(pk=curr_exchange["courseUnitId"])
         course_unit = course_unit.acronym
         class_auth_student_goes_to = curr_exchange["classNameRequesterGoesTo"]
         class_other_student_goes_to = curr_exchange["classNameRequesterGoesFrom"] # The other student goes to its new class
-
-        print("auth student goes to: ", class_auth_student_goes_to)
-        print("other student goes to: ", class_other_student_goes_to)
-        
-        print("what in the hell? ", student_schedules[other_student])
-        print("course unit: ", course_unit)
         
         # If participant is neither enrolled in that course unit or in that class
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
@@ -244,23 +231,3 @@ def update_schedule(student_schedule, exchanges):
                             student_schedule[i] = unit_schedule
 
     return (ExchangeStatus.SUCCESS, None)
-
-"""
-Util function to get the schedule of a class from sigarra
-"""
-def get_class_from_sigarra(course_unit_id, class_name, cookies):
-    pass
-    # (semana_ini, semana_fim) = curr_semester_weeks();
-    #
-    # print("course unit id: ", course_unit_id)
-    # # sigarra_res = SigarraController().get_class_schedule(course_unit_id, class_name)
-    #
-    # # if(sigarra_res.status_code != 200):
-    # #     return None
-    # #
-    # # schedule = sigarra_res.data
-    # classes = schedule["horario"]
-    # class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))
-    # theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
-    #
-    # return (class_schedule, theoretical_schedule)
