@@ -37,7 +37,11 @@ DEBUG = int(DEBUG) != 0 if DEBUG else False
 DOMAIN = os.getenv('DOMAIN')
 DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'tts.niaefeup.pt', 'tts-staging.niaefeup.pt', 'tts-dev.niaefeup.pt']
+ALLOWED_HOSTS = ['tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
+
+if DEBUG:
+    ALLOWED_HOSTS.extend(['localhost', 'tts-dev.niaefeup.pt'])
+
 
 # Application definition
 
@@ -194,23 +198,13 @@ CACHES = {
     }
 }
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3100',
-]
-# CSRF_COOKIE_SECURE = False
-
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3100",
-    "https://localhost:3100",
-]
+CORS_ORIGIN_ALLOW_ALL = bool(DEBUG)
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
-    "X_CSRFTOKEN",
     "X-CSRFToken"
 ]
 
-VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS = 3600 * 24
+VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS = int(os.getenv("VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS", 3600 * 24))
 
 EMAIL_HOST = ''
 EMAIL_HOST_USER = ''
