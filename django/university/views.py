@@ -1,51 +1,21 @@
-import csv
-from django.contrib.sessions.models import Session
-from django.utils.html import strip_tags
-from django.template.loader import render_to_string
-from django.core.mail import send_mail
-from datetime import datetime, timedelta
-from types import new_class
 from django.utils import timezone
 from django.http.response import HttpResponse
-from rest_framework.views import APIView
-from django.core.paginator import Paginator
-from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, DOMAIN
-from university.exchange.utils import course_unit_name, course_unit_by_id, curr_semester_weeks, get_student_data, get_student_schedule_url, build_student_schedule_dict, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
-from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
-from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, exchange_overlap, build_student_schedule_dicts, get_unit_schedule_url, update_schedule_accepted_exchanges
-from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule, build_marketplace_submission_schedule, incorrect_class_error, get_class_from_sigarra, create_marketplace_exchange_on_db
-from university.models import Faculty, MarketplaceExchangeClass
-from university.exchange.utils import course_unit_name, curr_semester_weeks, get_student_schedule_url, build_student_schedule_dict, build_student_schedule_dicts, get_unit_schedule_url, update_schedule, update_schedule_accepted_exchanges
-from university.exchange.utils import ExchangeStatus, build_new_schedules, convert_sigarra_schedule
+from university.exchange.utils import get_student_data
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
 from university.models import Professor
 from university.models import SlotProfessor
 from university.models import CourseMetadata
-from university.models import DirectExchange
-from university.models import DirectExchangeParticipants
 from university.models import Info
-from university.models import MarketplaceExchange, ExchangeAdmin
 from university.models import Info
 from university.controllers.ClassController import ClassController
 from university.response.errors import course_unit_not_found_error
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
-from django.db.models import Max, Q
-from django.db import transaction
-from django.shortcuts import redirect
 import requests
-import jwt
-import json
-import datetime
-import time
-from django.core.cache import cache
-import hashlib
-# Create your views here. 
 from rest_framework import status
 
-import os
 from django.utils import timezone
 from django.forms.models import model_to_dict
 

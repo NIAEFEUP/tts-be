@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import os 
 from dotenv import dotenv_values
-# from university.auth import CustomOIDCAuthentationBackend
 
 
 CONFIG={
@@ -38,7 +37,11 @@ DEBUG = int(DEBUG) != 0 if DEBUG else False
 DOMAIN = os.getenv('DOMAIN')
 DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'tts.niaefeup.pt', 'tts-staging.niaefeup.pt', 'tts-dev.niaefeup.pt']
+ALLOWED_HOSTS = ['tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
+
+if DEBUG:
+    ALLOWED_HOSTS.extend(['localhost', 'tts-dev.niaefeup.pt'])
+
 
 # Application definition
 
@@ -69,15 +72,9 @@ MIDDLEWARE = [
     'university.auth_middleware.AuthMiddleware',
     'mozilla_django_oidc.middleware.SessionRefresh',
     'django.middleware.csrf.CsrfViewMiddleware'
-    #'djangosaml2.middleware.SamlSessionMiddleware'
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
-# SECURE_SSL_REDIRECT = True
 
 ROOT_URLCONF = 'tts_be.urls'
 
@@ -105,9 +102,7 @@ WSGI_APPLICATION = 'tts_be.wsgi.application'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'university.auth.CustomOIDCAuthentationBackend',
-    # 'mozilla_django_oidc.auth.OIDCAuthenticationBackend'
-    #'djangosaml2.backends.Saml2Backend'
+    'university.auth.CustomOIDCAuthentationBackend'
 )
 
 OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
@@ -203,23 +198,13 @@ CACHES = {
     }
 }
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3100',
-]
-# CSRF_COOKIE_SECURE = False
-
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3100",
-    "https://localhost:3100",
-]
+CORS_ORIGIN_ALLOW_ALL = bool(DEBUG)
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
-    "X_CSRFTOKEN",
     "X-CSRFToken"
 ]
 
-VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS = 3600 * 24
+VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS = int(os.getenv("VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS", 3600 * 24))
 
 EMAIL_HOST = ''
 EMAIL_HOST_USER = ''
