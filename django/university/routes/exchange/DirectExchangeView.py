@@ -34,16 +34,21 @@ class DirectExchangeView(View):
         for user in users:
             user_accepted_exchanges = list(DirectExchangeParticipants.objects.filter(participant_nmec=user.username, direct_exchange__accepted=True))
 
+            if len(user_accepted_exchanges) == 0:
+                continue
+
+            exchanges = [DirectExchangeParticipantsSerializer(participant).data for participant in user_accepted_exchanges]
+            exchanges.sort(key=lambda exchange: exchange["date"])
+
             sigarra_controller = SigarraController()
             accepted_exchanges.append({
                 "participant_nmec": user.username,
                 "participant_name": f"{user.first_name} {user.last_name}",
-                "exchanges": [DirectExchangeParticipantsSerializer(participant).data for participant in user_accepted_exchanges],
+                "date": exchanges[0]["date"],
+                "exchanges": exchanges,
                 "schedule": convert_sigarra_schedule(sigarra_controller.get_student_schedule(user.username).data)
             })
 
-
-        print(accepted_exchanges)
 
         return JsonResponse(accepted_exchanges, safe=False)
 
