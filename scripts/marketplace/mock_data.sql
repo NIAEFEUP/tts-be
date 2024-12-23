@@ -20,10 +20,13 @@ INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, 
 INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (9, 'João Andrade', '202108888', false);
 INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (9, 'Sistemas Distribuídos de Larga Escala ', 'SDLE', 540679 , '1MEIC03', '1MEIC04');
 
-
 INSERT INTO direct_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (1, 'Armindo Santos', '202108881', false);
 INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (1, 'Participante 1', 202108881, '1MEIC06', '1MEIC05', 'AC', 540676, 1, false);
 INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (2, 'Participante 2', 202108880, '1MEIC05', '1MEIC06', 'AC', 540676, 1, false);
+
+INSERT INTO direct_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (2, 'José Santos', '202109260', true);
+INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (3, 'José Santos', 202109260, '1MEIC06', '1MEIC05', 'AC', 540676, 2, true);
+INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (4, 'Armindo Osório', 202108880, '1MEIC05', '1MEIC06', 'AC', 540676, 2, true);
 
 --INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (1, 'Armindo Santos', '202108881', false);
 --INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (1, 'Álgebra Linear e Geometria Analítica', 'ALGA', 541865, '1LEIC01', '1LEIC05');

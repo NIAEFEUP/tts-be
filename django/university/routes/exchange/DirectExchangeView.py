@@ -10,15 +10,42 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, DOMAIN
 
-
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, curr_semester_weeks, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
-from university.models import DirectExchange, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants
+from university.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants, AuthUser
+from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
+from university.exchange.utils import convert_sigarra_schedule
 
 class DirectExchangeView(View):
+    """
+        Returns every direct exchange
+    """
     def get(self, request):
-        return HttpResponse()
+        # 1. Validate if admin
+        if not request.user.is_staff:
+            #return HttpResponse(status=403) 
+            pass
+        
+        # 2. Get all users in exchanges
+        users = list(AuthUser.objects.all())
+
+        accepted_exchanges = []
+        for user in users:
+            user_accepted_exchanges = list(DirectExchangeParticipants.objects.filter(participant_nmec=user.username, direct_exchange__accepted=True))
+
+            sigarra_controller = SigarraController()
+            accepted_exchanges.append({
+                "participant_nmec": user.username,
+                "participant_name": f"{user.first_name} {user.last_name}",
+                "exchanges": [DirectExchangeParticipantsSerializer(participant).data for participant in user_accepted_exchanges],
+                "schedule": convert_sigarra_schedule(sigarra_controller.get_student_schedule(user.username).data)
+            })
+
+
+        print(accepted_exchanges)
+
+        return JsonResponse(accepted_exchanges, safe=False)
 
     def post(self, request):
         student_schedules = {}
