@@ -227,6 +227,12 @@ CREATE TABLE "public"."exchange_admin" (
   "username" varchar(32) NOT NULL UNIQUE
 ); 
 
+CREATE TABLE "public"."exchange_admin_courses" (
+    "id" SERIAL PRIMARY KEY,
+    "exchange_admin_id" INTEGER NOT NULL REFERENCES "public"."exchange_admin"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 --
 -- TOC entry 3276 (class 2604 OID 16801)
 -- Name: class id; Type: DEFAULT; Schema: public; Owner: -
