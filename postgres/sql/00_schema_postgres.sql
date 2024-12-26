@@ -59,7 +59,7 @@ ALTER SEQUENCE "public"."class_id_seq" OWNED BY "public"."class"."id";
 --
 
 CREATE TABLE "public"."course" (
-    "id" integer NOT NULL,
+    "id" integer NOT NULL UNIQUE,
     "faculty_id" character varying(10) NOT NULL,
     "name" character varying(200) NOT NULL,
     "acronym" character varying(10) NOT NULL,

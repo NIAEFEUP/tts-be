@@ -23,7 +23,7 @@ class DirectExchangeView(View):
     """
     def get(self, request):
         # 1. Validate if admin
-        is_admin = ExchangeAdmin.objects.filter(username=request.user).exists()
+        is_admin = ExchangeAdmin.objects.filter(username=request.user.username).exists()
         if not(is_admin):
             return HttpResponse(status=403) 
 
