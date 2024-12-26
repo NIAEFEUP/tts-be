@@ -9,7 +9,7 @@ import requests
 
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.models import ExchangeExpirations
+from university.models import ExchangeExpirations, ExchangeAdmin
 
 class InfoView(View):
     def get(self, request):
@@ -22,14 +22,16 @@ class InfoView(View):
                     request.user.username
                 )
 
-
             eligible_exchange = False if not eligible_course_units else len(eligible_course_units) > 0
+
+            is_admin = ExchangeAdmin.objects.filter(username=request.user.username).exists()
 
             return JsonResponse({
                 "signed": True,
                 "username": request.user.username,
                 "name": f"{request.user.first_name} {request.user.last_name}",
-                "eligible_exchange": eligible_exchange
+                "eligible_exchange": eligible_exchange,
+                "is_admin": is_admin,
             }, safe=False)
         else:
             return JsonResponse({

@@ -13,7 +13,7 @@ from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, D
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, curr_semester_weeks, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
-from university.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants, AuthUser
+from university.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants, AuthUser, ExchangeAdmin
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
 from university.exchange.utils import convert_sigarra_schedule
 
@@ -23,11 +23,10 @@ class DirectExchangeView(View):
     """
     def get(self, request):
         # 1. Validate if admin
-        if not request.user.is_staff:
-            #return HttpResponse(status=403) 
-            pass
-        
-        # 2. Get all users in exchanges
+        is_admin = ExchangeAdmin.objects.filter(username=request.user).exists()
+        if not(is_admin):
+            return HttpResponse(status=403) 
+
         users = list(AuthUser.objects.all())
 
         accepted_exchanges = []
