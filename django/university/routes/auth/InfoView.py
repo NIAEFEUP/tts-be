@@ -23,7 +23,7 @@ class InfoView(View):
                 )
 
 
-            eligible_exchange = False if not eligible_course_units else len(eligible_course_units) > 0
+            eligible_exchange = bool(eligible_course_units)
 
             return JsonResponse({
                 "signed": True,
