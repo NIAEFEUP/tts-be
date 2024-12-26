@@ -26,9 +26,9 @@ class SigarraController:
         first_semester = currdate.month >= 9 and currdate.month <= 12
         if first_semester: 
             semana_ini = "1001"
-            semana_fim = "1201"
+            semana_fim = "0101"
         else:
-            semana_ini = "0101"
+            semana_ini = "0201"
             semana_fim = "0601"
         
         return (year + semana_ini, year + semana_fim)

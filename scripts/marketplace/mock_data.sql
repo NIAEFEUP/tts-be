@@ -36,3 +36,7 @@ INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec
 --INSERT INTO exchange_expirations(course_unit_id, active_date, end_date) VALUES (541869, '2023-11-18 15:00:00', '2025-10-25 15:00:00');
 --INSERT INTO exchange_expirations(course_unit_id, active_date, end_date) VALUES (541868, '2023-11-18 15:00:00', '2025-10-25 15:00:00');
 --INSERT INTO exchange_expirations(course_unit_id, active_date, end_date) VALUES (541867, '2023-11-18 15:00:00', '2025-10-25 15:00:00');
+
+INSERT INTO exchange_admin (id, username) VALUES (1, '202108880');
+INSERT INTO exchange_admin_courses (exchange_admin_id, course_id) VALUES (1, 22841);
+INSERT INTO exchange_admin_courses (exchange_admin_id, course_id) VALUES (1, 22862);

@@ -230,6 +230,12 @@ CREATE TABLE "public"."exchange_admin" (
 CREATE TABLE "public"."exchange_admin_courses" (
     "id" SERIAL PRIMARY KEY,
     "exchange_admin_id" INTEGER NOT NULL REFERENCES "public"."exchange_admin"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "course_id" INTEGER NOT NULL REFERENCES "public"."course"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "public"."exchange_admin_course_units" (
+    "id" SERIAL PRIMARY KEY,
+    "exchange_admin_id" INTEGER NOT NULL REFERENCES "public"."exchange_admin"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 

@@ -13,6 +13,7 @@ from university.routes.auth.InfoView import InfoView
 from university.routes.student.StudentPhotoView import StudentPhotoView
 from university.routes.exchange.card.metadata.ExchangeCardMetadataView import ExchangeCardMetadataView
 from university.routes.exchange.verify.ExchangeVerifyView import ExchangeVerifyView
+from university.routes.admin.AdminExchangeCoursesView import AdminExchangeCoursesView
 from . import views
 from mozilla_django_oidc import views as oidc_views
 
@@ -43,4 +44,5 @@ urlpatterns = [
     path('professors/<int:slot>/', views.professor),
     path('course_unit/hash', views.get_course_unit_hashes),
     path('oidc-auth/', include('mozilla_django_oidc.urls')),
+    path('exchange/admin/courses/', AdminExchangeCoursesView.as_view()),
 ]
