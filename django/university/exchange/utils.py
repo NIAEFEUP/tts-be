@@ -48,6 +48,7 @@ def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
 
 def build_new_schedules(student_schedules, exchanges, auth_username):
     for curr_exchange in exchanges:
+        # There are 2 students involved in the exchange. THe other student is the student other than the currently authenticated user
         other_student = curr_exchange["other_student"]["mecNumber"]
         course_unit = CourseUnit.objects.get(pk=curr_exchange["courseUnitId"])
         course_unit = course_unit.acronym
@@ -64,21 +65,25 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
         if not(other_student_valid) or not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
 
-        # Change schedule
-        tmp = student_schedules[auth_username][(class_other_student_goes_to, course_unit)]
-        student_schedules[auth_username][(class_auth_student_goes_to, course_unit)] = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
-        student_schedules[other_student][(class_other_student_goes_to, course_unit)] = tmp
+        # Assign the class the auth student is going to to its schedule
+        schedule_of_auth_student_new_class = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
+        student_schedules[auth_username][(class_auth_student_goes_to, course_unit)] = schedule_of_auth_student_new_class
 
-        del student_schedules[other_student][(class_auth_student_goes_to, course_unit)] # remove old class of other student
-        del student_schedules[auth_username][(class_other_student_goes_to, course_unit)] # remove old class of auth student
+        # Assign the class the other student is going to to its schedule
+        schedule_of_other_student_new_class = student_schedules[auth_username][(class_other_student_goes_to, course_unit)]
+        student_schedules[other_student][(class_other_student_goes_to, course_unit)] = schedule_of_other_student_new_class
 
-    return (ExchangeStatus.SUCCESS, None)     
+        # Remove class the other student is going from and will not be in anymore
+        del student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
+
+        # Remove class the auth student is going from and will not be in anymore
+        del student_schedules[auth_username][(class_other_student_goes_to, course_unit)]
+
+    return (ExchangeStatus.SUCCESS, None) 
 
 def build_student_schedule_dicts(student_schedules, exchanges):
     for curr_exchange in exchanges:
         curr_username = curr_exchange["other_student"]["mecNumber"]
-        print("CURR USERNAME: ", curr_username)
-        print("student schedules: ", student_schedules.keys())
         if not curr_username in student_schedules.keys():
             sigarra_res = SigarraController().get_student_schedule(curr_username)
             if(sigarra_res.status_code != 200):
