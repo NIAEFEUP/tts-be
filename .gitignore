@@ -14,8 +14,6 @@ postgres/sql/01_data.sql
 **__pycache__
 
 # django 
-django/**/migrations/**
-django/university/models.py
 django/.env.dev
 
 nginx/certs/*.key

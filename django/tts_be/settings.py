@@ -119,6 +119,8 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware'
 ]
 
+# AUTH_USER_MODEL = 'university.TtsUser'
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 ROOT_URLCONF = 'tts_be.urls'
