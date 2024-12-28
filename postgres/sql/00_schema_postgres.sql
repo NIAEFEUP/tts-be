@@ -154,7 +154,6 @@ CREATE TABLE "public"."slot" (
     "last_updated" timestamp with time zone NOT NULL
 );
 
-
 --
 -- TOC entry 226 (class 1259 OID 16811)
 -- Name: slot_class; Type: TABLE; Schema: public; Owner: -
@@ -226,6 +225,12 @@ CREATE TABLE "public"."exchange_admin" (
   "id" SERIAL PRIMARY KEY,
   "username" varchar(32) NOT NULL UNIQUE
 ); 
+
+CREATE TABLE "public"."user_course_units" (
+    "id" SERIAL PRIMARY KEY,
+    "user_nmec" varchar(32) NOT NULL,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
 
 --
 -- TOC entry 3276 (class 2604 OID 16801)

@@ -18,6 +18,7 @@ from mozilla_django_oidc import views as oidc_views
 
 # URLConf
 urlpatterns = [
+    path('emailtest/', views.emailtest),
     path('faculty/', views.faculty),
     path('course/<int:year>', views.course),
     path('course_units/<int:course_id>/<int:year>/<int:semester>/', views.course_units),

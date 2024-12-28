@@ -18,7 +18,6 @@ class InfoView(View):
             
             if not eligible_course_units:
                 eligible_course_units = ExchangeController.eligible_course_units(
-                    SigarraController(),
                     request.user.username
                 )
 

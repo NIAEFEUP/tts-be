@@ -8,6 +8,8 @@ from university.models import DirectExchange, DirectExchangeParticipants, Exchan
 from django.utils import timezone
 from enum import Enum
 
+from university.models import UserCourseUnits
+
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
@@ -42,9 +44,8 @@ class DirectExchangePendingMotive(Enum):
 
 class ExchangeController:
     @staticmethod
-    def eligible_course_units(sigarra_controller, nmec):
-        course_units = sigarra_controller.get_student_course_units(nmec).data
-        print("CURRENT COURSE UNITS: ", course_units)
+    def eligible_course_units(nmec):
+        course_units = UserCourseUnits.objects.filter(user_nmec=nmec).values_list("course_unit_id", flat=True)
 
         exchange_expirations = ExchangeExpirations.objects.filter(
             course_unit_id__in=course_units, 

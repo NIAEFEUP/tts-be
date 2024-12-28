@@ -8,7 +8,6 @@ from university.models import CourseUnit
 class StudentEligibleCourseUnits(APIView):
     def get(self, request):
         eligible_course_units_ids = ExchangeController.eligible_course_units(
-            SigarraController(),
             request.user.username
         )
 
