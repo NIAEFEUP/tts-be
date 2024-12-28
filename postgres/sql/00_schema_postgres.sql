@@ -229,7 +229,8 @@ CREATE TABLE "public"."exchange_admin" (
 CREATE TABLE "public"."user_course_units" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
-    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 --

@@ -83,6 +83,20 @@ class SigarraController:
             course_units.add(scheduleItem["ocorrencia_id"])
 
         return SigarraResponse(list(course_units), 200)
+
+    def get_student_course_unit_classes(self, nmec: int) -> SigarraResponse:
+        schedule = self.get_student_schedule(nmec)
+
+        if schedule.status_code != 200:
+            return SigarraResponse(None, schedule.status_code)
+        
+        # set((course_unit_id, class_id))
+        course_unit_classes = set()
+        for scheduleItem in schedule.data:
+            course_unit_classes.add((scheduleItem["ocorrencia_id"], scheduleItem["turma_sigla"]))
+
+        return SigarraResponse(list(course_unit_classes), 200)
+
     
     def get_course_unit_classes(self, course_unit_id: int) -> SigarraResponse:
         url = f"https://sigarra.up.pt/feup/pt/mob_ucurr_geral.uc_inscritos?pv_ocorrencia_id={course_unit_id}"
