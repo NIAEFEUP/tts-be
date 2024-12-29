@@ -60,7 +60,12 @@ class MarketplaceExchangeView(APIView):
     def filterAllExchanges(self, request, course_unit_name_filter, classes_filter):
         print("classes filter: ", classes_filter)
         marketplace_exchanges = list(MarketplaceExchange.objects
-                .exclude(issuer_nmec=request.user.username).all())
+                .prefetch_related(
+                Prefetch(
+                    'marketplaceexchangeclass_set',
+                    to_attr='options'
+                )
+                ).exclude(issuer_nmec=request.user.username).all())
 
         marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
         

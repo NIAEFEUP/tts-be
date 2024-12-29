@@ -59,25 +59,19 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
         auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[auth_username]
         
-        print("other studenet valid: ", other_student_valid)
-        print("auth studenet valid: ", auth_user_valid)
-
         if not(other_student_valid) or not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
 
-        # Assign the class the auth student is going to to its schedule
-        schedule_of_auth_student_new_class = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
-        student_schedules[auth_username][(class_auth_student_goes_to, course_unit)] = schedule_of_auth_student_new_class
+        user_uc = (class_auth_student_goes_to, course_unit)
+        other_user_uc = (class_other_student_goes_to, course_unit)
 
-        # Assign the class the other student is going to to its schedule
-        schedule_of_other_student_new_class = student_schedules[auth_username][(class_other_student_goes_to, course_unit)]
-        student_schedules[other_student][(class_other_student_goes_to, course_unit)] = schedule_of_other_student_new_class
+        (student_schedules[auth_username][user_uc], student_schedules[other_student][other_user_uc]) = (student_schedules[other_student][user_uc], student_schedules[auth_username][other_user_uc])
 
         # Remove class the other student is going from and will not be in anymore
-        del student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
+        del student_schedules[other_student][user_uc]
 
         # Remove class the auth student is going from and will not be in anymore
-        del student_schedules[auth_username][(class_other_student_goes_to, course_unit)]
+        del student_schedules[auth_username][other_user_uc]
 
     return (ExchangeStatus.SUCCESS, None) 
 
