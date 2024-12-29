@@ -1,16 +1,13 @@
-import base64
 import json
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q, Prefetch
 
-from university.controllers.ClassController import ClassController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, convert_sigarra_schedule, curr_semester_weeks, exchange_overlap, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
-from university.models import CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
-from university.routes.student.schedule.StudentScheduleView import StudentScheduleView
+from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, exchange_overlap, incorrect_class_error, update_schedule_accepted_exchanges
+from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
@@ -33,29 +30,11 @@ class MarketplaceExchangeView(APIView):
                 "options": [
                     MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options
                 ],
-                "classes": list(self.getExchangeOptionClasses(exchange.options)),
+                "classes": list(ExchangeController.getExchangeOptionClasses(exchange.options)),
                 "date":  exchange.date,
                 "accepted": exchange.accepted
             } for exchange in page_obj]
         }
-
-
-    def filterMineExchanges(self, request, course_unit_name_filter, classes_filter):
-        marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
-                Prefetch(
-                    'marketplaceexchangeclass_set',
-                    queryset=MarketplaceExchangeClass.objects.all(),
-                    to_attr='options'
-                )
-            ).filter(issuer_nmec=request.user.username).all())
-
-        if course_unit_name_filter:
-            marketplace_exchanges = list(filter(
-                lambda x: self.courseUnitNameFilterInExchangeOptions(x.options, course_unit_name_filter),
-                marketplace_exchanges
-            ))
-
-        return self.build_pagination_payload(request, marketplace_exchanges)
 
     def filterAllExchanges(self, request, course_unit_name_filter, classes_filter):
         print("classes filter: ", classes_filter)
@@ -71,7 +50,7 @@ class MarketplaceExchangeView(APIView):
         
         if course_unit_name_filter:
             marketplace_exchanges = list(filter(
-                lambda x: self.courseUnitNameFilterInExchangeOptions(x.options, course_unit_name_filter),
+                lambda x: ExchangeController.courseUnitNameFilterInExchangeOptions(x.options, course_unit_name_filter),
                 marketplace_exchanges
             ))
 
@@ -91,39 +70,17 @@ class MarketplaceExchangeView(APIView):
 
         return filtered_marketplace_exchanges
 
-    def courseUnitNameFilterInExchangeOptions(self, options, courseUnitNameFilter):
-        matches = []
-        for courseUnitId in courseUnitNameFilter:
-            for option in options:
-                if courseUnitId == option.course_unit_id:
-                    matches.append(1)
-
-        return len(matches) == len(courseUnitNameFilter)
-   
-
     """
         Returns all the current marketplace exchange requests paginated
     """
     def get(self, request):
         courseUnitNameFilter = request.query_params.get('courseUnitNameFilter', None)
-        classesFilter = self.parseClassesFilter(request.query_params.get('classesFilter', None))
+        classesFilter = ExchangeController.parseClassesFilter(request.query_params.get('classesFilter', None))
     
         return JsonResponse(self.filterAllExchanges(request, courseUnitNameFilter.split(',') if courseUnitNameFilter else None, classesFilter), safe=False)
 
-    def parseClassesFilter(self, classesFilter: str) -> dict:
-        if not classesFilter:
-            return {}
-
-        b64_decoded = base64.b64decode(classesFilter)
-        string = b64_decoded.decode('utf-8')
-        return dict(json.loads(string))
-
     def post(self, request):
         return self.submit_marketplace_exchange_request(request)
-
-    def getExchangeOptionClasses(self, options):
-        classes = sum(list(map(lambda option: ClassController.get_classes(option.course_unit_id), options)), [])
-        return filter(lambda currentClass: any(currentClass["name"] == option.class_issuer_goes_from for option in options), classes)
 
     def submit_marketplace_exchange_request(self, request):
         exchanges = request.POST.getlist('exchangeChoices[]')

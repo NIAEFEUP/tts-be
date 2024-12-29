@@ -68,9 +68,3 @@ class StudentSentExchangesView(APIView):
                 "date": exchange.date
             } for exchange in page_obj]
         }
-    
-
-    def getExchangeOptionClasses(self, options):
-        classes = sum(list(map(lambda option: ClassController.get_classes(option.course_unit_id), options)), [])
-        return filter(lambda currentClass: any(currentClass["name"] == option.class_issuer_goes_from for option in options), classes)
-
