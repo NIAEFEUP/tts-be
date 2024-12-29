@@ -10,7 +10,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, DOMAIN
 
-
+from university.controllers.StudentController import StudentController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error, update_schedule_accepted_exchanges
@@ -92,5 +92,9 @@ class DirectExchangeView(View):
         participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
         if all(participant.accepted for participant in participants):
             exchange.accepted = True
+
+            for participant in participants:
+                StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
+
 
         return JsonResponse({"success": True}, safe=False)

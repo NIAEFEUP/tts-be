@@ -7,7 +7,7 @@ from django.db.models import Q, Prefetch
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, exchange_overlap, incorrect_class_error, update_schedule_accepted_exchanges
-from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass
+from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, Class
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
@@ -46,6 +46,7 @@ class MarketplaceExchangeView(APIView):
                 )
                 ).exclude(issuer_nmec=request.user.username).all())
 
+        marketplace_exchanges = self.remove_invalid_dest_class_exchanges(marketplace_exchanges, request.user.username)
         marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
         
         if course_unit_name_filter:
@@ -55,6 +56,22 @@ class MarketplaceExchangeView(APIView):
             ))
 
         return self.build_pagination_payload(request, marketplace_exchanges)
+
+    def remove_invalid_dest_class_exchanges(self, marketplace_exchanges, nmec):
+        """
+            Classes where the destination class the requester user will go to is not a class we are in should not be shown in exchange
+        """
+        user_ucs_map = {uc.course_unit.id: uc for uc in list(UserCourseUnits.objects.filter(user_nmec=nmec))}
+
+        exchanges_with_valid_dest_class = []
+        for exchange in marketplace_exchanges:
+            for option in exchange.options:
+                course_unit_id = option.course_unit_id
+                class_issuer_goes_to = option.class_issuer_goes_to
+                if Class.objects.filter(course_unit_id=course_unit_id, name=class_issuer_goes_to).get().id == user_ucs_map[int(course_unit_id)].class_field.id:
+                    exchanges_with_valid_dest_class.append(exchange)
+
+        return exchanges_with_valid_dest_class
 
     def advanced_classes_filter(self, marketplace_exchanges, classes_filter):
         filtered_marketplace_exchanges = []
