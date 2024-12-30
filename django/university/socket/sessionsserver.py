@@ -17,7 +17,7 @@ class SessionsServer:
     
     def generate_room_id(self):
         while True:
-            room_id = randbytes(2).hex().upper()
+            room_id = randbytes(4).hex().upper()
             if room_id not in self.rooms:
                 return room_id
     

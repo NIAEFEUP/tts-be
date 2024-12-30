@@ -37,7 +37,7 @@ async def connect(sid, environ, auth):
         await sessions_server.enter_room(sid, room_id)
         print(f"Client {sid} joined room {room_id}")
     
-    await sessions_server.emit('connected', { 'room' : room_id }, to=sid)
+    await sessions_server.emit('connected', { 'room_id' : room_id }, to=sid)
 
 
 @sessions_server.event
