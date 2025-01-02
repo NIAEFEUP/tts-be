@@ -51,8 +51,6 @@ async def disconnect(sid):
 
 # TODO: Remove this
 @sessions_server.event
-async def ping(sid, data):
-    await sessions_server.emit('ping', {
-        'id': data[0]['id'],    
-    }, session_id=data[0]['session_id'])
+async def ping(sid, session_id, data):
+    await sessions_server.emit('ping', data, session_id=session_id)
     
