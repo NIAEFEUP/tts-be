@@ -4,10 +4,6 @@ from urllib.parse import parse_qs
 
 from university.socket.sessionsserver import SessionsServer
 
-async_mode = None
-
-basedir = os.path.dirname(os.path.realpath(__file__))
-
 sessions_server = SessionsServer(
     socketio.AsyncServer(
         async_mode='asgi',
@@ -25,24 +21,24 @@ async def connect(sid, environ, auth):
     print('Client connected')
     
     query_params = parse_qs(environ.get("QUERY_STRING", ""))
-    room_id = query_params.get('room_id', None)
-    room_id = room_id[0] if room_id else None
+    session_id = query_params.get('session_id', None)
+    session_id = session_id[0] if session_id else None
     
-    if room_id is None:
-        await sessions_server.create_room(sid)
+    if session_id is None:
+        await sessions_server.create_session(sid)
     
-        room_id = sessions_server.get_client_room(sid)
-        print(f"Room created: {room_id}")
+        session_id = sessions_server.get_client_session(sid)
+        print(f"Session created: {session_id}")
     else:
-        await sessions_server.enter_room(sid, room_id)
-        print(f"Client {sid} joined room {room_id}")
+        await sessions_server.enter_session(sid, session_id)
+        print(f"Client {sid} joined session {session_id}")
     
-    await sessions_server.emit('connected', { 'room_id' : room_id }, to=sid)
+    await sessions_server.emit('connected', { 'session_id' : session_id }, to=sid)
 
 
 @sessions_server.event
 async def disconnect(sid):
-    await sessions_server.leave_room(sid)
+    await sessions_server.leave_session(sid)
     print('Client disconnected')
 
 # TODO: Remove this
@@ -50,5 +46,5 @@ async def disconnect(sid):
 async def ping(sid, data):
     await sessions_server.emit('ping', {
         'id': data[0]['id'],    
-    }, room=data[0]['room_id'])
+    }, session_id=data[0]['session_id'])
     

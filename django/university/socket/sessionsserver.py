@@ -5,7 +5,7 @@ import socketio
 class SessionsServer:
     def __init__(self, sio: socketio.AsyncServer):
         self.sio = sio
-        self.rooms = {}
+        self.sessions = {}
 
     def valid_token(self, token: str) -> bool:
         return True
@@ -13,39 +13,39 @@ class SessionsServer:
     def event(self, event):
         return self.sio.event(event)
     
-    def emit(self, event, data, **kwargs):
-        return self.sio.emit(event, data, **kwargs)
+    def emit(self, event, data, to=None, session_id=None):
+        return self.sio.emit(event, data, to=to, room=session_id)
     
-    def generate_room_id(self):
+    def generate_session_id(self):
         while True:
-            room_id = randbytes(4).hex().upper()
-            if room_id not in self.rooms:
-                return room_id
+            session_id = randbytes(4).hex().upper()
+            if session_id not in self.sessions:
+                return session_id
     
-    def create_room(self, sid) -> Coroutine:        
-        if self.get_client_room(sid):
-            raise ConnectionError('Client is already in a room')
+    def create_session(self, sid) -> Coroutine:        
+        if self.get_client_session(sid):
+            raise ConnectionError('Client is already in a session')
         
-        room_id = self.generate_room_id()
-        self.rooms.setdefault(room_id, [])
-        self.rooms[room_id].append(sid)
+        session_id = self.generate_session_id()
+        self.sessions.setdefault(session_id, [])
+        self.sessions[session_id].append(sid)
         
-        return self.sio.enter_room(sid, room_id)
+        return self.sio.enter_room(sid, session_id)
     
-    def enter_room(self, sid, room_id) -> Coroutine:
-        if self.get_client_room(sid):
-            raise ConnectionError('Client is already in a room')
+    def enter_session(self, sid, session_id) -> Coroutine:
+        if self.get_client_session(sid):
+            raise ConnectionError('Client is already in a session')
         
-        if room_id not in self.rooms:
-            print(self.rooms)
-            raise ConnectionError('Room is empty')
+        if session_id not in self.sessions:
+            print(self.sessions)
+            raise ConnectionError('Session is empty')
         
-        return self.sio.enter_room(sid, room_id)
+        return self.sio.enter_room(sid, session_id)
     
-    def leave_room(self, sid) -> Coroutine:
-        room_id = self.get_client_room(sid)
-        return self.sio.leave_room(sid, room_id)
+    def leave_session(self, sid) -> Coroutine:
+        session_id = self.get_client_session(sid)
+        return self.sio.leave_room(sid, session_id)
     
-    def get_client_room(self, sid):
-        client_room = self.sio.rooms(sid)
-        return client_room[1] if len(client_room) >= 2 else None
+    def get_client_session(self, sid):
+        client_session = self.sio.rooms(sid)
+        return client_session[1] if len(client_session) >= 2 else None
