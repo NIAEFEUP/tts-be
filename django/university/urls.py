@@ -44,4 +44,5 @@ urlpatterns = [
     path('professors/<int:slot>/', views.professor),
     path('course_unit/hash', views.get_course_unit_hashes),
     path('oidc-auth/', include('mozilla_django_oidc.urls')),
+    path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback")
 ]

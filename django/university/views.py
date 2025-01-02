@@ -83,8 +83,6 @@ def course_units(request, course_id, year, semester):
 
     return JsonResponse(json_data, safe=False)
 
-
-
 """
     Returns the classes of a course unit.
 """
