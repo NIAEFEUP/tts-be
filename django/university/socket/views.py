@@ -44,8 +44,11 @@ async def connect(sid, environ, auth):
 async def disconnect(sid):
     await sessions_server.leave_room(sid)
     print('Client disconnected')
-    
+
+# TODO: Remove this
 @sessions_server.event
-async def test(sid, environ):
-    await sessions_server.sio.disconnect(sid)
+async def ping(sid, data):
+    await sessions_server.emit('ping', {
+        'id': data[0]['id'],    
+    }, room=data[0]['room_id'])
     
