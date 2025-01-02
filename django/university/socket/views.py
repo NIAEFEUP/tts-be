@@ -2,6 +2,7 @@ import os
 import socketio
 from urllib.parse import parse_qs
 
+from socketio.exceptions import ConnectionRefusedError
 from university.socket.sessionsserver import SessionsServer
 
 sessions_server = SessionsServer(

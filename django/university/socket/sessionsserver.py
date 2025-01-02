@@ -1,6 +1,7 @@
 from typing import Coroutine
 from random import randbytes
 import socketio
+from socketio.exceptions import ConnectionRefusedError
 
 class SessionsServer:
     def __init__(self, sio: socketio.AsyncServer):
@@ -24,7 +25,7 @@ class SessionsServer:
     
     def create_session(self, sid) -> Coroutine:        
         if self.get_client_session(sid):
-            raise ConnectionError('Client is already in a session')
+            raise ConnectionRefusedError('Client is already in a session')
         
         session_id = self.generate_session_id()
         self.sessions.setdefault(session_id, [])
@@ -34,11 +35,11 @@ class SessionsServer:
     
     def enter_session(self, sid, session_id) -> Coroutine:
         if self.get_client_session(sid):
-            raise ConnectionError('Client is already in a session')
+            raise ConnectionRefusedError('Client is already in a session')
         
         if session_id not in self.sessions:
             print(self.sessions)
-            raise ConnectionError('Session is empty')
+            raise ConnectionRefusedError('Session is empty')
         
         return self.sio.enter_room(sid, session_id)
     
