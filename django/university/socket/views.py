@@ -4,6 +4,7 @@ import socketio
 from urllib.parse import parse_qs
 
 from socketio.exceptions import ConnectionRefusedError
+from university.socket.participant import Participant
 from university.socket.session import Session
 from university.socket.sessionsserver import SessionsServer
 
@@ -21,27 +22,34 @@ async def connect(sid, environ, auth):
     if not sessions_server.valid_token(auth['token']):
         raise ConnectionRefusedError('Authentication failed: Invalid token')
     
-    print(f'Client {sid} connected')
+    print(f'Participant {sid} connected')
     
     query_params = parse_qs(environ.get("QUERY_STRING", ""))
-    session_id = query_params.get('session_id', None)
-    session_id = session_id[0] if session_id else None
+    session_id = query_params.get('session_id', [None])[0]
+    
+    participant_name = query_params.get('participant_name', ["Anonymous"])[0]
+    participant = Participant(sid, participant_name)
     
     if session_id is None:
-        await sessions_server.create_session(sid)
+        await sessions_server.create_session(participant)
     
         session = cast(Session, sessions_server.get_client_session(sid))
         session_id = session.session_id
         
-        print(f"Client {sid} created session {session_id}")
+        print(f"Participant {sid} created session {session_id}")
     else:     
-        await sessions_server.enter_session(sid, session_id)
+        await sessions_server.enter_session(participant, session_id)
 
         session = cast(Session, sessions_server.get_session(session_id))
         
-        print(f"Client {sid} joined session {session_id}")
+        print(f"Participant {sid} joined session {session_id}")
     
-    await sessions_server.emit('connected', session.to_json(), to=sid)
+    payload = {
+        'session_id': session_id,
+        'session_info': session.to_json(),
+    }
+    
+    await sessions_server.emit('connected', payload, to=sid)
 
 
 @sessions_server.event

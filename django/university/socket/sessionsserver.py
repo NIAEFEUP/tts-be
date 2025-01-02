@@ -4,6 +4,7 @@ import socketio
 from socketio.exceptions import ConnectionRefusedError
 
 from university.socket.session import Session
+from university.socket.participant import Participant
 
 class SessionsServer:
     def __init__(self, sio: socketio.AsyncServer):
@@ -26,36 +27,36 @@ class SessionsServer:
             if session_id not in self.sessions:
                 return session_id
     
-    def create_session(self, sid) -> Coroutine:        
-        if self.get_client_session(sid):
+    def create_session(self, participant: Participant) -> Coroutine:        
+        if self.get_client_session(participant.sid):
             raise ConnectionRefusedError('Client is already in a session')
         
         session_id = self.generate_session_id()
-        result = self.sio.enter_room(sid, session_id)
+        result = self.sio.enter_room(participant.sid, session_id)
         
         self.sessions.setdefault(session_id, Session(session_id))
-        self.sessions[session_id].add_client(sid)
-        self.clients[sid] = session_id
+        self.sessions[session_id].add_client(participant)
+        self.clients[participant.sid] = session_id
         
         return result
         
     
-    def enter_session(self, sid, session_id) -> Coroutine:
-        if self.get_client_session(sid):
+    def enter_session(self, participant: Participant, session_id: str) -> Coroutine:
+        if self.get_client_session(participant):
             raise ConnectionRefusedError('Client is already in a session')
         
         if session_id not in self.sessions:
             print(self.sessions)
             raise ConnectionRefusedError('Session is empty')
         
-        self.sessions[session_id].add_client(sid)
-        result = self.sio.enter_room(sid, session_id)
+        self.sessions[session_id].add_client(participant)
+        result = self.sio.enter_room(participant.sid, session_id)
         
-        self.clients[sid] = session_id
+        self.clients[participant.sid] = session_id
         
         return result
     
-    def leave_session(self, sid) -> Coroutine:
+    def leave_session(self, sid: str) -> Coroutine:
         session_id = self.clients.get(sid)
         if session_id is None:
             raise ConnectionRefusedError('Client is not in a session')
@@ -63,7 +64,7 @@ class SessionsServer:
         result = self.sio.leave_room(sid, session_id)
         
         self.sessions[session_id].remove_client(sid)
-        if (self.sessions[session_id].is_empty()):
+        if (self.sessions[session_id].no_participants()):
             del self.sessions[session_id]
 
         del self.clients[sid]

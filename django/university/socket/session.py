@@ -1,20 +1,21 @@
+from university.socket.participant import Participant
+
 class Session:
-    def __init__(self, session_id):
+    def __init__(self, session_id: str):
         self.session_id = session_id
-        self.clients = []
+        self.participants = {}
         
-    def add_client(self, client):
-        self.clients.append(client)
+    def add_client(self, participant: Participant):
+        self.participants[participant.sid] = participant
         
-    def remove_client(self, client):
-        self.clients.remove(client)
+    def remove_client(self, sid):
+        del self.participants[sid]
         
-    def is_empty(self):
-        return self.clients == []
+    def no_participants(self):
+        return self.participants == []
     
     def to_json(self):
         return {
-            'session_id': self.session_id,
-            'clients': self.clients,
+            'participants': list(map(Participant.to_json, self.participants.values()))
         }
     
