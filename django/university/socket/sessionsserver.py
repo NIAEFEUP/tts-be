@@ -18,8 +18,11 @@ class SessionsServer:
     def event(self, event):
         return self.sio.event(event)
     
-    def emit(self, event, data, to=None, session_id=None):
-        return self.sio.emit(event, data, to=to, room=session_id)
+    def emit(self, event, data, to):
+        return self.sio.emit(event, data, to=to)
+    
+    def emit_to_session(self, event, data, session_id, sid):
+        return self.sio.emit(event, data, room=session_id, skip_sid=sid)
     
     def generate_session_id(self):
         while True:
