@@ -15,6 +15,14 @@ sessions_server = SessionsServer(
     )
 )
 
+async def emit_session_update(sid, session: Session):
+    payload = {
+        'session_id': session.session_id,
+        'session_info': session.to_json(),
+    }
+    
+    await sessions_server.emit_to_session('update_session_info', payload, session.session_id, sid)
+
 @sessions_server.event
 async def connect(sid, environ, auth):
     if auth is None or 'token' not in auth:
@@ -45,12 +53,13 @@ async def connect(sid, environ, auth):
         print(f"Participant {sid} joined session {session_id}")
     
     payload = {
+        'client_id': participant.client_id,
         'session_id': session_id,
         'session_info': session.to_json(),
     }
     
     await sessions_server.emit('connected', payload, to=sid)
-    await sessions_server.emit_to_session('update_session_info', payload, session_id, sid)
+    await emit_session_update(sid, session)
 
 @sessions_server.event
 async def disconnect(sid):
@@ -59,13 +68,20 @@ async def disconnect(sid):
     await sessions_server.leave_session(sid)
     print(f'Client {sid} disconnected')
     
-    payload = {
-        'session_id': session.session_id,
-        'session_info': session.to_json(),
-    }
-    await sessions_server.emit_to_session('update_session_info', payload, session.session_id, sid)
+    await emit_session_update(sid, session)
 
 # TODO: Remove this
 @sessions_server.event
-async def ping(sid, session_id, data):
+async def ping(sid, data):
+    user_session = cast(Session, sessions_server.get_client_session(sid))
+    session_id = user_session.session_id
+    
     await sessions_server.emit_to_session('ping', data, session_id=session_id, sid=sid)
+    
+@sessions_server.event
+async def update_participant(sid, updated_participant):
+    user_session = cast(Session, sessions_server.get_client_session(sid))
+    participant = user_session.participants[sid]
+    participant.update_from_json(updated_participant)
+    
+    await emit_session_update(sid, user_session)

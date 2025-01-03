@@ -11,6 +11,9 @@ class Session:
     def remove_client(self, sid):
         del self.participants[sid]
         
+    def update_client(self, participant: Participant):
+        self.participants[participant.sid] = participant
+        
     def no_participants(self):
         return self.participants == []
     
