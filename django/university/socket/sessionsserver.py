@@ -67,7 +67,7 @@ class SessionsServer:
         result = self.sio.leave_room(sid, session_id)
         
         self.sessions[session_id].remove_client(sid)
-        if (self.sessions[session_id].no_participants()):
+        if self.sessions[session_id].no_participants() and self.sessions[session_id].expired():
             del self.sessions[session_id]
 
         del self.clients[sid]

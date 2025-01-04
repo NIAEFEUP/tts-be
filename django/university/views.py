@@ -153,7 +153,6 @@ def student_data(request, codigo):
 """
 @api_view(['GET'])
 def get_course_unit_hashes(request):
-
     ids_param = request.query_params.get('ids', '')
 
     try:
