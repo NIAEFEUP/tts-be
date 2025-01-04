@@ -1,9 +1,12 @@
 from university.socket.participant import Participant
+from datetime import datetime
+from datetime import timedelta
 
 class Session:
-    def __init__(self, session_id: str):
+    def __init__(self, session_id: str, duration: timedelta = timedelta(days=30)):
         self.session_id = session_id
         self.participants = {}
+        self.expire_datetime = datetime.now() + duration
         
     def add_client(self, participant: Participant):
         self.participants[participant.sid] = participant
@@ -16,6 +19,9 @@ class Session:
         
     def no_participants(self):
         return self.participants == []
+    
+    def expired(self):
+        return datetime.now() > self.expire_datetime
     
     def to_json(self):
         return {
