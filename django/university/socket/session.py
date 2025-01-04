@@ -25,6 +25,7 @@ class Session:
     
     def to_json(self):
         return {
+            'expire_datetime': self.expire_datetime.strftime('%Y-%m-%d %H:%M:%S'),
             'participants': list(map(Participant.to_json, self.participants.values()))
         }
     
