@@ -1,12 +1,11 @@
 from university.socket.participant import Participant
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 class Session:
     def __init__(self, session_id: str, duration: timedelta = timedelta(days=30)):
         self.session_id = session_id
         self.participants = {}
-        self.expire_datetime = datetime.now() + duration
+        self.expire_datetime = datetime.now(timezone.utc) + duration
         
     def add_client(self, participant: Participant):
         self.participants[participant.sid] = participant
