@@ -21,7 +21,6 @@ class InfoView(View):
                     request.user.username
                 )
 
-
             eligible_exchange = bool(eligible_course_units)
 
             return JsonResponse({

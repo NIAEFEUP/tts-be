@@ -103,7 +103,6 @@ class MarketplaceExchangeView(APIView):
         exchanges = request.POST.getlist('exchangeChoices[]')
         exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
-        print("Marketplace exchange: ", exchanges)
         curr_student = request.user.username
         sigarra_res = SigarraController().get_student_schedule(curr_student)
         

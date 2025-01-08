@@ -49,9 +49,6 @@ class StudentSentExchangesView(APIView):
         paginator = Paginator(exchanges, 10)
         page_obj = paginator.get_page(page_number if page_number != None else 1)
 
-        for exchange in page_obj:
-            print(type(exchange) == MarketplaceExchange)
-
         return {
             "page": {
                 "current": page_obj.number,
