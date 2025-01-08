@@ -26,14 +26,11 @@ def create_marketplace_exchange_on_db(exchanges, curr_student):
    
 
 def build_marketplace_submission_schedule(schedule, submission, auth_student):
-    print("Current auth student: ", auth_student)
     for exchange in submission:
         course_unit = exchange["courseUnitId"]
         class_auth_student_goes_to = exchange["classNameRequesterGoesTo"]
         class_auth_student_goes_from = exchange["classNameRequesterGoesFrom"]
 
-        print("schedule is: ", schedule[auth_student])
-        
         auth_user_valid = (class_auth_student_goes_from, course_unit) in schedule[auth_student]
         if not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)

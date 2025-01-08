@@ -20,6 +20,7 @@ class StudentScheduleView(APIView):
                 return HttpResponse(status=sigarra_res.status_code)
 
             schedule_data = sigarra_res.data
+
             old_schedule = hashlib.sha256(json.dumps(schedule_data, sort_keys=True).encode()).hexdigest()
 
             update_schedule_accepted_exchanges(request.user.username, schedule_data)
