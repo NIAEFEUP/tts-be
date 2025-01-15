@@ -24,12 +24,11 @@ SET row_security = off;
 --
 
 CREATE TABLE "public"."class" (
-    "id" bigint NOT NULL,
+    "id" bigint NOT NULL UNIQUE,
     "name" character varying(31) NOT NULL,
     "course_unit_id" integer NOT NULL,
     "last_updated" timestamp with time zone NOT NULL
 );
-
 
 --
 -- TOC entry 223 (class 1259 OID 16797)
