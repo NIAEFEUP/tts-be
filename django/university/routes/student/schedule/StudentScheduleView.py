@@ -45,7 +45,6 @@ class StudentScheduleView(APIView):
 
         schedule_data = sigarra_res.data
 
-        # print("SCHEDULE_DATA BEFORE retrieve course unit classes: ", schedule_data)
         update_schedule_accepted_exchanges(username, schedule_data)
 
         course_unit_classes = set()
