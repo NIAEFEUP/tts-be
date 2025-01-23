@@ -200,7 +200,7 @@ def update_schedule_accepted_exchanges(student, schedule):
     direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids).order_by('date')
 
     for exchange in direct_exchanges:
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant=student).order_by('date')
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant_nmec=student).order_by('date')
         (status, trailing) = update_schedule(schedule, participants) 
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
@@ -208,22 +208,18 @@ def update_schedule_accepted_exchanges(student, schedule):
     return (ExchangeStatus.SUCCESS, None)
 
 def update_schedule(student_schedule, exchanges):
+    #print("UPDATE_SCHEDULE student schedule: ", student_schedule)
+    #print("UPDATE_SCHEDULE exchanges: ", exchanges)
+
     for exchange in exchanges:
         for i, schedule in enumerate(student_schedule):
             if schedule["ucurr_sigla"] == exchange.course_unit:
-                ocorr_id = schedule["ocorrencia_id"]
                 class_type = schedule["tipo"]
 
-                sigarra_res = SigarraController().get_course_unit_classes(ocorr_id)
-
-                if sigarra_res.status_code != 200:
-                    return (ExchangeStatus.FETCH_SCHEDULE_ERROR, sigarra_res.status_code)
-
                 # TODO if old_class schedule is different from current schedule, abort
-                schedule = sigarra_res.data
-                for unit_schedule in schedule:
-                    for turma in unit_schedule["turmas"]:
-                        if turma["turma_sigla"] == exchange.new_class and unit_schedule["tipo"] == class_type:
-                            student_schedule[i] = unit_schedule
+
+                for turma in schedule["turmas"]:
+                    if turma["turma_sigla"] == exchange.class_participant_goes_to and schedule["tipo"] == class_type:
+                        student_schedule[i] = schedule
 
     return (ExchangeStatus.SUCCESS, None)
