@@ -232,6 +232,15 @@ CREATE TABLE "public"."user_course_units" (
     "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE "public"."exchange_urgent_requests" (
+    "id" SERIAL PRIMARY KEY,
+    "user_nmec" varchar(32) NOT NULL,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "class_user_goes_from" varchar(16) NOT NULL,
+    "class_user_goes_to" varchar(16) NOT NULL,
+    "accepted" boolean DEFAULT false
+);
+
 CREATE TABLE "public"."course_unit_enrollments" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
