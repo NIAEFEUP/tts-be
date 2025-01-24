@@ -245,7 +245,7 @@ CREATE TABLE "public"."course_unit_enrollments" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
     "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "accepted" boolean DEFAULT false
 );
 
