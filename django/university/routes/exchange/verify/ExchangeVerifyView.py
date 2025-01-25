@@ -1,7 +1,8 @@
 import json
 import jwt
-import requests
-import datetime
+import time
+
+from django.core.cache import cache
 
 from django.http import HttpResponse, JsonResponse
 from django.views import View
@@ -11,13 +12,10 @@ from django.template.loader import render_to_string
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, DOMAIN
 
 from university.controllers.StudentController import StudentController
-from university.controllers.ExchangeController import ExchangeController
-from university.controllers.SigarraController import SigarraController
-from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, curr_semester_weeks, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
-from university.models import DirectExchange, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants
+from university.models import DirectExchange, DirectExchangeParticipants
 
 class ExchangeVerifyView(View):
-    def post(self, response):
+    def post(self, request, token):
         try:
             exchange_info = jwt.decode(token, JWT_KEY, algorithms=["HS256"])
         
