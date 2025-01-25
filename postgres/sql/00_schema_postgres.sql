@@ -238,6 +238,7 @@ CREATE TABLE "public"."exchange_urgent_requests" (
     "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "class_user_goes_from" varchar(16) NOT NULL,
     "class_user_goes_to" varchar(16) NOT NULL,
+    "message" varchar(2048) NOT NULL,
     "accepted" boolean DEFAULT false
 );
 
