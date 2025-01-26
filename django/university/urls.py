@@ -15,6 +15,7 @@ from university.routes.student.StudentPhotoView import StudentPhotoView
 from university.routes.exchange.card.metadata.ExchangeCardMetadataView import ExchangeCardMetadataView
 from university.routes.exchange.verify.ExchangeVerifyView import ExchangeVerifyView
 from university.routes.admin.AdminExchangeCoursesView import AdminExchangeCoursesView
+from university.routes.exchange.ExchangeUrgentView import ExchangeUrgentView
 from . import views
 from mozilla_django_oidc import views as oidc_views
 
@@ -40,6 +41,7 @@ urlpatterns = [
     path('exchange/direct/<int:id>', DirectExchangeView.as_view(), name="direct_exchange-id"),
     path('exchange/options/', ExchangeOptionsView.as_view()),
     path('exchange/export/csv', ExchangeExportView.as_view()),
+    path('exchange/urgent/', ExchangeUrgentView.as_view()),
     path('course_unit/<int:course_unit_id>/exchange/metadata', ExchangeCardMetadataView.as_view()),
     path('course_unit/<int:course_unit_id>/', views.course_unit_by_id),
     path('class/<int:course_unit_id>/', views.classes),

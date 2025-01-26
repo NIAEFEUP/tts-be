@@ -15,7 +15,6 @@ from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, curr_semester_weeks, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
 from university.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants, AuthUser, ExchangeAdmin
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
-from university.exchange.utils import convert_sigarra_schedule
 
 class DirectExchangeView(View):
     """
