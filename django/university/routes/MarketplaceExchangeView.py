@@ -4,10 +4,12 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q, Prefetch
 
+from django.db import transaction
+
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, exchange_overlap, incorrect_class_error, update_schedule_accepted_exchanges
-from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, Class, ExchangeUrgentRequests
+from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, Class, ExchangeUrgentRequests, ExchangeUrgentRequestOptions
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
@@ -129,25 +131,30 @@ class MarketplaceExchangeView(APIView):
             return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
         if urgentMessage:
-            print("URGENT: ", urgentMessage);
             return self.add_urgent_exchange(request, exchanges, urgentMessage)
         else:
             return self.add_normal_marketplace_exchange(request, exchanges)
 
         
     def add_urgent_exchange(self, request, exchanges, message: str):
-        models_to_save = []
-        for exchange in exchanges:
-            models_to_save.append(ExchangeUrgentRequests(
+        with transaction.atomic():
+            urgent_request = ExchangeUrgentRequests.objects.create(
                 user_nmec=request.user.username,
-                course_unit_id=int(exchange["courseUnitId"]),
-                class_user_goes_from=exchange["classNameRequesterGoesFrom"],
-                class_user_goes_to=exchange["classNameRequesterGoesTo"],
                 message=message,
                 accepted=False
-            ))
+            )
+            urgent_request.save()
 
-        ExchangeUrgentRequests.objects.bulk_create(models_to_save)
+            models_to_save = []
+            for exchange in exchanges:
+                models_to_save.append(ExchangeUrgentRequestOptions(
+                    course_unit_id=int(exchange["courseUnitId"]),
+                    class_user_goes_from=exchange["classNameRequesterGoesFrom"],
+                    class_user_goes_to=exchange["classNameRequesterGoesTo"],
+                    exchange_urgent_request=urgent_request
+                ))
+
+            ExchangeUrgentRequestOptions.objects.bulk_create(models_to_save)
 
         return JsonResponse({"success": True}, safe=False)
 
