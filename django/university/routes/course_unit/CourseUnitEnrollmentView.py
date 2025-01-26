@@ -1,12 +1,22 @@
 import json
 from rest_framework.views import APIView
-from university.models import CourseUnitEnrollments, CourseUnitEnrollmentOptions, UserCourseUnits
+from university.models import CourseUnitEnrollments, CourseUnitEnrollmentOptions, UserCourseUnits, ExchangeAdmin
+from university.serializers.CourseUnitEnrollmentsSerializer import CourseUnitEnrollmentsSerializer
 
 from django.db import transaction
 
 from django.http import HttpResponse, JsonResponse
 
 class CourseUnitEnrollmentView(APIView):
+    def get(self, request):
+        is_admin = ExchangeAdmin.objects.filter(username=request.user.username).exists()
+        if not(is_admin):
+            return HttpResponse(status=403) 
+
+        enrollments = map(lambda enrollment: CourseUnitEnrollmentsSerializer(enrollment).data, CourseUnitEnrollments.objects.all())
+
+        return JsonResponse(list(enrollments), safe=False)
+
     def post(self, request):
         enrollments = request.POST.getlist("enrollCourses[]")
 
