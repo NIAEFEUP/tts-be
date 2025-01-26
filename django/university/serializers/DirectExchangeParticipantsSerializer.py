@@ -1,8 +1,21 @@
 from django.forms.models import model_to_dict
 from rest_framework import serializers
 
-from university.models import CourseUnit
+from university.models import CourseUnit, DirectExchangeParticipants
 from university.controllers.ClassController import ClassController
+
+class DirectExchangeSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    issuer_name = serializers.CharField(max_length=32)
+    issuer_nmec = serializers.CharField(max_length=32)
+    accepted = serializers.BooleanField()
+    date = serializers.DateTimeField()
+    options = serializers.SerializerMethodField()
+
+    def get_options(self, obj):
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=obj.id)
+
+        return list(map(lambda participant: DirectExchangeParticipantsSerializer(participant).data, participants))
 
 class DirectExchangeParticipantsSerializer(serializers.Serializer):
     course_info = serializers.SerializerMethodField()

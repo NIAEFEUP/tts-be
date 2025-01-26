@@ -14,7 +14,7 @@ from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, curr_semester_weeks, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
 from university.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants, AuthUser, ExchangeAdmin
-from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
+from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
 from university.exchange.utils import convert_sigarra_schedule
 
 class DirectExchangeView(View):
@@ -27,29 +27,9 @@ class DirectExchangeView(View):
         if not(is_admin):
             return HttpResponse(status=403) 
 
-        users = list(AuthUser.objects.all())
+        direct_exchanges = map(lambda exchange: DirectExchangeSerializer(exchange).data, DirectExchange.objects.all())
 
-        accepted_exchanges = []
-        for user in users:
-            user_accepted_exchanges = list(DirectExchangeParticipants.objects.filter(participant_nmec=user.username, direct_exchange__accepted=True))
-
-            if len(user_accepted_exchanges) == 0:
-                continue
-
-            exchanges = [DirectExchangeParticipantsSerializer(participant).data for participant in user_accepted_exchanges]
-            exchanges.sort(key=lambda exchange: exchange["date"])
-
-            sigarra_controller = SigarraController()
-            accepted_exchanges.append({
-                "participant_nmec": user.username,
-                "participant_name": f"{user.first_name} {user.last_name}",
-                "date": exchanges[0]["date"],
-                "exchanges": exchanges,
-                "schedule": convert_sigarra_schedule(sigarra_controller.get_student_schedule(user.username).data)
-            })
-
-
-        return JsonResponse(accepted_exchanges, safe=False)
+        return JsonResponse(list(direct_exchanges), safe=False)
 
     def post(self, request):
         student_schedules = {}
