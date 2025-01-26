@@ -247,19 +247,29 @@ CREATE TABLE "public"."user_course_units" (
 CREATE TABLE "public"."exchange_urgent_requests" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
+    "message" varchar(2048) NOT NULL,
+    "accepted" boolean DEFAULT false
+);
+
+CREATE TABLE "public"."exchange_urgent_request_options" (
+    id SERIAL PRIMARY KEY,
     "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "class_user_goes_from" varchar(16) NOT NULL,
     "class_user_goes_to" varchar(16) NOT NULL,
-    "message" varchar(2048) NOT NULL,
-    "accepted" boolean DEFAULT false
+    "exchange_urgent_request_id" INTEGER NOT NULL REFERENCES "public"."exchange_urgent_requests"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE "public"."course_unit_enrollments" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
+    "accepted" boolean DEFAULT false
+);
+
+CREATE TABLE "public"."course_unit_enrollment_options" (
+    id SERIAL PRIMARY KEY,
     "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    "accepted" boolean DEFAULT false
+    "course_unit_enrollment_id" INTEGER NOT NULL REFERENCES "public"."course_unit_enrollments"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 --
