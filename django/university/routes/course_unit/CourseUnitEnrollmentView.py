@@ -13,11 +13,11 @@ class CourseUnitEnrollmentView(APIView):
         student_course_units = list(UserCourseUnits.objects.filter(user_nmec=request.user.username).all())
 
         with transaction.atomic():
-            enrollment = CourseUnitEnrollments.objects.create(
+            course_unit_enrollment = CourseUnitEnrollments.objects.create(
                 user_nmec=request.user.username,
                 accepted=False
             )
-            enrollment.save()
+            course_unit_enrollment.save()
 
             models_to_save = []
             for enrollment in enrollments:
@@ -29,10 +29,10 @@ class CourseUnitEnrollmentView(APIView):
                 db_enrollment = CourseUnitEnrollmentOptions(
                     course_unit_id=enrollment_metadata["course_unit_id"],
                     class_field_id=enrollment_metadata["class_id"],
-                    course_unit_enrollment=enrollment
+                    course_unit_enrollment=course_unit_enrollment
                 )
                 models_to_save.append(db_enrollment)
 
-            CourseUnitEnrollments.objects.bulk_create(models_to_save)
+            CourseUnitEnrollmentOptions.objects.bulk_create(models_to_save)
         
         return HttpResponse(status=200)
