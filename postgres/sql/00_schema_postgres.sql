@@ -24,12 +24,11 @@ SET row_security = off;
 --
 
 CREATE TABLE "public"."class" (
-    "id" bigint NOT NULL,
+    "id" bigint NOT NULL UNIQUE,
     "name" character varying(31) NOT NULL,
     "course_unit_id" integer NOT NULL,
     "last_updated" timestamp with time zone NOT NULL
 );
-
 
 --
 -- TOC entry 223 (class 1259 OID 16797)
@@ -154,7 +153,6 @@ CREATE TABLE "public"."slot" (
     "last_updated" timestamp with time zone NOT NULL
 );
 
-
 --
 -- TOC entry 226 (class 1259 OID 16811)
 -- Name: slot_class; Type: TABLE; Schema: public; Owner: -
@@ -237,6 +235,31 @@ CREATE TABLE "public"."exchange_admin_course_units" (
     "id" SERIAL PRIMARY KEY,
     "exchange_admin_id" INTEGER NOT NULL REFERENCES "public"."exchange_admin"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "public"."user_course_units" (
+    "id" SERIAL PRIMARY KEY,
+    "user_nmec" varchar(32) NOT NULL,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "public"."exchange_urgent_requests" (
+    "id" SERIAL PRIMARY KEY,
+    "user_nmec" varchar(32) NOT NULL,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "class_user_goes_from" varchar(16) NOT NULL,
+    "class_user_goes_to" varchar(16) NOT NULL,
+    "message" varchar(2048) NOT NULL,
+    "accepted" boolean DEFAULT false
+);
+
+CREATE TABLE "public"."course_unit_enrollments" (
+    "id" SERIAL PRIMARY KEY,
+    "user_nmec" varchar(32) NOT NULL,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "accepted" boolean DEFAULT false
 );
 
 --

@@ -1,5 +1,6 @@
 from django.urls import path, include
 
+from university.routes.course_unit.CourseUnitEnrollmentView import CourseUnitEnrollmentView
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
 from university.routes.auth.Csrf import Csrf
 from university.routes.exchange.DirectExchangeView import DirectExchangeView
@@ -19,6 +20,7 @@ from mozilla_django_oidc import views as oidc_views
 
 # URLConf
 urlpatterns = [
+    path('emailtest/', views.emailtest),
     path('faculty/', views.faculty),
     path('course/<int:year>', views.course),
     path('course_units/<int:course_id>/<int:year>/<int:semester>/', views.course_units),
@@ -43,6 +45,8 @@ urlpatterns = [
     path('class/<int:course_unit_id>/', views.classes),
     path('professors/<int:slot>/', views.professor),
     path('course_unit/hash', views.get_course_unit_hashes),
+    path('course_unit/enrollment/', CourseUnitEnrollmentView.as_view()), 
     path('oidc-auth/', include('mozilla_django_oidc.urls')),
     path('exchange/admin/courses/', AdminExchangeCoursesView.as_view()),
+    path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback")
 ]

@@ -20,6 +20,7 @@ class StudentScheduleView(APIView):
                 return HttpResponse(status=sigarra_res.status_code)
 
             schedule_data = sigarra_res.data
+
             old_schedule = hashlib.sha256(json.dumps(schedule_data, sort_keys=True).encode()).hexdigest()
 
             update_schedule_accepted_exchanges(request.user.username, schedule_data)
@@ -44,14 +45,12 @@ class StudentScheduleView(APIView):
 
         schedule_data = sigarra_res.data
 
+        # print("SCHEDULE_DATA BEFORE retrieve course unit classes: ", schedule_data)
         update_schedule_accepted_exchanges(username, schedule_data)
+
+        course_unit_classes = set()
+        for scheduleItem in schedule_data:
+            course_unit_classes.add((scheduleItem["ocorrencia_id"], scheduleItem["turma_sigla"]))
         
-        courseunitclass = {}
-        for slot in schedule_data:
-            if slot["tipo"] == "t":
-                continue
-
-            courseUnitClass[slot["turma_sigla"]] = slot["ucurr_sigla"]
-
-        return courseUnitClass
+        return course_unit_classes
 

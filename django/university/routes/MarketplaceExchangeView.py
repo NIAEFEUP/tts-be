@@ -1,16 +1,13 @@
-import base64
 import json
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q, Prefetch
 
-from university.controllers.ClassController import ClassController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, convert_sigarra_schedule, curr_semester_weeks, exchange_overlap, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
-from university.models import CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
-from university.routes.student.schedule.StudentScheduleView import StudentScheduleView
+from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, exchange_overlap, incorrect_class_error, update_schedule_accepted_exchanges
+from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, Class, ExchangeUrgentRequests
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
@@ -33,44 +30,48 @@ class MarketplaceExchangeView(APIView):
                 "options": [
                     MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options
                 ],
-                "classes": list(self.getExchangeOptionClasses(exchange.options)),
+                "classes": list(ExchangeController.getExchangeOptionClasses(exchange.options)),
                 "date":  exchange.date,
                 "accepted": exchange.accepted
             } for exchange in page_obj]
         }
 
-
-    def filterMineExchanges(self, request, course_unit_name_filter, classes_filter):
-        marketplace_exchanges = list(MarketplaceExchange.objects.prefetch_related(
-                Prefetch(
-                    'marketplaceexchangeclass_set',
-                    queryset=MarketplaceExchangeClass.objects.all(),
-                    to_attr='options'
-                )
-            ).filter(issuer_nmec=request.user.username).all())
-
-        if course_unit_name_filter:
-            marketplace_exchanges = list(filter(
-                lambda x: self.courseUnitNameFilterInExchangeOptions(x.options, course_unit_name_filter),
-                marketplace_exchanges
-            ))
-
-        return self.build_pagination_payload(request, marketplace_exchanges)
-
     def filterAllExchanges(self, request, course_unit_name_filter, classes_filter):
         print("classes filter: ", classes_filter)
         marketplace_exchanges = list(MarketplaceExchange.objects
-                .exclude(issuer_nmec=request.user.username).all())
+                .prefetch_related(
+                Prefetch(
+                    'marketplaceexchangeclass_set',
+                    to_attr='options'
+                )
+                ).exclude(issuer_nmec=request.user.username).all())
 
+        marketplace_exchanges = self.remove_invalid_dest_class_exchanges(marketplace_exchanges, request.user.username)
         marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
         
         if course_unit_name_filter:
             marketplace_exchanges = list(filter(
-                lambda x: self.courseUnitNameFilterInExchangeOptions(x.options, course_unit_name_filter),
+                lambda x: ExchangeController.courseUnitNameFilterInExchangeOptions(x.options, course_unit_name_filter),
                 marketplace_exchanges
             ))
 
         return self.build_pagination_payload(request, marketplace_exchanges)
+
+    def remove_invalid_dest_class_exchanges(self, marketplace_exchanges, nmec):
+        """
+            Classes where the destination class the requester user will go to is not a class we are in should not be shown in exchange
+        """
+        user_ucs_map = {uc.course_unit.id: uc for uc in list(UserCourseUnits.objects.filter(user_nmec=nmec))}
+
+        exchanges_with_valid_dest_class = []
+        for exchange in marketplace_exchanges:
+            for option in exchange.options:
+                course_unit_id = option.course_unit_id
+                class_issuer_goes_to = option.class_issuer_goes_to
+                if Class.objects.filter(course_unit_id=course_unit_id, name=class_issuer_goes_to).get().id == user_ucs_map[int(course_unit_id)].class_field.id:
+                    exchanges_with_valid_dest_class.append(exchange)
+
+        return exchanges_with_valid_dest_class
 
     def advanced_classes_filter(self, marketplace_exchanges, classes_filter):
         filtered_marketplace_exchanges = []
@@ -86,45 +87,26 @@ class MarketplaceExchangeView(APIView):
 
         return filtered_marketplace_exchanges
 
-    def courseUnitNameFilterInExchangeOptions(self, options, courseUnitNameFilter):
-        matches = []
-        for courseUnitId in courseUnitNameFilter:
-            for option in options:
-                if courseUnitId == option.course_unit_id:
-                    matches.append(1)
-
-        return len(matches) == len(courseUnitNameFilter)
-   
-
     """
         Returns all the current marketplace exchange requests paginated
     """
     def get(self, request):
         courseUnitNameFilter = request.query_params.get('courseUnitNameFilter', None)
-        classesFilter = self.parseClassesFilter(request.query_params.get('classesFilter', None))
+        classesFilter = ExchangeController.parseClassesFilter(request.query_params.get('classesFilter', None))
     
         return JsonResponse(self.filterAllExchanges(request, courseUnitNameFilter.split(',') if courseUnitNameFilter else None, classesFilter), safe=False)
-
-    def parseClassesFilter(self, classesFilter: str) -> dict:
-        if not classesFilter:
-            return {}
-
-        b64_decoded = base64.b64decode(classesFilter)
-        string = b64_decoded.decode('utf-8')
-        return dict(json.loads(string))
 
     def post(self, request):
         return self.submit_marketplace_exchange_request(request)
 
-    def getExchangeOptionClasses(self, options):
-        classes = sum(list(map(lambda option: ClassController.get_classes(option.course_unit_id), options)), [])
-        return filter(lambda currentClass: any(currentClass["name"] == option.class_issuer_goes_from for option in options), classes)
-
     def submit_marketplace_exchange_request(self, request):
         exchanges = request.POST.getlist('exchangeChoices[]')
         exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
+        
+        # If user sent a message explaining why their request should be directly handled by the comission instead of having to be
+        # accepted by students in the marketplace
+        urgentMessage = request.POST.get('urgentMessage')
 
-        print("Marketplace exchange: ", exchanges)
         curr_student = request.user.username
         sigarra_res = SigarraController().get_student_schedule(curr_student)
         
@@ -146,9 +128,34 @@ class MarketplaceExchangeView(APIView):
         if exchange_overlap(student_schedules, curr_student):
             return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
+        if urgentMessage:
+            print("URGENT: ", urgentMessage);
+            return self.add_urgent_exchange(request, exchanges, urgentMessage)
+        else:
+            return self.add_normal_marketplace_exchange(request, exchanges)
+
+        
+    def add_urgent_exchange(self, request, exchanges, message: str):
+        models_to_save = []
+        for exchange in exchanges:
+            models_to_save.append(ExchangeUrgentRequests(
+                user_nmec=request.user.username,
+                course_unit_id=int(exchange["courseUnitId"]),
+                class_user_goes_from=exchange["classNameRequesterGoesFrom"],
+                class_user_goes_to=exchange["classNameRequesterGoesTo"],
+                message=message,
+                accepted=False
+            ))
+
+        ExchangeUrgentRequests.objects.bulk_create(models_to_save)
+
+        return JsonResponse({"success": True}, safe=False)
+
+    def add_normal_marketplace_exchange(self, request, exchanges):
         self.insert_marketplace_exchange(exchanges, request.user)
     
         return JsonResponse({"success": True}, safe=False)
+
 
     def insert_marketplace_exchange(self, exchanges, user):
         issuer_name = f"{user.first_name} {user.last_name.split(' ')[-1]}"

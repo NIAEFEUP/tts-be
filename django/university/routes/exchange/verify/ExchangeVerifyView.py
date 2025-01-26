@@ -10,7 +10,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, DOMAIN
 
-
+from university.controllers.StudentController import StudentController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, curr_semester_weeks, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
@@ -45,6 +45,9 @@ class ExchangeVerifyView(View):
                     direct_exchange_object.marketplace_exchange = None
                     direct_exchange_object.save()
                     marketplace_exchange.delete()
+
+                for participant in all_participants:
+                    StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
 
             if cache.get(token) != None:
                 return JsonResponse({"verified": False}, safe=False, status=403)

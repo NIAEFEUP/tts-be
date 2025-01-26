@@ -15,6 +15,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 import requests
 from rest_framework import status
+from django.core.mail import send_mail
 
 from django.utils import timezone
 from django.forms.models import model_to_dict
@@ -22,6 +23,12 @@ from django.forms.models import model_to_dict
 
 def get_field(value):
     return value.field
+
+@api_view(['GET'])
+def emailtest(request):
+    send_mail("subject", "message", "from_email", ["recipient_list"])
+    
+    return HttpResponse()
 
 
 @api_view(['GET'])
@@ -75,8 +82,6 @@ def course_units(request, course_id, year, semester):
         json_data.append(course_unit_metadata.__dict__)
 
     return JsonResponse(json_data, safe=False)
-
-
 
 """
     Returns the classes of a course unit.
@@ -148,7 +153,6 @@ def student_data(request, codigo):
 """
 @api_view(['GET'])
 def get_course_unit_hashes(request):
-
     ids_param = request.query_params.get('ids', '')
 
     try:

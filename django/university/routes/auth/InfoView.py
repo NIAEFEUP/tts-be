@@ -18,11 +18,10 @@ class InfoView(View):
             
             if not eligible_course_units:
                 eligible_course_units = ExchangeController.eligible_course_units(
-                    SigarraController(),
                     request.user.username
                 )
 
-            eligible_exchange = False if not eligible_course_units else len(eligible_course_units) > 0
+            eligible_exchange = bool(eligible_course_units)
 
             is_admin = True
 

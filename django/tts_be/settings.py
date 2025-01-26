@@ -109,13 +109,13 @@ OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
 OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
 OIDC_RP_SIGN_ALGO = "RS256"
 
-OIDC_STORE_ID_TOKEN = True
-OIDC_STORE_ACCESS_TOKEN = True
+OIDC_AUTHENTICATION_CALLBACK_URL = "api_oidc_authentication_callback"
 
 OIDC_OP_AUTHORIZATION_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/auth"
 OIDC_OP_TOKEN_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/token"
 OIDC_OP_USER_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/userinfo"
 OIDC_OP_JWKS_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/certs"
+
 OIDC_OP_LOGOUT_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/logout"
 
 OIDC_RP_SCOPES = "openid email profile uporto_data"
@@ -206,7 +206,7 @@ CORS_ALLOW_HEADERS = [
 
 VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS = int(os.getenv("VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS", 3600 * 24))
 
-EMAIL_HOST = ''
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_PORT = ''
+EMAIL_HOST = os.getenv("EMAIL_HOST", "tts-mailpit")
+EMAIL_PORT = os.getenv("EMAIL_PORT", 1025)
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", None)
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", None)

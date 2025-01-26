@@ -44,3 +44,4 @@ INSERT INTO exchange_admin(id, username) VALUES (1, '202109260');
 INSERT INTO exchange_admin (id, username) VALUES (2, '202108880');
 INSERT INTO exchange_admin_courses (exchange_admin_id, course_id) VALUES (2, 22841);
 INSERT INTO exchange_admin_courses (exchange_admin_id, course_id) VALUES (2, 22862);
+INSERT INTO exchange_expirations(course_unit_id, active_date, end_date) VALUES (540679, '2023-11-18 15:00:00', '2025-10-25 15:00:00');

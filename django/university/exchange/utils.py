@@ -26,14 +26,11 @@ def create_marketplace_exchange_on_db(exchanges, curr_student):
    
 
 def build_marketplace_submission_schedule(schedule, submission, auth_student):
-    print("Current auth student: ", auth_student)
     for exchange in submission:
         course_unit = exchange["courseUnitId"]
         class_auth_student_goes_to = exchange["classNameRequesterGoesTo"]
         class_auth_student_goes_from = exchange["classNameRequesterGoesFrom"]
 
-        print("schedule is: ", schedule[auth_student])
-        
         auth_user_valid = (class_auth_student_goes_from, course_unit) in schedule[auth_student]
         if not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
@@ -48,6 +45,7 @@ def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
 
 def build_new_schedules(student_schedules, exchanges, auth_username):
     for curr_exchange in exchanges:
+        # There are 2 students involved in the exchange. THe other student is the student other than the currently authenticated user
         other_student = curr_exchange["other_student"]["mecNumber"]
         course_unit = CourseUnit.objects.get(pk=curr_exchange["courseUnitId"])
         course_unit = course_unit.acronym
@@ -58,27 +56,25 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
         auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[auth_username]
         
-        print("other studenet valid: ", other_student_valid)
-        print("auth studenet valid: ", auth_user_valid)
-
         if not(other_student_valid) or not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
 
-        # Change schedule
-        tmp = student_schedules[auth_username][(class_other_student_goes_to, course_unit)]
-        student_schedules[auth_username][(class_auth_student_goes_to, course_unit)] = student_schedules[other_student][(class_auth_student_goes_to, course_unit)]
-        student_schedules[other_student][(class_other_student_goes_to, course_unit)] = tmp
+        user_uc = (class_auth_student_goes_to, course_unit)
+        other_user_uc = (class_other_student_goes_to, course_unit)
 
-        del student_schedules[other_student][(class_auth_student_goes_to, course_unit)] # remove old class of other student
-        del student_schedules[auth_username][(class_other_student_goes_to, course_unit)] # remove old class of auth student
+        (student_schedules[auth_username][user_uc], student_schedules[other_student][other_user_uc]) = (student_schedules[other_student][user_uc], student_schedules[auth_username][other_user_uc])
 
-    return (ExchangeStatus.SUCCESS, None)     
+        # Remove class the other student is going from and will not be in anymore
+        del student_schedules[other_student][user_uc]
+
+        # Remove class the auth student is going from and will not be in anymore
+        del student_schedules[auth_username][other_user_uc]
+
+    return (ExchangeStatus.SUCCESS, None) 
 
 def build_student_schedule_dicts(student_schedules, exchanges):
     for curr_exchange in exchanges:
         curr_username = curr_exchange["other_student"]["mecNumber"]
-        print("CURR USERNAME: ", curr_username)
-        print("student schedules: ", student_schedules.keys())
         if not curr_username in student_schedules.keys():
             sigarra_res = SigarraController().get_student_schedule(curr_username)
             if(sigarra_res.status_code != 200):
@@ -204,7 +200,7 @@ def update_schedule_accepted_exchanges(student, schedule):
     direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids).order_by('date')
 
     for exchange in direct_exchanges:
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant=student).order_by('date')
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant_nmec=student).order_by('date')
         (status, trailing) = update_schedule(schedule, participants) 
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
@@ -212,22 +208,18 @@ def update_schedule_accepted_exchanges(student, schedule):
     return (ExchangeStatus.SUCCESS, None)
 
 def update_schedule(student_schedule, exchanges):
+    #print("UPDATE_SCHEDULE student schedule: ", student_schedule)
+    #print("UPDATE_SCHEDULE exchanges: ", exchanges)
+
     for exchange in exchanges:
         for i, schedule in enumerate(student_schedule):
             if schedule["ucurr_sigla"] == exchange.course_unit:
-                ocorr_id = schedule["ocorrencia_id"]
                 class_type = schedule["tipo"]
 
-                sigarra_res = SigarraController().get_course_unit_classes(ocorr_id)
-
-                if sigarra_res.status_code != 200:
-                    return (ExchangeStatus.FETCH_SCHEDULE_ERROR, sigarra_res.status_code)
-
                 # TODO if old_class schedule is different from current schedule, abort
-                schedule = sigarra_res.data
-                for unit_schedule in schedule:
-                    for turma in unit_schedule["turmas"]:
-                        if turma["turma_sigla"] == exchange.new_class and unit_schedule["tipo"] == class_type:
-                            student_schedule[i] = unit_schedule
+
+                for turma in schedule["turmas"]:
+                    if turma["turma_sigla"] == exchange.class_participant_goes_to and schedule["tipo"] == class_type:
+                        student_schedule[i] = schedule
 
     return (ExchangeStatus.SUCCESS, None)

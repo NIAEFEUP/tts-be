@@ -23,15 +23,15 @@ class SigarraController:
     def semester_weeks(self):
         currdate = date.today()
         year = str(currdate.year)
-        first_semester = currdate.month >= 9 and currdate.month <= 12
+        first_semester = currdate.month >= 10 or currdate.month <= 1
         if first_semester: 
-            semana_ini = "1001"
-            semana_fim = "1231"
+            semana_ini = "20241001"
+            semana_fim = "20250131"
         else:
-            semana_ini = "0201"
-            semana_fim = "0601"
+            semana_ini = year + "0210"
+            semana_fim = year + "0601"
         
-        return (year + semana_ini, year + semana_fim)
+        return (semana_ini, semana_fim)
     
     def student_schedule_url(self, nmec, semana_ini, semana_fim) -> str:
         return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={nmec}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
@@ -83,7 +83,7 @@ class SigarraController:
             course_units.add(scheduleItem["ocorrencia_id"])
 
         return SigarraResponse(list(course_units), 200)
-    
+
     def get_course_unit_classes(self, course_unit_id: int) -> SigarraResponse:
         url = f"https://sigarra.up.pt/feup/pt/mob_ucurr_geral.uc_inscritos?pv_ocorrencia_id={course_unit_id}"
         response = requests.get(url, cookies=self.cookies)

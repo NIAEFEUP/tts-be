@@ -49,9 +49,6 @@ class StudentSentExchangesView(APIView):
         paginator = Paginator(exchanges, 10)
         page_obj = paginator.get_page(page_number if page_number != None else 1)
 
-        for exchange in page_obj:
-            print(type(exchange) == MarketplaceExchange)
-
         return {
             "page": {
                 "current": page_obj.number,
@@ -68,9 +65,3 @@ class StudentSentExchangesView(APIView):
                 "date": exchange.date
             } for exchange in page_obj]
         }
-    
-
-    def getExchangeOptionClasses(self, options):
-        classes = sum(list(map(lambda option: ClassController.get_classes(option.course_unit_id), options)), [])
-        return filter(lambda currentClass: any(currentClass["name"] == option.class_issuer_goes_from for option in options), classes)
-

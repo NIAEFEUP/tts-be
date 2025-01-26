@@ -59,6 +59,13 @@ services:
     ports:
       - "6379:6379"
 
+  mailpit:
+    image: axllent/mailpit
+    container_name: tts-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 networks:
   default:
     name: tts-docker-network

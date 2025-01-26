@@ -6,8 +6,6 @@ class Csrf(View):
     def get(self, request):
         response = HttpResponse()
 
-        print("csrf request cookies is: ", request.COOKIES)
-
         if("csrftoken" not in request.COOKIES):
             cookies = request.COOKIES
             response.COOKIES = cookies
