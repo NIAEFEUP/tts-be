@@ -12,10 +12,6 @@ class CourseUnitEnrollmentsSerializer(serializers.Serializer):
     accepted = serializers.BooleanField()
     admin_state = serializers.CharField(max_length=32)
     options = serializers.SerializerMethodField()
-    schedule = serializers.SerializerMethodField()
-
-    def get_schedule(self, obj):
-        return convert_sigarra_schedule(SigarraController().get_student_schedule(obj.user_nmec).data)
 
     def get_options(self, obj):
         options = CourseUnitEnrollmentOptions.objects.filter(course_unit_enrollment__id=obj.id)

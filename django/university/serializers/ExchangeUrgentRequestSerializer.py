@@ -13,10 +13,6 @@ class ExchangeUrgentRequestSerializer(serializers.Serializer):
     accepted = serializers.BooleanField()
     admin_state = serializers.CharField(max_length=32)
     options = serializers.SerializerMethodField()
-    schedule = serializers.SerializerMethodField()
-
-    def get_schedule(self, obj):
-        return convert_sigarra_schedule(SigarraController().get_student_schedule(obj.user_nmec).data)
 
     def get_options(self, obj):
         options = ExchangeUrgentRequestOptions.objects.filter(exchange_urgent_request__id=obj.id)

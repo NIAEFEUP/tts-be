@@ -31,10 +31,6 @@ class DirectExchangeParticipantsSerializer(serializers.Serializer):
     course_unit_id = serializers.CharField(max_length=16)
     accepted = serializers.BooleanField()
     date = serializers.DateTimeField()
-    schedule = serializers.SerializerMethodField()
-
-    def get_schedule(self, obj):
-        return convert_sigarra_schedule(SigarraController().get_student_schedule(obj.participant_nmec).data)
 
     def get_course_info(self, obj):
         course_unit_id = obj.course_unit_id
