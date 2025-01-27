@@ -188,6 +188,7 @@ CREATE TABLE "public"."direct_exchange" (
   "issuer_nmec" varchar(32) NOT NULL,
   "accepted" boolean NOT NULL,
   "date" TIMESTAMP DEFAULT now()
+  "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
 );
 
 CREATE TABLE "public"."direct_exchange_participants" (
@@ -250,6 +251,7 @@ CREATE TABLE "public"."exchange_urgent_requests" (
     "user_nmec" varchar(32) NOT NULL,
     "message" varchar(2048) NOT NULL,
     "accepted" boolean DEFAULT false,
+    "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
     "date" TIMESTAMP DEFAULT now()
 );
 
@@ -265,7 +267,8 @@ CREATE TABLE "public"."exchange_urgent_request_options" (
 CREATE TABLE "public"."course_unit_enrollments" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
-    "accepted" boolean DEFAULT false
+    "accepted" boolean DEFAULT false,
+    "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
     "date" TIMESTAMP DEFAULT now()
 );
 
