@@ -65,7 +65,7 @@ class DirectExchangeView(View):
         if not(is_admin):
             return HttpResponse(status=403) 
 
-        direct_exchanges = list(map(lambda exchange: DirectExchangeSerializer(exchange).data, DirectExchange.objects.all()))
+        direct_exchanges = list(map(lambda exchange: DirectExchangeSerializer(exchange).data, DirectExchange.objects.all().order_by('date')))
 
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):

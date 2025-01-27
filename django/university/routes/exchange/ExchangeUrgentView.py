@@ -54,7 +54,7 @@ class ExchangeUrgentView(View):
         if not(is_admin):
             return HttpResponse(status=403) 
 
-        exchanges = list(map(lambda exchange: ExchangeUrgentRequestSerializer(exchange).data, ExchangeUrgentRequests.objects.all()))
+        exchanges = list(map(lambda exchange: ExchangeUrgentRequestSerializer(exchange).data, ExchangeUrgentRequests.objects.all().order_by('date')))
 
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
