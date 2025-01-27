@@ -208,9 +208,6 @@ def update_schedule_accepted_exchanges(student, schedule):
     return (ExchangeStatus.SUCCESS, None)
 
 def update_schedule(student_schedule, exchanges):
-    #print("UPDATE_SCHEDULE student schedule: ", student_schedule)
-    #print("UPDATE_SCHEDULE exchanges: ", exchanges)
-
     for exchange in exchanges:
         for i, schedule in enumerate(student_schedule):
             if schedule["ucurr_sigla"] == exchange.course_unit:

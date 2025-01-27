@@ -29,6 +29,7 @@ urlpatterns = [
     path('info/', views.info),
     path('auth/info/', InfoView.as_view()),
     path('csrf/', Csrf.as_view()),
+    path('admin/courses/', AdminExchangeCoursesView.as_view()),
     path('student/schedule', StudentScheduleView.as_view()),
     path('student/exchange/sent/', StudentSentExchangesView.as_view()),
     path('student/exchange/received/', StudentReceivedExchangesView.as_view()),

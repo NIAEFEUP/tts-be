@@ -5,6 +5,7 @@ from university.models import CourseUnitEnrollmentOptions, CourseUnit
 from university.controllers.ClassController import ClassController
 
 class CourseUnitEnrollmentsSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     user_nmec = serializers.CharField(max_length=32)
     accepted = serializers.BooleanField()
     options = serializers.SerializerMethodField()

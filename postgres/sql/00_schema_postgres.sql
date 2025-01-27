@@ -211,6 +211,7 @@ CREATE TABLE "public"."marketplace_exchange_class" (
     "course_unit_id" varchar(256) NOT NULL,
     "class_issuer_goes_from" varchar(16) NOT NULL,
     "class_issuer_goes_to" varchar(16) NOT NULL
+    "date" TIMESTAMP DEFAULT now()
 ); 
 
 CREATE TABLE "public"."exchange_expirations"(
@@ -248,7 +249,8 @@ CREATE TABLE "public"."exchange_urgent_requests" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
     "message" varchar(2048) NOT NULL,
-    "accepted" boolean DEFAULT false
+    "accepted" boolean DEFAULT false,
+    "date" TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE "public"."exchange_urgent_request_options" (
@@ -257,12 +259,14 @@ CREATE TABLE "public"."exchange_urgent_request_options" (
     "class_user_goes_from" varchar(16) NOT NULL,
     "class_user_goes_to" varchar(16) NOT NULL,
     "exchange_urgent_request_id" INTEGER NOT NULL REFERENCES "public"."exchange_urgent_requests"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "date" TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE "public"."course_unit_enrollments" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
     "accepted" boolean DEFAULT false
+    "date" TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE "public"."course_unit_enrollment_options" (
@@ -270,6 +274,7 @@ CREATE TABLE "public"."course_unit_enrollment_options" (
     "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "course_unit_enrollment_id" INTEGER NOT NULL REFERENCES "public"."course_unit_enrollments"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "date" TIMESTAMP DEFAULT now()
 );
 
 --
