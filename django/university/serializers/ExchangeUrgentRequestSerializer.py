@@ -11,6 +11,7 @@ class ExchangeUrgentRequestSerializer(serializers.Serializer):
     user_nmec = serializers.CharField(max_length=32)
     message = serializers.CharField(max_length=2048)
     accepted = serializers.BooleanField()
+    admin_state = serializers.CharField(max_length=32)
     options = serializers.SerializerMethodField()
     schedule = serializers.SerializerMethodField()
 

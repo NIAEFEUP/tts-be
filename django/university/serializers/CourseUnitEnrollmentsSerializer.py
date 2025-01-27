@@ -10,6 +10,7 @@ class CourseUnitEnrollmentsSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     user_nmec = serializers.CharField(max_length=32)
     accepted = serializers.BooleanField()
+    admin_state = serializers.CharField(max_length=32)
     options = serializers.SerializerMethodField()
     schedule = serializers.SerializerMethodField()
 

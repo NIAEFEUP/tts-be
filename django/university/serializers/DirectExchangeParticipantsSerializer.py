@@ -12,6 +12,7 @@ class DirectExchangeSerializer(serializers.Serializer):
     issuer_name = serializers.CharField(max_length=32)
     issuer_nmec = serializers.CharField(max_length=32)
     accepted = serializers.BooleanField()
+    admin_state = serializers.CharField(max_length=32)
     date = serializers.DateTimeField()
     options = serializers.SerializerMethodField()
 

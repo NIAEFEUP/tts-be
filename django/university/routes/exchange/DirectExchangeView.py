@@ -49,7 +49,12 @@ class DirectExchangeView(View):
         )
 
     def filter_active_state(self, exchanges, state):
-        return []
+        return list(
+            filter(
+                lambda exchange: exchange.get("admin_state") == state,
+                exchanges
+            )
+        )
 
     """
         Returns every direct exchange

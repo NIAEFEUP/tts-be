@@ -40,7 +40,12 @@ class CourseUnitEnrollmentView(APIView):
         )
 
     def filter_active_state(self, exchanges, state):
-        return []
+        return list(
+            filter(
+                lambda exchange: exchange.get("admin_state") == state,
+                exchanges
+            )
+        )
 
     def get(self, request):
         is_admin = ExchangeAdmin.objects.filter(username=request.user.username).exists()

@@ -9,7 +9,7 @@ def exchange_admin_required(view_func):
             return HttpResponseForbidden("Autenticação necessária")
 
         # Check if the user exists in the ExchangeAdmin table
-        if not ExchangeAdmin.objects.filter(user=request.user).exists():
+        if not ExchangeAdmin.objects.filter(username=request.user.username).exists():
             return HttpResponseForbidden("Sem permissões suficientes")
         
         # Proceed with the original view
