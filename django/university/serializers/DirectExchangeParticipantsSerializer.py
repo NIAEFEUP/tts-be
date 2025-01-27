@@ -4,6 +4,9 @@ from rest_framework import serializers
 from university.models import CourseUnit, DirectExchangeParticipants
 from university.controllers.ClassController import ClassController
 
+from university.controllers.SigarraController import SigarraController
+from university.exchange.utils import convert_sigarra_schedule
+
 class DirectExchangeSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     issuer_name = serializers.CharField(max_length=32)
@@ -27,6 +30,10 @@ class DirectExchangeParticipantsSerializer(serializers.Serializer):
     course_unit_id = serializers.CharField(max_length=16)
     accepted = serializers.BooleanField()
     date = serializers.DateTimeField()
+    schedule = serializers.SerializerMethodField()
+
+    def get_schedule(self, obj):
+        return convert_sigarra_schedule(SigarraController().get_student_schedule(obj.participant_nmec).data)
 
     def get_course_info(self, obj):
         course_unit_id = obj.course_unit_id

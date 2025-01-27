@@ -3,6 +3,8 @@ from rest_framework import serializers
 
 from university.models import CourseUnit, ExchangeUrgentRequestOptions
 from university.controllers.ClassController import ClassController
+from university.controllers.SigarraController import SigarraController
+from university.exchange.utils import convert_sigarra_schedule
 
 class ExchangeUrgentRequestSerializer(serializers.Serializer):
     id = serializers.IntegerField()
@@ -10,6 +12,10 @@ class ExchangeUrgentRequestSerializer(serializers.Serializer):
     message = serializers.CharField(max_length=2048)
     accepted = serializers.BooleanField()
     options = serializers.SerializerMethodField()
+    schedule = serializers.SerializerMethodField()
+
+    def get_schedule(self, obj):
+        return convert_sigarra_schedule(SigarraController().get_student_schedule(obj.user_nmec).data)
 
     def get_options(self, obj):
         options = ExchangeUrgentRequestOptions.objects.filter(exchange_urgent_request__id=obj.id)
