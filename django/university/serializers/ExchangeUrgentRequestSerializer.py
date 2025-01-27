@@ -12,6 +12,7 @@ class ExchangeUrgentRequestSerializer(serializers.Serializer):
     message = serializers.CharField(max_length=2048)
     accepted = serializers.BooleanField()
     admin_state = serializers.CharField(max_length=32)
+    date = serializers.DateTimeField()
     options = serializers.SerializerMethodField()
 
     def get_options(self, obj):

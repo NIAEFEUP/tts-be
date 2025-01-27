@@ -11,6 +11,7 @@ class CourseUnitEnrollmentsSerializer(serializers.Serializer):
     user_nmec = serializers.CharField(max_length=32)
     accepted = serializers.BooleanField()
     admin_state = serializers.CharField(max_length=32)
+    date = serializers.DateTimeField()
     options = serializers.SerializerMethodField()
 
     def get_options(self, obj):

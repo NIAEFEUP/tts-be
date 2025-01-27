@@ -10,11 +10,11 @@ from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import convert_sigarra_schedule, update_schedule_accepted_exchanges
 
 class StudentScheduleView(APIView):
-    def get(self, request, nmec):
+    def get(self, request, nmec=""):
         sigarra_controller = SigarraController()
         
         try:
-            sigarra_res = sigarra_controller.get_student_schedule(request.user.username if not nmec else nmec)
+            sigarra_res = sigarra_controller.get_student_schedule(request.user.username if nmec == "" else int(nmec))
             
             if sigarra_res.status_code != 200:
                 return HttpResponse(status=sigarra_res.status_code)
