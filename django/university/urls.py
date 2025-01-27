@@ -16,6 +16,10 @@ from university.routes.exchange.card.metadata.ExchangeCardMetadataView import Ex
 from university.routes.exchange.verify.ExchangeVerifyView import ExchangeVerifyView
 from university.routes.admin.AdminExchangeCoursesView import AdminExchangeCoursesView
 from university.routes.exchange.ExchangeUrgentView import ExchangeUrgentView
+from university.routes.student.StudentCourseMetadataView import StudentCourseMetadataView
+
+from university.middleware.exchange_admin import exchange_admin_required
+
 from . import views
 from mozilla_django_oidc import views as oidc_views
 
@@ -33,6 +37,7 @@ urlpatterns = [
     path('student/schedule', StudentScheduleView.as_view()),
     path('student/exchange/sent/', StudentSentExchangesView.as_view()),
     path('student/exchange/received/', StudentReceivedExchangesView.as_view()),
+    path('student/<str:nmec>/<int:course_unit_id>/metadata', exchange_admin_required(StudentCourseMetadataView.as_view())),
     path('student/course_units/eligible', StudentEligibleCourseUnits.as_view()),
     path('student/<str:nmec>/photo', StudentPhotoView.as_view()),
     path('exchange/verify/<str:token>', ExchangeVerifyView.as_view()),
@@ -50,6 +55,6 @@ urlpatterns = [
     path('course_unit/hash', views.get_course_unit_hashes),
     path('course_unit/enrollment/', CourseUnitEnrollmentView.as_view()), 
     path('oidc-auth/', include('mozilla_django_oidc.urls')),
-    path('exchange/admin/courses/', AdminExchangeCoursesView.as_view()),
+    path('exchange/admin/courses/', exchange_admin_required(AdminExchangeCoursesView.as_view())),
     path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback")
 ]

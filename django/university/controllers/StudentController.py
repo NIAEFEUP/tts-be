@@ -3,7 +3,7 @@ import json
 from university.routes.student.schedule.StudentScheduleView import StudentScheduleView
 from university.controllers.SigarraController import SigarraController
 
-from university.models import UserCourseUnits, Class, StudentFestids, Course
+from university.models import UserCourseUnits, Class, StudentCourseMetadata, Course
 
 class StudentController:
     """
@@ -35,7 +35,7 @@ class StudentController:
             user_course_unit.save()
 
     @staticmethod
-    def populate_festid(nmec):
+    def populate_course_metadata(nmec):
         sigarra_controller = SigarraController()
 
         student_festid = sigarra_controller.get_student_festid(nmec)
@@ -45,7 +45,7 @@ class StudentController:
 
             for item in student_festid:
                 models_to_save.append(
-                    StudentFestids(
+                    StudentCourseMetadata(
                         nmec = nmec,
                         fest_id = item["fest_id"],
                         course = Course.objects.filter(
@@ -55,4 +55,4 @@ class StudentController:
                     )
                 )
 
-            StudentFestids.objects.bulk_create(models_to_save)
+            StudentCourseMetadata.objects.bulk_create(models_to_save)

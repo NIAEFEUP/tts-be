@@ -14,7 +14,7 @@ class CustomOIDCAuthentationBackend(OIDCAuthenticationBackend):
         user.password = "" # User does not have password
         user.save()
 
-        StudentController.populate_festid(user.username)
+        StudentController.populate_course_metadata(user.username)
         StudentController.populate_user_course_unit_data(user.username) 
 
         return user
@@ -24,7 +24,7 @@ class CustomOIDCAuthentationBackend(OIDCAuthenticationBackend):
         user.last_name = claims.get('family_name', '').split(' ')[-1]
         user.save()
 
-        StudentController.populate_festid(user.username)
+        StudentController.populate_course_metadata(user.username)
         StudentController.populate_user_course_unit_data(user.username, erase_previous=True)
 
         return user
