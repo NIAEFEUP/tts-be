@@ -10,6 +10,16 @@ class ExchangeStatus(Enum):
     CLASSES_OVERLAP = 3
     SUCCESS = 4
 
+def exchange_status_message(status: ExchangeStatus):
+    if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
+        return "fetch-schedule-error"
+    elif status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
+        return incorrect_class_error()
+    elif status == ExchangeStatus.CLASSES_OVERLAP:
+        return "classes-overlap"
+    elif status == ExchangeStatus.SUCCESS:
+        return "success"
+
 def get_student_data(username, cookies):
     url = f"https://sigarra.up.pt/feup/pt/mob_fest_geral.perfil?pv_codigo={username}"
     response = requests.get(url, cookies=cookies)
@@ -79,7 +89,6 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
 
 def build_student_schedule_dicts(student_schedules, exchanges):
     for curr_exchange in exchanges:
-        print("CURR EXCHANGE: ", curr_exchange)
         curr_username = curr_exchange["other_student"]["mecNumber"]
         if not curr_username in student_schedules.keys():
             sigarra_res = SigarraController().get_student_schedule(curr_username)

@@ -5,5 +5,9 @@ from university.controllers.ExchangeValidationController import ExchangeValidati
 
 class DirectExchangeValidationView(View):
     def get(self, request, id):
-        ExchangeValidationController().validate_direct_exchange(id)
-        return HttpResponse()
+        validation = ExchangeValidationController().validate_direct_exchange(id)
+
+        if validation.status:
+            return HttpResponse(status=200)
+
+        return JsonResponse({"error": validation.message}, status=400, safe=False)
