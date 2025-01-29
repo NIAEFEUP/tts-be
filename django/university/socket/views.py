@@ -85,3 +85,15 @@ async def update_participant(sid, updated_participant):
     participant.update_from_json(updated_participant)
     
     await emit_session_update(sid, user_session)
+    
+@sessions_server.event
+async def update_picked_courses(sid, new_picked_courses):
+    user_session = cast(Session, sessions_server.get_client_session(sid))
+    user_session.picked_courses = new_picked_courses
+    
+    await sessions_server.emit_to_session(
+        'update_picked_courses',
+        user_session.picked_courses,
+        session_id=user_session.session_id,
+        sid=sid
+    )
