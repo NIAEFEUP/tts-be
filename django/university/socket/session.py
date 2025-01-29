@@ -6,6 +6,7 @@ class Session:
     def __init__(self, session_id: str, duration: timedelta = timedelta(days=30)):
         self.session_id = session_id
         self.participants = {}
+        self.picked_courses = []
         self.expiration_datetime = datetime.now(timezone.utc) + duration
         
     def add_client(self, participant: Participant):
@@ -26,6 +27,7 @@ class Session:
     def to_json(self):
         return {
             'expiration_time': int(time.mktime(self.expiration_datetime.timetuple())) * 1000.0,
+            'picked_courses': self.picked_courses,
             'participants': list(map(Participant.to_json, self.participants.values()))
         }
     
