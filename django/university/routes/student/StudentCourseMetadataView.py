@@ -16,6 +16,4 @@ class StudentCourseMetadataView(APIView):
 
         serialized_student_course_metadata = list(map(lambda metadata: StudentCourseMetadataSerializer(metadata).data, student_course_metadata))
 
-        print("WHAT???", serialized_student_course_metadata)
-
         return JsonResponse(serialized_student_course_metadata, safe=False)
