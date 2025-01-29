@@ -3,6 +3,8 @@ import jwt
 import requests
 import datetime
 
+from django.core.paginator import Paginator
+
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 
@@ -56,10 +58,13 @@ class ExchangeUrgentView(View):
 
         exchanges = list(map(lambda exchange: ExchangeUrgentRequestSerializer(exchange).data, ExchangeUrgentRequests.objects.all().order_by('date')))
 
+        paginator = Paginator(exchanges, 48)
+        page_number = request.GET.get("page")
+        exchanges = [x for x in paginator.get_page(page_number if page_number != None else 1)]
+
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
                 exchanges = self.filter_actions[filter](exchanges, request.GET.get(filter))
-
 
         return JsonResponse(exchanges, safe=False)
     

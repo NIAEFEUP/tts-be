@@ -3,6 +3,8 @@ import jwt
 import requests
 import datetime
 
+from django.core.paginator import Paginator
+
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.utils.html import strip_tags
@@ -68,6 +70,11 @@ class DirectExchangeView(View):
             return HttpResponse(status=403) 
 
         direct_exchanges = list(map(lambda exchange: DirectExchangeSerializer(exchange).data, DirectExchange.objects.all().order_by('date')))
+
+        paginator = Paginator(direct_exchanges, 48)
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number if page_number != None else 1)
+        direct_exchanges = [x for x in page_obj]
 
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):

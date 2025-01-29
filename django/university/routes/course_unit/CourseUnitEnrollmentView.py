@@ -5,6 +5,8 @@ from university.serializers.CourseUnitEnrollmentsSerializer import CourseUnitEnr
 from university.controllers.CourseUnitController import CourseUnitController
 from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController
 
+from django.core.paginator import Paginator
+
 from django.db import transaction
 
 from django.http import HttpResponse, JsonResponse
@@ -53,6 +55,11 @@ class CourseUnitEnrollmentView(APIView):
             return HttpResponse(status=403) 
 
         enrollments = list(map(lambda enrollment: CourseUnitEnrollmentsSerializer(enrollment).data, CourseUnitEnrollments.objects.all().order_by('date')))
+
+        paginator = Paginator(enrollments, 48)
+        page_number = request.GET.get("page")
+        enrollments = [x for x in paginator.get_page(page_number if page_number != None else 1)]
+
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
                 enrollments = self.filter_actions[filter](enrollments, request.GET.get(filter))
