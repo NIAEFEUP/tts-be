@@ -14,9 +14,11 @@ from university.controllers.CourseUnitController import CourseUnitController
 from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, curr_semester_weeks, get_student_schedule_url, incorrect_class_error, update_schedule_accepted_exchanges
 from university.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants, AuthUser, ExchangeAdmin
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
+from university.controllers.ExchangeValidationController import ExchangeValidationController
+from university.controllers.StudentController import StudentController
+from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error, update_schedule_accepted_exchanges, exchange_status_message
 
 class DirectExchangeView(View):
     def __init__(self):
@@ -134,6 +136,10 @@ class DirectExchangeView(View):
         return JsonResponse({"success": True}, safe=False)
 
     def put(self, request, id):
+        # Validate if exchange is still valid
+        if not ExchangeValidationController().validate_direct_exchange(id).status:
+            return JsonResponse({"error": ExchangeValidationController().validate_direct_exchange(id).message}, status=400, safe=False)
+
         exchange = DirectExchange.objects.get(id=id)
 
         participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
@@ -148,6 +154,5 @@ class DirectExchangeView(View):
 
             for participant in participants:
                 StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
-
 
         return JsonResponse({"success": True}, safe=False)

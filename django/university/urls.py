@@ -20,6 +20,7 @@ from university.routes.exchange.ExchangeUrgentView import ExchangeUrgentView
 from university.routes.student.StudentCourseMetadataView import StudentCourseMetadataView
 
 from university.middleware.exchange_admin import exchange_admin_required
+from university.routes.exchange.verify.DirectExchangeValidationView import DirectExchangeValidationView
 
 from . import views
 from mozilla_django_oidc import views as oidc_views
@@ -47,6 +48,7 @@ urlpatterns = [
     path('exchange/marketplace/', MarketplaceExchangeView.as_view()),
     path('exchange/direct/', DirectExchangeView.as_view(), name="direct_exchange"),
     path('exchange/direct/<int:id>', DirectExchangeView.as_view(), name="direct_exchange-id"),
+    path('exchange/direct/validate/<int:id>', DirectExchangeValidationView.as_view()),
     path('exchange/options/', ExchangeOptionsView.as_view()),
     path('exchange/export/csv', ExchangeExportView.as_view()),
     path('exchange/urgent/', ExchangeUrgentView.as_view()),

@@ -286,7 +286,6 @@ CREATE TABLE "public"."student_course_metadata"(
     "fest_id" INTEGER NOT NULL,
     "course_id" INTEGER NOT NULL REFERENCES "public"."course"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
-
 --
 -- TOC entry 3276 (class 2604 OID 16801)
 -- Name: class id; Type: DEFAULT; Schema: public; Owner: -

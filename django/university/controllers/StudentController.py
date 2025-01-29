@@ -14,6 +14,15 @@ class StudentController:
     """
 
     @staticmethod
+    def student_class(nmec, course_unit_id):
+        potential_user_class = UserCourseUnits.objects.filter(user_nmec=nmec, course_unit_id__id=course_unit_id)
+
+        if potential_user_class.exists():
+            return potential_user_class.first().class_field
+        else:
+            return None
+
+    @staticmethod
     def populate_user_course_unit_data(nmec: int, erase_previous: bool = False):
         if(erase_previous):
             UserCourseUnits.objects.filter(user_nmec=nmec).delete()

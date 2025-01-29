@@ -39,7 +39,6 @@ class MarketplaceExchangeView(APIView):
         }
 
     def filterAllExchanges(self, request, course_unit_name_filter, classes_filter):
-        print("classes filter: ", classes_filter)
         marketplace_exchanges = list(MarketplaceExchange.objects
                 .prefetch_related(
                 Prefetch(
