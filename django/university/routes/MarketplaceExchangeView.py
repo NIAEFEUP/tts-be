@@ -4,10 +4,12 @@ from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Q, Prefetch
 
+from django.db import transaction
+
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, exchange_overlap, incorrect_class_error, update_schedule_accepted_exchanges
-from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, Class
+from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, Class, ExchangeUrgentRequests, ExchangeUrgentRequestOptions
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
@@ -101,6 +103,10 @@ class MarketplaceExchangeView(APIView):
     def submit_marketplace_exchange_request(self, request):
         exchanges = request.POST.getlist('exchangeChoices[]')
         exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
+        
+        # If user sent a message explaining why their request should be directly handled by the comission instead of having to be
+        # accepted by students in the marketplace
+        urgentMessage = request.POST.get('urgentMessage')
 
         curr_student = request.user.username
         sigarra_res = SigarraController().get_student_schedule(curr_student)
@@ -123,9 +129,39 @@ class MarketplaceExchangeView(APIView):
         if exchange_overlap(student_schedules, curr_student):
             return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
+        if urgentMessage:
+            return self.add_urgent_exchange(request, exchanges, urgentMessage)
+        else:
+            return self.add_normal_marketplace_exchange(request, exchanges)
+
+        
+    def add_urgent_exchange(self, request, exchanges, message: str):
+        with transaction.atomic():
+            urgent_request = ExchangeUrgentRequests.objects.create(
+                user_nmec=request.user.username,
+                message=message,
+                accepted=False
+            )
+            urgent_request.save()
+
+            models_to_save = []
+            for exchange in exchanges:
+                models_to_save.append(ExchangeUrgentRequestOptions(
+                    course_unit_id=int(exchange["courseUnitId"]),
+                    class_user_goes_from=exchange["classNameRequesterGoesFrom"],
+                    class_user_goes_to=exchange["classNameRequesterGoesTo"],
+                    exchange_urgent_request=urgent_request
+                ))
+
+            ExchangeUrgentRequestOptions.objects.bulk_create(models_to_save)
+
+        return JsonResponse({"success": True}, safe=False)
+
+    def add_normal_marketplace_exchange(self, request, exchanges):
         self.insert_marketplace_exchange(exchanges, request.user)
     
         return JsonResponse({"success": True}, safe=False)
+
 
     def insert_marketplace_exchange(self, exchanges, user):
         issuer_name = f"{user.first_name} {user.last_name.split(' ')[-1]}"
