@@ -111,7 +111,7 @@ class ExchangeController:
                 participant_nmec=curr_exchange["other_student"],
                 class_participant_goes_from=curr_exchange["class_participant_goes_from"],
                 class_participant_goes_to=curr_exchange["class_participant_goes_to"],
-                course_unit=course_unit.acronym,
+                course_unit=course_unit,
                 course_unit_id=curr_exchange["course_unit_id"],
                 direct_exchange=exchange_db_model,
                 accepted=False
@@ -122,7 +122,7 @@ class ExchangeController:
                 participant_nmec=auth_user,
                 class_participant_goes_from=curr_exchange["class_participant_goes_to"], # This is not a typo, the old class of the authenticted student is the new class of the other student
                 class_participant_goes_to=curr_exchange["class_participant_goes_from"],
-                course_unit=course_unit.acronym,
+                course_unit=course_unit,
                 course_unit_id=curr_exchange["course_unit_id"],
                 direct_exchange=exchange_db_model,
                 accepted=False

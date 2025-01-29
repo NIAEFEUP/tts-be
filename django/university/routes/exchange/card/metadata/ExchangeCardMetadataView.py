@@ -2,11 +2,12 @@ import requests
 
 from rest_framework.views import APIView
 from django.http import HttpResponse, JsonResponse
-from django.db.models import Prefetch
 
+from university.serializers.ClassSerializer import ClassSerializer
+
+from university.controllers.StudentController import StudentController
 from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
-from university.models import Class
 
 class ExchangeCardMetadataView(APIView):
     def get(self, request, course_unit_id):
@@ -19,9 +20,19 @@ class ExchangeCardMetadataView(APIView):
                 return HttpResponse(status=sigarra_res.status_code)
 
             students = sigarra_res.data
+
             new_response = JsonResponse({
                 "classes": list(ClassController.get_classes(course_unit_id)),
-                "students": students
+                "students": [
+                    {
+                        "codigo": student.get("codigo"),
+                        "nome": student.get("nome"),
+                        "classInfo": 
+                            ClassSerializer(StudentController.student_class(student.get("codigo"), course_unit_id)).data 
+                            if ClassSerializer(StudentController.student_class(student.get("codigo"), course_unit_id)).data.get("name") != ""
+                            else None
+                    } for student in students
+                ]
             }, safe=False)
 
             new_response.status_code = sigarra_res.status_code

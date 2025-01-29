@@ -10,6 +10,16 @@ class ExchangeStatus(Enum):
     CLASSES_OVERLAP = 3
     SUCCESS = 4
 
+def exchange_status_message(status: ExchangeStatus):
+    if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
+        return "fetch-schedule-error"
+    elif status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
+        return incorrect_class_error()
+    elif status == ExchangeStatus.CLASSES_OVERLAP:
+        return "classes-overlap"
+    elif status == ExchangeStatus.SUCCESS:
+        return "success"
+
 def get_student_data(username, cookies):
     url = f"https://sigarra.up.pt/feup/pt/mob_fest_geral.perfil?pv_codigo={username}"
     response = requests.get(url, cookies=cookies)
@@ -43,6 +53,11 @@ def build_marketplace_submission_schedule(schedule, submission, auth_student):
 def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
 
+"""
+    Generates the new schedules the students will have after the exchange 
+    This is useful in order to apply the overlap validation logic in it and not in the current 
+    sigarra schedule of the users
+"""
 def build_new_schedules(student_schedules, exchanges, auth_username):
     for curr_exchange in exchanges:
         # There are 2 students involved in the exchange. THe other student is the student other than the currently authenticated user

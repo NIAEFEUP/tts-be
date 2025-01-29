@@ -259,7 +259,6 @@ CREATE TABLE "public"."course_unit_enrollment_options" (
     "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "course_unit_enrollment_id" INTEGER NOT NULL REFERENCES "public"."course_unit_enrollments"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
-
 --
 -- TOC entry 3276 (class 2604 OID 16801)
 -- Name: class id; Type: DEFAULT; Schema: public; Owner: -
