@@ -23,6 +23,7 @@ class ExchangeType(Enum):
 class DirectExchangePendingMotive(Enum):
     USER_DID_NOT_ACCEPT = 1
     OTHERS_DID_NOT_ACCEPT = 2
+    NOT_PENDING = 3
     
     @staticmethod
     def get_pending_motive(curr_user_nmec: str, direct_exchange: DirectExchange):
@@ -30,12 +31,15 @@ class DirectExchangePendingMotive(Enum):
             participant_nmec=curr_user_nmec, direct_exchange=direct_exchange).all()
         )
 
+        # The participants list includes the options in the exchange of the current user
         for participant in participants:
             if not participant.accepted:
                 return DirectExchangePendingMotive.USER_DID_NOT_ACCEPT
 
         if not direct_exchange.accepted:
             return DirectExchangePendingMotive.OTHERS_DID_NOT_ACCEPT
+
+        return DirectExchangePendingMotive.NOT_PENDING 
     
     @staticmethod
     def get_value(pending_motive):

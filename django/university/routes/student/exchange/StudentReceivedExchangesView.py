@@ -1,13 +1,11 @@
 from django.core.paginator import Paginator
-from django.http.response import HttpResponse, JsonResponse
+from django.http.response import JsonResponse
 from rest_framework.views import APIView
 from django.db.models import Prefetch
 
 from university.controllers.ExchangeController import DirectExchangePendingMotive
-from university.controllers.SigarraController import SigarraController
 from university.models import DirectExchange, DirectExchangeParticipants
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
-from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class StudentReceivedExchangesView(APIView):
     def get(self, request):
