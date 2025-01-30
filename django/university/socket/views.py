@@ -97,3 +97,15 @@ async def update_picked_courses(sid, new_picked_courses):
         session_id=user_session.session_id,
         sid=sid
     )
+
+@sessions_server.event
+async def update_multiple_options(sid, new_multiple_options):
+    user_session = cast(Session, sessions_server.get_client_session(sid))
+    user_session.multiple_options = new_multiple_options
+    
+    await sessions_server.emit_to_session(
+        'update_multiple_options',
+        user_session.multiple_options,
+        session_id=user_session.session_id,
+        sid=sid
+    )
