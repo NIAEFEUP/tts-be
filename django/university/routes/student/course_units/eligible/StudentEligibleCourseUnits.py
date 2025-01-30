@@ -1,8 +1,7 @@
-from django.http.response import HttpResponse, JsonResponse
+from django.http.response import JsonResponse
 from rest_framework.views import APIView
 
 from university.controllers.ExchangeController import ExchangeController
-from university.controllers.SigarraController import SigarraController
 from university.models import CourseUnit
 
 class StudentEligibleCourseUnits(APIView):
