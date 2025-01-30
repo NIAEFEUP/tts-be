@@ -14,3 +14,4 @@ mozilla-django-oidc==4.0.1
 channels==4.1.0
 daphne==4.1.2
 python-socketio==5.11.4
+jsonpatch==1.33 
