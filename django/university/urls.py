@@ -12,6 +12,7 @@ from university.routes.student.exchange.StudentSentExchangesView import StudentS
 from university.routes.student.schedule.StudentScheduleView import StudentScheduleView
 from university.routes.auth.InfoView import InfoView
 from university.routes.exchange.AdminExchangeRequestRejectView import AdminExchangeRequestRejectView
+from university.routes.exchange.AdminExchangeRequestAcceptView import AdminExchangeRequestAcceptView
 from university.routes.student.StudentPhotoView import StudentPhotoView
 from university.routes.exchange.card.metadata.ExchangeCardMetadataView import ExchangeCardMetadataView
 from university.routes.exchange.verify.ExchangeVerifyView import ExchangeVerifyView
@@ -61,6 +62,6 @@ urlpatterns = [
     path('oidc-auth/', include('mozilla_django_oidc.urls')),
     path('exchange/admin/courses/', exchange_admin_required(AdminExchangeCoursesView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/reject/', exchange_admin_required(AdminExchangeRequestRejectView.as_view())),
-    path('exchange/admin/request/<str:request_type>/<int:id>/accept/', exchange_admin_required(AdminExchangeRequestRejectView.as_view())),
+    path('exchange/admin/request/<str:request_type>/<int:id>/accept/', exchange_admin_required(AdminExchangeRequestAcceptView.as_view())),
     path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback")
 ]

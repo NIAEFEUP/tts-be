@@ -5,6 +5,7 @@ from university.serializers.CourseUnitEnrollmentsSerializer import CourseUnitEnr
 from university.controllers.CourseUnitController import CourseUnitController
 from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController
 
+from django.utils import timezone
 from django.core.paginator import Paginator
 
 from django.db import transaction
@@ -74,7 +75,9 @@ class CourseUnitEnrollmentView(APIView):
         with transaction.atomic():
             course_unit_enrollment = CourseUnitEnrollments.objects.create(
                 user_nmec=request.user.username,
-                accepted=False
+                accepted=False,
+                admin_state="untreated",
+                date=timezone.now()
             )
             course_unit_enrollment.save()
 
@@ -89,7 +92,8 @@ class CourseUnitEnrollmentView(APIView):
                     course_unit_id=enrollment_metadata["course_unit_id"],
                     class_field_id=enrollment_metadata["class_id"],
                     course_unit_enrollment=course_unit_enrollment,
-                    enrolling=enrollment_metadata["enrolling"]
+                    enrolling=enrollment_metadata["enrolling"],
+                    date=timezone.now()
                 )
                 models_to_save.append(db_enrollment)
 
