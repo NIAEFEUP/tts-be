@@ -187,8 +187,8 @@ CREATE TABLE "public"."direct_exchange" (
   "issuer_name" varchar(32) NOT NULL,
   "issuer_nmec" varchar(32) NOT NULL,
   "accepted" boolean NOT NULL,
-  "date" TIMESTAMP DEFAULT now()
-  "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
+  "date" TIMESTAMP DEFAULT now(),
+  "admin_state" varchar(32) NOT NULL DEFAULT 'untreated'
 );
 
 CREATE TABLE "public"."direct_exchange_participants" (
@@ -211,7 +211,7 @@ CREATE TABLE "public"."marketplace_exchange_class" (
     "course_unit_acronym" varchar(256) NOT NULL,
     "course_unit_id" varchar(256) NOT NULL,
     "class_issuer_goes_from" varchar(16) NOT NULL,
-    "class_issuer_goes_to" varchar(16) NOT NULL
+    "class_issuer_goes_to" varchar(16) NOT NULL,
     "date" TIMESTAMP DEFAULT now()
 ); 
 
@@ -260,7 +260,7 @@ CREATE TABLE "public"."exchange_urgent_request_options" (
     "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "class_user_goes_from" varchar(16) NOT NULL,
     "class_user_goes_to" varchar(16) NOT NULL,
-    "exchange_urgent_request_id" INTEGER NOT NULL REFERENCES "public"."exchange_urgent_requests"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "exchange_urgent_request_id" INTEGER NOT NULL REFERENCES "public"."exchange_urgent_requests"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "date" TIMESTAMP DEFAULT now()
 );
 
@@ -277,7 +277,7 @@ CREATE TABLE "public"."course_unit_enrollment_options" (
     "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "enrolling" boolean DEFAULT true,
-    "course_unit_enrollment_id" INTEGER NOT NULL REFERENCES "public"."course_unit_enrollments"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "course_unit_enrollment_id" INTEGER NOT NULL REFERENCES "public"."course_unit_enrollments"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "date" TIMESTAMP DEFAULT now()
 );
 
