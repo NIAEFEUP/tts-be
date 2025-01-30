@@ -10,6 +10,10 @@ class SigarraResponse:
         self.status_code = status_code
     
 class SigarraController:
+    """
+        This class will contain methods to manipulate student data that is inside sigarra.
+    """
+
     def __init__(self):
         self.username = CONFIG["SIGARRA_USERNAME"]
         self.password = CONFIG["SIGARRA_PASSWORD"]
@@ -32,6 +36,9 @@ class SigarraController:
             semana_fim = year + "0601"
         
         return (semana_ini, semana_fim)
+
+    def student_profile_url(self, nmec):
+        return f"https://sigarra.up.pt/feup/pt/mob_fest_geral.perfil?pv_codigo={nmec}"
     
     def student_schedule_url(self, nmec, semana_ini, semana_fim) -> str:
         return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={nmec}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
@@ -46,6 +53,28 @@ class SigarraController:
             return SigarraResponse(None, response.status_code)
 
         return SigarraResponse(response.content, 200)
+
+    def get_student_profile(self, nmec):
+        response = requests.get(self.student_profile_url(nmec), cookies=self.cookies)
+
+        if response.status_code != 200:
+            return SigarraResponse(None, response.status_code)
+
+        return SigarraResponse(response.content, 200)
+
+    def get_student_festid(self, nmec):
+        profile: SigarraResponse = self.get_student_profile(nmec)
+
+        if profile.status_code != 200:
+            return None
+
+        courses = json.loads(profile.data)["cursos"]
+
+        return list(map(lambda course: {
+            "fest_id": course["fest_id"],
+            "faculty": course["inst_sigla"].lower(),
+            "course_name": course["cur_nome"]
+        }, courses))
 
     def login(self):
         try:

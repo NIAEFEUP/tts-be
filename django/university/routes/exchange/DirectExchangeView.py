@@ -3,6 +3,8 @@ import jwt
 import requests
 import datetime
 
+from django.core.paginator import Paginator
+
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.utils.html import strip_tags
@@ -10,16 +12,75 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, DOMAIN
 
-from university.controllers.ExchangeValidationController import ExchangeValidationController
-from university.controllers.StudentController import StudentController
+from university.controllers.CourseUnitController import CourseUnitController
+from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
+from university.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants, AuthUser, ExchangeAdmin
+from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
+from university.controllers.ExchangeValidationController import ExchangeValidationController
+from university.controllers.StudentController import StudentController
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error, update_schedule_accepted_exchanges, exchange_status_message
-from university.models import DirectExchange, DirectExchangeParticipants
 
 class DirectExchangeView(View):
+    def __init__(self):
+        self.filter_actions = {
+            "activeCourse": self.filter_active_course,
+            "activeCurricularYear": self.filter_active_curricular_year,
+            "activeState": self.filter_active_state
+        }
+
+    def filter_active_course(self, exchanges, major_id):
+        return list(
+            filter(
+                lambda exchange: len(list(
+                    filter(
+                        lambda course_unit: int(CourseUnitController.course_unit_major(course_unit.get("course_info").get("id"))) == int(major_id), exchange.get("options"))
+                    )) > 0,
+                exchanges
+            )
+        )
+
+    def filter_active_curricular_year(self, exchanges, curricular_year):
+        return list(
+            filter(
+                lambda exchange: len(list(
+                    filter(
+                        lambda course_unit: int(CourseUnitController.course_unit_curricular_year(course_unit.get("course_info").get("id"))) == int(curricular_year), exchange.get("options"))
+                    )) > 0,
+                exchanges
+            )
+        )
+
+    def filter_active_state(self, exchanges, state):
+        return list(
+            filter(
+                lambda exchange: exchange.get("admin_state") == state,
+                exchanges
+            )
+        )
+
+    """
+        Returns every direct exchange
+    """
     def get(self, request):
-        return HttpResponse()
+        # 1. Validate if admin
+        is_admin = ExchangeAdmin.objects.filter(username=request.user.username).exists()
+        if not(is_admin):
+            return HttpResponse(status=403) 
+
+        direct_exchanges = list(map(lambda exchange: DirectExchangeSerializer(exchange).data, DirectExchange.objects.all().order_by('date')))
+
+        paginator = Paginator(direct_exchanges, 48)
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number if page_number != None else 1)
+        direct_exchanges = [x for x in page_obj]
+
+        for filter in AdminRequestFiltersController.filter_values():
+            if request.GET.get(filter):
+                direct_exchanges = self.filter_actions[filter](direct_exchanges, request.GET.get(filter))
+
+        return JsonResponse(direct_exchanges, safe=False)
 
     def post(self, request):
         student_schedules = {}

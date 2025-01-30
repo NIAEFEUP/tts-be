@@ -7,7 +7,7 @@ from university.models import DirectExchange, DirectExchangeParticipants, Exchan
 
 class ExchangeExportView(APIView):
     def get(self, request):
-        if not ExchangeAdmin.objects.filter(username=request.session["username"]).exists():
+        if not ExchangeAdmin.objects.filter(username=request.user.username).exists():
             response = HttpResponse()
             response.status_code = 403
             return response
@@ -29,7 +29,7 @@ class ExchangeExportView(APIView):
             participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange).order_by('date')
             for participant in participants:
                 writer.writerow([
-                    participant.participant,
+                    participant.participant_nmec,
                     participant.course_unit_id,
                     participant.class_participant_goes_from,
                     participant.class_participant_goes_to

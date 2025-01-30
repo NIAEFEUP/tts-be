@@ -1,7 +1,9 @@
+import json
+
 from university.routes.student.schedule.StudentScheduleView import StudentScheduleView
 from university.controllers.SigarraController import SigarraController
 
-from university.models import UserCourseUnits, Class
+from university.models import UserCourseUnits, Class, StudentCourseMetadata, Course
 
 class StudentController:
     """
@@ -40,3 +42,26 @@ class StudentController:
                 class_field=corresponding_class
             )
             user_course_unit.save()
+
+    @staticmethod
+    def populate_course_metadata(nmec):
+        sigarra_controller = SigarraController()
+
+        student_festid = sigarra_controller.get_student_festid(nmec)
+
+        if student_festid is not None:
+            models_to_save = []
+
+            for item in student_festid:
+                models_to_save.append(
+                    StudentCourseMetadata(
+                        nmec = nmec,
+                        fest_id = item["fest_id"],
+                        course = Course.objects.filter(
+                            faculty_id = item["faculty"],
+                            name = item["course_name"]
+                        ).get()
+                    )
+                )
+
+            StudentCourseMetadata.objects.bulk_create(models_to_save)

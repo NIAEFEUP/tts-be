@@ -58,7 +58,7 @@ ALTER SEQUENCE "public"."class_id_seq" OWNED BY "public"."class"."id";
 --
 
 CREATE TABLE "public"."course" (
-    "id" integer NOT NULL,
+    "id" integer NOT NULL UNIQUE,
     "faculty_id" character varying(10) NOT NULL,
     "name" character varying(200) NOT NULL,
     "acronym" character varying(10) NOT NULL,
@@ -188,6 +188,7 @@ CREATE TABLE "public"."direct_exchange" (
   "issuer_nmec" varchar(32) NOT NULL,
   "accepted" boolean NOT NULL,
   "date" TIMESTAMP DEFAULT now()
+  "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
 );
 
 CREATE TABLE "public"."direct_exchange_participants" (
@@ -211,6 +212,7 @@ CREATE TABLE "public"."marketplace_exchange_class" (
     "course_unit_id" varchar(256) NOT NULL,
     "class_issuer_goes_from" varchar(16) NOT NULL,
     "class_issuer_goes_to" varchar(16) NOT NULL
+    "date" TIMESTAMP DEFAULT now()
 ); 
 
 CREATE TABLE "public"."exchange_expirations"(
@@ -225,6 +227,18 @@ CREATE TABLE "public"."exchange_admin" (
   "username" varchar(32) NOT NULL UNIQUE
 ); 
 
+CREATE TABLE "public"."exchange_admin_courses" (
+    "id" SERIAL PRIMARY KEY,
+    "exchange_admin_id" INTEGER NOT NULL REFERENCES "public"."exchange_admin"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "course_id" INTEGER NOT NULL REFERENCES "public"."course"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "public"."exchange_admin_course_units" (
+    "id" SERIAL PRIMARY KEY,
+    "exchange_admin_id" INTEGER NOT NULL REFERENCES "public"."exchange_admin"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE "public"."user_course_units" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
@@ -236,7 +250,9 @@ CREATE TABLE "public"."exchange_urgent_requests" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
     "message" varchar(2048) NOT NULL,
-    "accepted" boolean DEFAULT false
+    "accepted" boolean DEFAULT false,
+    "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
+    "date" TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE "public"."exchange_urgent_request_options" (
@@ -245,19 +261,31 @@ CREATE TABLE "public"."exchange_urgent_request_options" (
     "class_user_goes_from" varchar(16) NOT NULL,
     "class_user_goes_to" varchar(16) NOT NULL,
     "exchange_urgent_request_id" INTEGER NOT NULL REFERENCES "public"."exchange_urgent_requests"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "date" TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE "public"."course_unit_enrollments" (
     "id" SERIAL PRIMARY KEY,
     "user_nmec" varchar(32) NOT NULL,
-    "accepted" boolean DEFAULT false
+    "accepted" boolean DEFAULT false,
+    "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
+    "date" TIMESTAMP DEFAULT now()
 );
 
 CREATE TABLE "public"."course_unit_enrollment_options" (
     id SERIAL PRIMARY KEY,
     "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "enrolling" boolean DEFAULT true,
     "course_unit_enrollment_id" INTEGER NOT NULL REFERENCES "public"."course_unit_enrollments"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "date" TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE "public"."student_course_metadata"(
+    "id" SERIAL PRIMARY KEY,
+    "nmec" VARCHAR(255) NOT NULL,
+    "fest_id" INTEGER NOT NULL,
+    "course_id" INTEGER NOT NULL REFERENCES "public"."course"("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 --
 -- TOC entry 3276 (class 2604 OID 16801)
