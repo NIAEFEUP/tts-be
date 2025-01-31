@@ -23,7 +23,7 @@ class InfoView(View):
 
             eligible_exchange = bool(eligible_course_units)
 
-            is_admin = True
+            is_admin = ExchangeAdmin.objects.filter(username=request.user.username).exists()
 
             return JsonResponse({
                 "signed": True,
