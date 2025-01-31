@@ -4,6 +4,7 @@ import datetime
 
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.utils import timezone
 
 from django.http import HttpResponse, JsonResponse
 from django.views import View
@@ -109,7 +110,13 @@ class DirectExchangeView(View):
             student_schedules[student] = build_student_schedule_dict(student_schedule)
 
         with transaction.atomic():
-            exchange_model = DirectExchange(accepted=False, issuer_name=f"{request.user.first_name} {request.user.last_name}", issuer_nmec=request.user.username)
+            exchange_model = DirectExchange(
+                accepted=False, 
+                issuer_name=f"{request.user.first_name} {request.user.last_name}", 
+                issuer_nmec=request.user.username,
+                date=timezone.now(),
+                admin_state="untreated"
+            )
 
             (status, trailing) = build_new_schedules(
                 student_schedules, exchanges, request.user.username)
