@@ -1,9 +1,9 @@
 import json
 import jwt
-import requests
 import datetime
 
 from django.core.paginator import Paginator
+from django.db import transaction
 
 from django.http import HttpResponse, JsonResponse
 from django.views import View
@@ -108,26 +108,32 @@ class DirectExchangeView(View):
             update_schedule_accepted_exchanges(student, student_schedule)
             student_schedules[student] = build_student_schedule_dict(student_schedule)
 
-        exchange_model = DirectExchange(accepted=False, issuer_name=f"{request.user.first_name} {request.user.last_name}", issuer_nmec=request.user.username)
+        with transaction.atomic():
+            exchange_model = DirectExchange(accepted=False, issuer_name=f"{request.user.first_name} {request.user.last_name}", issuer_nmec=request.user.username)
 
-        (status, trailing) = build_new_schedules(
-            student_schedules, exchanges, request.user.username)
+            (status, trailing) = build_new_schedules(
+                student_schedules, exchanges, request.user.username)
+            
+            if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
+                return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
         
-        if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
-            return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
-    
-        inserted_exchanges = []
-        (status, trailing) = ExchangeController.create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_model, request.user.username)
-        
-        if status == ExchangeStatus.CLASSES_OVERLAP:    
-            return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+            inserted_exchanges = []
+            (status, trailing) = ExchangeController.create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_model, request.user.username)
+            
+            if status == ExchangeStatus.CLASSES_OVERLAP:    
+                return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
-        exchange_model.save()
-    
-        tokens_to_generate = {}
+            exchange_model.save()
+        
+            tokens_to_generate = {}
+            for inserted_exchange in inserted_exchanges:
+                inserted_exchange.save()
+        
         for inserted_exchange in inserted_exchanges:
-            participant = inserted_exchange.participant;
-            if not(participant in tokens_to_generate):
+            participant = inserted_exchange.participant_nmec
+
+            # A participant may appear multiple times since there is one line in the table for each course unit inside of the exhange
+            if participant not in tokens_to_generate.keys():
                 token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
                 tokens_to_generate[participant] = token
                 html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}tts/verify_direct_exchange/{token}"})
@@ -138,8 +144,7 @@ class DirectExchangeView(View):
                     [f'up{participant}@up.pt']
                 )
 
-            inserted_exchange.save()
-    
+        
         return JsonResponse({"success": True}, safe=False)
 
     def put(self, request, id):

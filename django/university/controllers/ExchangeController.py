@@ -98,25 +98,34 @@ class ExchangeController:
         return dict(json.loads(string))
 
     @staticmethod
+    def getStudentClass(student_schedules, username, courseUnitId):
+        schedule = student_schedules[username]
+        for key in schedule.keys():
+            if key[1] == courseUnitId:
+                return key[0]
+
+        return None
+
+    @staticmethod
     def create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_db_model, auth_user):
         if ExchangeController.exchange_overlap(student_schedules, auth_user):
             return (ExchangeStatus.CLASSES_OVERLAP, None)
 
         for curr_exchange in exchanges:
-            other_student = curr_exchange["other_student"]
+            other_student = curr_exchange["other_student"]["mecNumber"]
 
-            course_unit = course_unit_by_id(curr_exchange["course_unit_id"])
+            course_unit = course_unit_by_id(curr_exchange["courseUnitId"])
 
             if ExchangeController.exchange_overlap(student_schedules, other_student):
                 return (ExchangeStatus.CLASSES_OVERLAP, None)
         
             inserted_exchanges.append(DirectExchangeParticipants(
-                participant_name=curr_exchange["other_student"],
-                participant_nmec=curr_exchange["other_student"],
-                class_participant_goes_from=curr_exchange["class_participant_goes_from"],
-                class_participant_goes_to=curr_exchange["class_participant_goes_to"],
+                participant_name=curr_exchange["other_student"]["name"],
+                participant_nmec=curr_exchange["other_student"]["mecNumber"],
+                class_participant_goes_from=ExchangeController.getStudentClass(student_schedules, other_student, curr_exchange["courseUnitId"]),
+                class_participant_goes_to=curr_exchange["classNameRequesterGoesFrom"],
                 course_unit=course_unit,
-                course_unit_id=curr_exchange["course_unit_id"],
+                course_unit_id=curr_exchange["courseUnitId"],
                 direct_exchange=exchange_db_model,
                 accepted=False
             ))
@@ -124,21 +133,24 @@ class ExchangeController:
             inserted_exchanges.append(DirectExchangeParticipants(
                 participant_name=auth_user,
                 participant_nmec=auth_user,
-                class_participant_goes_from=curr_exchange["class_participant_goes_to"], # This is not a typo, the old class of the authenticted student is the new class of the other student
-                class_participant_goes_to=curr_exchange["class_participant_goes_from"],
+                class_participant_goes_from=curr_exchange["classNameRequesterGoesFrom"], # This is not a typo, the old class of the authenticted student is the new class of the other student
+                class_participant_goes_to=curr_exchange["classNameRequesterGoesTo"],
                 course_unit=course_unit,
-                course_unit_id=curr_exchange["course_unit_id"],
+                course_unit_id=curr_exchange["courseUnitId"],
                 direct_exchange=exchange_db_model,
                 accepted=False
             ))
 
         return (ExchangeStatus.SUCCESS, None)
 
+    """
+        Checks if schedule for a user with a given username has overlpas
+    """
     @staticmethod
     def exchange_overlap(student_schedules, username) -> bool:
+        
         for (key, class_schedule) in student_schedules[username].items():
             for (other_key, other_class_schedule) in student_schedules[username].items():
-                print(f"({key}, {other_key})")
                 if key == other_key:
                     continue
 
@@ -149,7 +161,4 @@ class ExchangeController:
                     return True
 
         return False
-
-
-
 
