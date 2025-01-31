@@ -162,17 +162,24 @@ class DirectExchangeView(View):
 
         exchange = DirectExchange.objects.get(id=id)
 
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-        for participant in participants:
-            if participant.participant_nmec == request.user.username:
-                participant.accepted = True
-                participant.save()
+        try: 
+            with transaction.atomic():
+                # Update exchange accepted states
+                participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+                for participant in participants:
+                    if participant.participant_nmec == request.user.username:
+                        participant.accepted = True
+                        participant.save()
 
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-        if all(participant.accepted for participant in participants):
-            exchange.accepted = True
+                participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+                if all(participant.accepted for participant in participants):
+                    exchange.accepted = True
 
-            for participant in participants:
-                StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
+                    for participant in participants:
+                        StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
 
-        return JsonResponse({"success": True}, safe=False)
+                ExchangeValidationController().cancel_conflicting_exchanges(exchange.id)
+
+                return JsonResponse({"success": True}, safe=False)
+        except:
+            return JsonResponse({"success": False}, safe=False)
