@@ -2,7 +2,9 @@ import json
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch
+
+from datetime import datetime
 
 from django.db import transaction
 
@@ -140,7 +142,9 @@ class MarketplaceExchangeView(APIView):
             urgent_request = ExchangeUrgentRequests.objects.create(
                 user_nmec=request.user.username,
                 message=message,
-                accepted=False
+                accepted=False,
+                admin_state="untreated",
+                date=datetime.now()
             )
             urgent_request.save()
 
