@@ -27,7 +27,7 @@ class SigarraController:
     def semester_weeks(self):
         currdate = date.today()
         year = str(currdate.year)
-        first_semester = currdate.month >= 10 or currdate.month <= 1
+        first_semester = currdate.month >= 10 or currdate.month <= 2
         if first_semester: 
             semana_ini = "20241001"
             semana_fim = "20250131"
