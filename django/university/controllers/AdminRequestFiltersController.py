@@ -4,5 +4,5 @@ class AdminRequestFiltersController:
         return [
             "activeCourse",
             "activeCurricularYear",
-            "activeState"
+            "activeStates"
         ] 
