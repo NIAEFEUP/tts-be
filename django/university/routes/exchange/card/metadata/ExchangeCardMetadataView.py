@@ -25,8 +25,8 @@ class ExchangeCardMetadataView(APIView):
                 "classes": list(ClassController.get_classes(course_unit_id)),
                 "students": [
                     {
-                        "codigo": student.get("codigo"),
-                        "nome": student.get("nome"),
+                        "mecNumber": student.get("codigo"),
+                        "name": student.get("nome"),
                         "classInfo": 
                             ClassSerializer(StudentController.student_class(student.get("codigo"), course_unit_id)).data 
                             if ClassSerializer(StudentController.student_class(student.get("codigo"), course_unit_id)).data.get("name") != ""
