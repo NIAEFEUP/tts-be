@@ -28,7 +28,7 @@ class DirectExchangeView(View):
         self.filter_actions = {
             "activeCourse": self.filter_active_course,
             "activeCurricularYear": self.filter_active_curricular_year,
-            "activeState": self.filter_active_state
+            "activeStates": self.filter_active_state
         }
 
     def filter_active_course(self, exchanges, major_id):
@@ -54,9 +54,10 @@ class DirectExchangeView(View):
         )
 
     def filter_active_state(self, exchanges, state):
+        states = state.split(",")
         return list(
             filter(
-                lambda exchange: exchange.get("admin_state") == state,
+                lambda exchange: exchange.get("admin_state") in states,
                 exchanges
             )
         )

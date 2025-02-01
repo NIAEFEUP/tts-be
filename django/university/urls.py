@@ -19,6 +19,7 @@ from university.routes.exchange.verify.ExchangeVerifyView import ExchangeVerifyV
 from university.routes.admin.AdminExchangeCoursesView import AdminExchangeCoursesView
 from university.routes.exchange.ExchangeUrgentView import ExchangeUrgentView
 from university.routes.student.StudentCourseMetadataView import StudentCourseMetadataView
+from university.routes.exchange.AdminRequestAwaitingInformationView import AdminRequestAwaitingInformationView
 
 from university.middleware.exchange_admin import exchange_admin_required
 from university.routes.exchange.verify.DirectExchangeValidationView import DirectExchangeValidationView
@@ -63,5 +64,6 @@ urlpatterns = [
     path('exchange/admin/courses/', exchange_admin_required(AdminExchangeCoursesView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/reject/', exchange_admin_required(AdminExchangeRequestRejectView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/accept/', exchange_admin_required(AdminExchangeRequestAcceptView.as_view())),
+    path('exchange/admin/request/<str:request_type>/<int:id>/awaiting-information/', exchange_admin_required(AdminRequestAwaitingInformationView.as_view())),
     path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback")
 ]
