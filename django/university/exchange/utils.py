@@ -63,10 +63,10 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
         # There are 2 students involved in the exchange. THe other student is the student other than the currently authenticated user
         other_student = curr_exchange["other_student"]["mecNumber"]
         course_unit = CourseUnit.objects.get(pk=curr_exchange["courseUnitId"])
-        course_unit = course_unit.acronym
+        course_unit = course_unit.id
         class_auth_student_goes_to = curr_exchange["classNameRequesterGoesTo"]
         class_other_student_goes_to = curr_exchange["classNameRequesterGoesFrom"] # The other student goes to its new class
-        
+
         # If participant is neither enrolled in that course unit or in that class
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
         auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[auth_username]
@@ -119,7 +119,6 @@ def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: in
 def exchange_overlap(student_schedules, username) -> bool:
     for (key, class_schedule) in student_schedules[username].items():
         for (other_key, other_class_schedule) in student_schedules[username].items():
-            print(f"({key}, {other_key})")
             if key == other_key:
                 continue
 
@@ -135,14 +134,14 @@ def exchange_overlap(student_schedules, username) -> bool:
     Returns name of course unit given its id
 """
 def course_unit_name(course_unit_id):
-    course_unit = CourseUnit.objects.get(sigarra_id=course_unit_id)
+    course_unit = CourseUnit.objects.get(id=course_unit_id)
     return course_unit.name
 
 """
     Returns the course unit given its acronym
 """
 def course_unit_by_id(id):
-    course_units = CourseUnit.objects.filter(sigarra_id=id)
+    course_units = CourseUnit.objects.filter(id=id)
     return course_units.first()
 
 def curr_semester_weeks():
@@ -161,7 +160,7 @@ def incorrect_class_error() -> str:
     return "students-with-incorrect-classes"    
 
 def append_tts_info_to_sigarra_schedule(schedule):
-    course_unit = CourseUnit.objects.filter(sigarra_id=schedule['ocorrencia_id'])[0]
+    course_unit = CourseUnit.objects.filter(id=schedule['ocorrencia_id'])[0]
             
     schedule['url'] = course_unit.url
     # The sigarra api does not return the course with the full name, just the acronym
