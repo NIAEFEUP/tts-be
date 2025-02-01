@@ -49,18 +49,25 @@ class StudentController:
 
         student_festid = sigarra_controller.get_student_festid(nmec)
 
+        print("THIS IS STUDENT FEST ID: ", student_festid)
+
         if student_festid is not None:
             models_to_save = []
 
             for item in student_festid:
+                course = Course.objects.filter(
+                    faculty_id = item["faculty"],
+                    name = item["course_name"]
+                )
+
+                if len(course) == 0:
+                    continue
+                    
                 models_to_save.append(
                     StudentCourseMetadata(
                         nmec = nmec,
                         fest_id = item["fest_id"],
-                        course = Course.objects.filter(
-                            faculty_id = item["faculty"],
-                            name = item["course_name"]
-                        ).get()
+                        course = course.get()
                     )
                 )
 
