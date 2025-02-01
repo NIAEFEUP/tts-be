@@ -70,7 +70,7 @@ class DirectExchangeView(View):
         if not(is_admin):
             return HttpResponse(status=403) 
 
-        direct_exchanges = list(map(lambda exchange: DirectExchangeSerializer(exchange).data, DirectExchange.objects.all().order_by('date')))
+        direct_exchanges = list(map(lambda exchange: DirectExchangeSerializer(exchange).data, DirectExchange.objects.filter(accepted=True).order_by('date')))
 
         paginator = Paginator(direct_exchanges, 48)
         page_number = request.GET.get("page")
