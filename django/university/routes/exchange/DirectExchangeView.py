@@ -17,7 +17,7 @@ from university.controllers.CourseUnitController import CourseUnitController
 from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, DirectExchangeParticipants, AuthUser, ExchangeAdmin
+from university.models import DirectExchange, DirectExchangeParticipants, DirectExchangeParticipants, ExchangeAdmin
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
 from university.controllers.ExchangeValidationController import ExchangeValidationController
 from university.controllers.StudentController import StudentController
