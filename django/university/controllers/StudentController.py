@@ -49,8 +49,6 @@ class StudentController:
 
         student_festid = sigarra_controller.get_student_festid(nmec)
 
-        print("THIS IS STUDENT FEST ID: ", student_festid)
-
         if student_festid is not None:
             models_to_save = []
 
