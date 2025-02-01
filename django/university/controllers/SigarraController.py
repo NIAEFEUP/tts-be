@@ -68,7 +68,10 @@ class SigarraController:
         if profile.status_code != 200:
             return None
 
-        courses = json.loads(profile.data)["cursos"]
+        try:
+            courses = json.loads(profile.data)["cursos"]
+        except json.decoder.JSONDecodeError:
+            return None
 
         return list(map(lambda course: {
             "fest_id": course["fest_id"],
