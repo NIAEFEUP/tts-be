@@ -91,7 +91,6 @@ class CourseUnitEnrollmentView(APIView):
 
                 db_enrollment = CourseUnitEnrollmentOptions(
                     course_unit_id=enrollment_metadata["course_unit_id"],
-                    class_field_id=enrollment_metadata["class_id"],
                     course_unit_enrollment=course_unit_enrollment,
                     enrolling=enrollment_metadata["enrolling"],
                     date=timezone.now()
