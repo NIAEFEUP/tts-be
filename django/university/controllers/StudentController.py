@@ -53,14 +53,19 @@ class StudentController:
             models_to_save = []
 
             for item in student_festid:
+                course = Course.objects.filter(
+                    faculty_id = item["faculty"],
+                    name = item["course_name"]
+                )
+
+                if len(course) == 0:
+                    continue
+                    
                 models_to_save.append(
                     StudentCourseMetadata(
                         nmec = nmec,
                         fest_id = item["fest_id"],
-                        course = Course.objects.filter(
-                            faculty_id = item["faculty"],
-                            name = item["course_name"]
-                        ).get()
+                        course = course.get()
                     )
                 )
 
