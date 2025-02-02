@@ -124,7 +124,6 @@ class MarketplaceExchangeView(APIView):
         student_schedules[curr_student] = build_student_schedule_dict(student_schedule)
 
         (status, new_marketplace_schedule) = build_marketplace_submission_schedule(student_schedules, exchanges, curr_student)
-        print("Student schedules: ", student_schedules[curr_student])
         if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
             return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
 

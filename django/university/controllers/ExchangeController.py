@@ -108,17 +108,10 @@ class ExchangeController:
 
     @staticmethod
     def create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_db_model, auth_user):
-        if ExchangeController.exchange_overlap(student_schedules, auth_user):
-            return (ExchangeStatus.CLASSES_OVERLAP, None)
-
         for curr_exchange in exchanges:
             other_student = curr_exchange["other_student"]["mecNumber"]
-
             course_unit = course_unit_by_id(curr_exchange["courseUnitId"])
 
-            if ExchangeController.exchange_overlap(student_schedules, other_student):
-                return (ExchangeStatus.CLASSES_OVERLAP, None)
-        
             inserted_exchanges.append(DirectExchangeParticipants(
                 participant_name=curr_exchange["other_student"]["name"],
                 participant_nmec=curr_exchange["other_student"]["mecNumber"],

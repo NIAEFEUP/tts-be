@@ -83,13 +83,14 @@ class ExchangeValidationController:
                     return ExchangeValidationResponse(False, ExchangeStatus.STUDENTS_NOT_ENROLLED)
 
                 # 3. Alter the schedule of the users according to the exchange metadata 
-                schedule[username][(entry.class_participant_goes_to, int(entry.course_unit_id))] = SigarraController().get_class_schedule(int(entry.course_unit_id), entry.class_participant_goes_to).data
-                del schedule[username][(entry.class_participant_goes_from, int(entry.course_unit_id))]
+                class_schedule = SigarraController().get_class_schedule(int(entry.course_unit_id), entry.class_participant_goes_to).data[0][0] # For other courses we will need to have pratical class as a list in the dictionary
 
+                schedule[username][(entry.class_participant_goes_to, int(entry.course_unit_id))] = class_schedule
+                del schedule[username][(entry.class_participant_goes_from, int(entry.course_unit_id))]
 
         # 4. Verify if the exchanges will have overlaps after building the new schedules
         for username in schedule.keys():
-            if exchange_overlap(schedule, username):
+            if ExchangeController.exchange_overlap(schedule, username):
                 return ExchangeValidationResponse(False, ExchangeStatus.CLASSES_OVERLAP)
 
         return ExchangeValidationResponse(True, ExchangeStatus.SUCCESS)

@@ -105,6 +105,7 @@ class DirectExchangeView(View):
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return HttpResponse(status=trailing)
 
+        # Update student schedule with exchange updates that are not in sigarra currently
         for student in student_schedules.keys():
             student_schedule = list(student_schedules[student].values())
             update_schedule_accepted_exchanges(student, student_schedule)
@@ -116,20 +117,25 @@ class DirectExchangeView(View):
                 issuer_name=f"{request.user.first_name} {request.user.last_name}", 
                 issuer_nmec=request.user.username,
                 date=timezone.now(),
-                admin_state="untreated"
+                admin_state="untreated",
+                canceled=False
             )
 
+            inserted_exchanges = []
+            ExchangeController.create_direct_exchange_participants(
+                student_schedules, exchanges, inserted_exchanges, exchange_model, request.user.username
+            )
+
+            # Change the schedules to the final result of the exchange so it is easier to detect overlaps
             (status, trailing) = build_new_schedules(
                 student_schedules, exchanges, request.user.username)
             
             if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
                 return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
-        
-            inserted_exchanges = []
-            (status, trailing) = ExchangeController.create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_model, request.user.username)
-            
-            if status == ExchangeStatus.CLASSES_OVERLAP:    
-                return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+
+            for username in student_schedules.keys():
+                if ExchangeController.exchange_overlap(student_schedules, username):
+                    return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
             exchange_model.save()
         
