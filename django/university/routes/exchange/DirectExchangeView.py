@@ -158,6 +158,7 @@ class DirectExchangeView(View):
     def put(self, request, id):
         # Validate if exchange is still valid
         if not ExchangeValidationController().validate_direct_exchange(id).status:
+            ExchangeValidationController().cancel_exchange(DirectExchange.objects.get(id=id))
             return JsonResponse({"error": ExchangeValidationController().validate_direct_exchange(id).message}, status=400, safe=False)
 
         exchange = DirectExchange.objects.get(id=id)

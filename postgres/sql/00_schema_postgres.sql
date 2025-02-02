@@ -187,6 +187,7 @@ CREATE TABLE "public"."direct_exchange" (
   "issuer_name" varchar(32) NOT NULL,
   "issuer_nmec" varchar(32) NOT NULL,
   "accepted" boolean NOT NULL,
+  "canceled" boolean DEFAULT false,
   "date" TIMESTAMP DEFAULT now(),
   "admin_state" varchar(32) NOT NULL DEFAULT 'untreated'
 );

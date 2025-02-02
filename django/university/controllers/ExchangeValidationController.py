@@ -52,17 +52,11 @@ class ExchangeValidationController:
 
                 for exchange in exchanges:
                     if not self.validate_direct_exchange(exchange.id).status:
-                        self.cancel_exchange(exchange.id)
+                        self.cancel_exchange(exchange)
 
-    def cancel_exchange(self, exchange_id: int):
-        with transaction.atomic():
-            exchange = DirectExchange.objects.get(id=exchange_id)
-            participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-
-            for participant in participants:
-                participant.delete()
-
-            exchange.delete()
+    def cancel_exchange(self, exchange: DirectExchange):
+        exchange.canceled = True
+        exchange.save()
 
     """
         This class will contain methods to validate the direct exchanges that are already inside

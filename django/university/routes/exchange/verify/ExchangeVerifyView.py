@@ -19,7 +19,10 @@ class ExchangeVerifyView(View):
         try:
             exchange_info = jwt.decode(token, JWT_KEY, algorithms=["HS256"])
 
+            direct_exchange = DirectExchange.objects.get(id=exchange_info["exchange_id"])
+
             if not ExchangeValidationController().validate_direct_exchange(exchange_info["exchange_id"]).status:
+                ExchangeValidationController().cancel_exchange(direct_exchange)
                 return JsonResponse({"verified": False}, safe=False, status=403)
         
             token_seconds_elapsed = time.time() - exchange_info["exp"]
@@ -37,8 +40,8 @@ class ExchangeVerifyView(View):
                     accepted_participants += participant.accepted
 
                 if accepted_participants == len(all_participants):
-                    direct_exchange = DirectExchange.objects.filter(id=int(exchange_info["exchange_id"]))
-                    direct_exchange.update(accepted=True)
+                    direct_exchange.accepted = True
+                    direct_exchange.save()
 
                     # Change user schedule
                     for participant in all_participants:
@@ -55,7 +58,6 @@ class ExchangeVerifyView(View):
                 )
 
                 ExchangeValidationController().cancel_conflicting_exchanges(exchange_info["exchange_id"])
-
                 return JsonResponse({"verified": True}, safe=False)
 
         except Exception as e:
