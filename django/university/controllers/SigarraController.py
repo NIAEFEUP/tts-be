@@ -125,6 +125,9 @@ class SigarraController:
 
         return SigarraResponse(response.json(), 200)
 
+    """
+        Returns a tuple with (pratical class, theoretical class)
+    """
     def get_class_schedule(self, course_unit_id: int, class_name: str) -> SigarraResponse:
         (semana_ini, semana_fim) = self.semester_weeks()
 

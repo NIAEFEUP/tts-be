@@ -10,7 +10,7 @@ from django.db import transaction
 
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, exchange_overlap, incorrect_class_error, update_schedule_accepted_exchanges
+from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, exchange_overlap, incorrect_class_error 
 from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, Class, ExchangeUrgentRequests, ExchangeUrgentRequestOptions
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
@@ -120,11 +120,10 @@ class MarketplaceExchangeView(APIView):
         student_schedules[curr_student] = build_student_schedule_dict(sigarra_res.data)
     
         student_schedule = list(student_schedules[curr_student].values())
-        update_schedule_accepted_exchanges(curr_student, student_schedule)
+        ExchangeController.update_schedule_accepted_exchanges(curr_student, student_schedule)
         student_schedules[curr_student] = build_student_schedule_dict(student_schedule)
 
         (status, new_marketplace_schedule) = build_marketplace_submission_schedule(student_schedules, exchanges, curr_student)
-        print("Student schedules: ", student_schedules[curr_student])
         if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
             return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
 

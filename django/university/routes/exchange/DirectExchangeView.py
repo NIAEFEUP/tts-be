@@ -21,7 +21,7 @@ from university.models import DirectExchange, DirectExchangeParticipants, Direct
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
 from university.controllers.ExchangeValidationController import ExchangeValidationController
 from university.controllers.StudentController import StudentController
-from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error, update_schedule_accepted_exchanges, exchange_status_message
+from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error 
 
 class DirectExchangeView(View):
     def __init__(self):
@@ -105,9 +105,10 @@ class DirectExchangeView(View):
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return HttpResponse(status=trailing)
 
+        # Update student schedule with exchange updates that are not in sigarra currently
         for student in student_schedules.keys():
             student_schedule = list(student_schedules[student].values())
-            update_schedule_accepted_exchanges(student, student_schedule)
+            ExchangeController.update_schedule_accepted_exchanges(student, student_schedule)
             student_schedules[student] = build_student_schedule_dict(student_schedule)
 
         with transaction.atomic():
@@ -116,20 +117,25 @@ class DirectExchangeView(View):
                 issuer_name=f"{request.user.first_name} {request.user.last_name}", 
                 issuer_nmec=request.user.username,
                 date=timezone.now(),
-                admin_state="untreated"
+                admin_state="untreated",
+                canceled=False
             )
 
+            inserted_exchanges = []
+            ExchangeController.create_direct_exchange_participants(
+                student_schedules, exchanges, inserted_exchanges, exchange_model, request.user.username
+            )
+
+            # Change the schedules to the final result of the exchange so it is easier to detect overlaps
             (status, trailing) = build_new_schedules(
                 student_schedules, exchanges, request.user.username)
             
             if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
                 return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
-        
-            inserted_exchanges = []
-            (status, trailing) = ExchangeController.create_direct_exchange_participants(student_schedules, exchanges, inserted_exchanges, exchange_model, request.user.username)
-            
-            if status == ExchangeStatus.CLASSES_OVERLAP:    
-                return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+
+            for username in student_schedules.keys():
+                if ExchangeController.exchange_overlap(student_schedules, username):
+                    return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
             exchange_model.save()
         
@@ -151,28 +157,36 @@ class DirectExchangeView(View):
                     'tts@exchange.com',
                     [f'up{participant}@up.pt']
                 )
-
         
         return JsonResponse({"success": True}, safe=False)
 
     def put(self, request, id):
         # Validate if exchange is still valid
         if not ExchangeValidationController().validate_direct_exchange(id).status:
+            ExchangeValidationController().cancel_exchange(DirectExchange.objects.get(id=id))
             return JsonResponse({"error": ExchangeValidationController().validate_direct_exchange(id).message}, status=400, safe=False)
 
         exchange = DirectExchange.objects.get(id=id)
 
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-        for participant in participants:
-            if participant.participant_nmec == request.user.username:
-                participant.accepted = True
-                participant.save()
+        try: 
+            with transaction.atomic():
+                # Update exchange accepted states
+                participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+                for participant in participants:
+                    if participant.participant_nmec == request.user.username:
+                        participant.accepted = True
+                        participant.save()
 
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-        if all(participant.accepted for participant in participants):
-            exchange.accepted = True
+                if all(participant.accepted for participant in participants):
+                    exchange.accepted = True
+                    exchange.save()
 
-            for participant in participants:
-                StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
+                    for participant in participants:
+                        StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
 
-        return JsonResponse({"success": True}, safe=False)
+                    ExchangeValidationController().cancel_conflicting_exchanges(exchange.id)
+
+                return JsonResponse({"success": True}, safe=False)
+        except Exception as e:
+            print("ERROR: ", e)
+            return JsonResponse({"success": False}, status=400, safe=False)
