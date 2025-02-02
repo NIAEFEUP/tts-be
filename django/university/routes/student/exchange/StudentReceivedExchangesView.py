@@ -6,6 +6,7 @@ from django.db.models import Prefetch
 from university.controllers.ExchangeController import DirectExchangePendingMotive
 from university.models import DirectExchange, DirectExchangeParticipants
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
+from university.serializers.DirectExchangeSerializer import DirectExchangeSerializer
 
 class StudentReceivedExchangesView(APIView):
     def get(self, request):
@@ -32,18 +33,12 @@ class StudentReceivedExchangesView(APIView):
                 "has_next": page_obj.has_next(),
                 "has_previous": page_obj.has_previous(),
             },
-            "data": [{
-                "id": exchange.id,
-                "type": "directexchange",
-                "issuer_name": exchange.issuer_name,
-                "issuer_nmec": exchange.issuer_nmec,
-                "accepted": exchange.accepted,
-                "pending_motive": DirectExchangePendingMotive.get_value(DirectExchangePendingMotive.get_pending_motive(request.user.username, exchange)),
-                "options": [
-                    DirectExchangeParticipantsSerializer(participant).data for participant in exchange.options
-                ],
-                "date": exchange.date
-            } for exchange in page_obj]
+            "data": [
+                {
+                    **DirectExchangeSerializer(exchange).data,
+                    "pending_motive": DirectExchangePendingMotive.get_value(DirectExchangePendingMotive.get_pending_motive(request.user.username, exchange)),
+                }
+            for exchange in page_obj]
         }
 
         
