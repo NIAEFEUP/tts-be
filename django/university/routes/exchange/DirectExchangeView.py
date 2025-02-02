@@ -157,7 +157,6 @@ class DirectExchangeView(View):
                     'tts@exchange.com',
                     [f'up{participant}@up.pt']
                 )
-
         
         return JsonResponse({"success": True}, safe=False)
 
@@ -178,15 +177,16 @@ class DirectExchangeView(View):
                         participant.accepted = True
                         participant.save()
 
-                participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
                 if all(participant.accepted for participant in participants):
                     exchange.accepted = True
+                    exchange.save()
 
                     for participant in participants:
                         StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
 
-                ExchangeValidationController().cancel_conflicting_exchanges(exchange.id)
+                    ExchangeValidationController().cancel_conflicting_exchanges(exchange.id)
 
                 return JsonResponse({"success": True}, safe=False)
-        except:
-            return JsonResponse({"success": False}, safe=False)
+        except Exception as e:
+            print("ERROR: ", e)
+            return JsonResponse({"success": False}, status=400, safe=False)

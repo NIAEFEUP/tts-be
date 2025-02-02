@@ -51,7 +51,7 @@ class ExchangeValidationController:
 
             # 3. Cancel all the conflicting exchanges
             for conflicting_exchange in conflicting_exchanges:
-                self.cancel_exchange(conflicting_exchange.id)
+                self.cancel_exchange(conflicting_exchange)
 
     def cancel_exchange(self, exchange: DirectExchange):
         exchange.canceled = True
@@ -66,7 +66,7 @@ class ExchangeValidationController:
         will validate the request format.
     """
     def validate_direct_exchange(self, exchange_id: int) -> ExchangeValidationResponse:
-        exchange_participants = list(DirectExchangeParticipants.objects.filter(direct_exchange__id=exchange_id).all())
+        exchange_participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=exchange_id).all()
 
         # 1. Build new schedule of each student
         schedule = {}
@@ -76,7 +76,7 @@ class ExchangeValidationController:
 
         # 2. Check if users are inside classes they will exchange from with
         for username in schedule.keys():
-            participant_entries = list(DirectExchangeParticipants.objects.filter(participant_nmec=username).all())
+            participant_entries = list(exchange_participants.filter(participant_nmec=username))
 
             for entry in participant_entries:
                 if (entry.class_participant_goes_from, int(entry.course_unit_id)) not in list(schedule[username].keys()):

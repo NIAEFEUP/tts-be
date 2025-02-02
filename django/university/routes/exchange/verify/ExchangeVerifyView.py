@@ -47,6 +47,9 @@ class ExchangeVerifyView(View):
                     for participant in all_participants:
                         StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
 
+
+                    ExchangeValidationController().cancel_conflicting_exchanges(exchange_info["exchange_id"])
+
                 if cache.get(token) is not None:
                     return JsonResponse({"verified": False}, safe=False, status=403)
             
@@ -57,7 +60,6 @@ class ExchangeVerifyView(View):
                     timeout=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS - token_seconds_elapsed
                 )
 
-                ExchangeValidationController().cancel_conflicting_exchanges(exchange_info["exchange_id"])
                 return JsonResponse({"verified": True}, safe=False)
 
         except Exception as e:
