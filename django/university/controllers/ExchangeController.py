@@ -3,6 +3,7 @@ import json
 
 from django.core.paginator import Paginator
 from university.controllers.ClassController import ClassController
+from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, check_class_schedule_overlap, course_unit_by_id
 from university.models import DirectExchange, DirectExchangeParticipants, ExchangeExpirations, MarketplaceExchange
 from django.utils import timezone
@@ -155,3 +156,36 @@ class ExchangeController:
 
         return False
 
+    @staticmethod
+    def update_schedule_accepted_exchanges(student, schedule):
+        accepted_options = DirectExchangeParticipants.objects.filter(participant_nmec=student, accepted=True, direct_exchange__accepted=True)
+
+        (status, trailing) = ExchangeController.update_schedule(schedule, accepted_options) 
+        if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
+            return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
+
+        return (ExchangeStatus.SUCCESS, None)
+
+    @staticmethod
+    def update_schedule(student_schedule, exchanges):
+        for exchange in exchanges:
+            for i, schedule in enumerate(student_schedule):
+                ocurr_id = int(schedule["ocorrencia_id"])
+                if ocurr_id == int(exchange.course_unit_id):
+                    class_type = schedule["tipo"]
+
+                    res = SigarraController().get_class_schedule(int(exchange.course_unit_id), exchange.class_participant_goes_to)
+                    if res.status_code != 200: 
+                        return (ExchangeStatus.FETCH_SCHEDULE_ERROR, None)
+
+                    (tp_schedule, t_schedule) = res.data
+                    tp_schedule.extend(t_schedule)
+                    new_schedules = tp_schedule
+
+                    for new_schedule in new_schedules:
+                        for turma in new_schedule["turmas"]:
+                            if turma["turma_sigla"] == exchange.class_participant_goes_to and schedule["tipo"] == class_type:
+                                del student_schedule[i]
+                                student_schedule.append(new_schedule)
+
+        return (ExchangeStatus.SUCCESS, None)

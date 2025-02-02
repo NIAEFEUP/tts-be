@@ -1,6 +1,6 @@
 from datetime import date
 from university.controllers.SigarraController import SigarraController
-from university.models import CourseUnit, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
+from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
 from enum import Enum
 import requests
 
@@ -206,31 +206,3 @@ def convert_sigarra_schedule(schedule_data):
         new_schedule_data.append(new_schedule)
 
     return new_schedule_data
-
-def update_schedule_accepted_exchanges(student, schedule):
-    direct_exchange_ids = DirectExchangeParticipants.objects.filter(
-        participant_nmec=student, direct_exchange__accepted=True
-    ).values_list('direct_exchange', flat=True)
-    direct_exchanges = DirectExchange.objects.filter(id__in=direct_exchange_ids).order_by('date')
-
-    for exchange in direct_exchanges:
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange, participant_nmec=student).order_by('date')
-        (status, trailing) = update_schedule(schedule, participants) 
-        if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
-            return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
-
-    return (ExchangeStatus.SUCCESS, None)
-
-def update_schedule(student_schedule, exchanges):
-    for exchange in exchanges:
-        for i, schedule in enumerate(student_schedule):
-            if schedule["ucurr_sigla"] == exchange.course_unit:
-                class_type = schedule["tipo"]
-
-                # TODO if old_class schedule is different from current schedule, abort
-
-                for turma in schedule["turmas"]:
-                    if turma["turma_sigla"] == exchange.class_participant_goes_to and schedule["tipo"] == class_type:
-                        student_schedule[i] = schedule
-
-    return (ExchangeStatus.SUCCESS, None)

@@ -21,7 +21,7 @@ from university.models import DirectExchange, DirectExchangeParticipants, Direct
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
 from university.controllers.ExchangeValidationController import ExchangeValidationController
 from university.controllers.StudentController import StudentController
-from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error, update_schedule_accepted_exchanges, exchange_status_message
+from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error 
 
 class DirectExchangeView(View):
     def __init__(self):
@@ -108,7 +108,7 @@ class DirectExchangeView(View):
         # Update student schedule with exchange updates that are not in sigarra currently
         for student in student_schedules.keys():
             student_schedule = list(student_schedules[student].values())
-            update_schedule_accepted_exchanges(student, student_schedule)
+            ExchangeController.update_schedule_accepted_exchanges(student, student_schedule)
             student_schedules[student] = build_student_schedule_dict(student_schedule)
 
         with transaction.atomic():
