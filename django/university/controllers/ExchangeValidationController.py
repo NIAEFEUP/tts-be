@@ -35,24 +35,23 @@ class ExchangeValidationController:
                     participant_nmec=participant.participant_nmec, 
                     class_participant_goes_from=participant.class_participant_goes_from
                 )
-
                 conflicting_exchanges.extend(list(map(lambda conflicting_exchange: conflicting_exchange.direct_exchange, conflicting)))
-
                 
-            # 2. Cancel all the conflicting exchanges
-            for conflicting_exchange in conflicting_exchanges:
-                self.cancel_exchange(conflicting_exchange.id)
-
-            # 3. Revalidate all of the other exchanges who include classes from the participant but not classes
+            # 2. Revalidate all of the other exchanges who include classes from the participant but not classes
             # that are the "class_participant_goes_from" of the exchange
             for participant in accepted_exchange_participants:
                 exchanges = DirectExchange.objects.exclude(id=accepted_exchange_id).filter(
                     directexchangeparticipants__participant_nmec=participant.participant_nmec
                 )
+                exchanges = [exchange for exchange in exchanges if exchange not in conflicting_exchanges]
 
                 for exchange in exchanges:
                     if not self.validate_direct_exchange(exchange.id).status:
-                        self.cancel_exchange(exchange)
+                        conflicting_exchanges.append(exchange)
+
+            # 3. Cancel all the conflicting exchanges
+            for conflicting_exchange in conflicting_exchanges:
+                self.cancel_exchange(conflicting_exchange.id)
 
     def cancel_exchange(self, exchange: DirectExchange):
         exchange.canceled = True
