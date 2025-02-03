@@ -1,4 +1,6 @@
 import json
+import hashlib
+
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
@@ -129,14 +131,23 @@ class MarketplaceExchangeView(APIView):
 
         if exchange_overlap(student_schedules, curr_student):
             return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+        
+        exchange_data_str = json.dumps(exchanges, sort_keys=True)
+        exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
+
+        if MarketplaceExchange.objects.filter(hash=exchange_hash).exists():
+            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+
+        if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
+            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         if urgentMessage:
-            return self.add_urgent_exchange(request, exchanges, urgentMessage)
+            return self.add_urgent_exchange(request, exchanges, urgentMessage, exchange_hash)
         else:
-            return self.add_normal_marketplace_exchange(request, exchanges)
+            return self.add_normal_marketplace_exchange(request, exchanges, exchange_hash)
 
         
-    def add_urgent_exchange(self, request, exchanges, message: str):
+    def add_urgent_exchange(self, request, exchanges, message: str, exchange_hash):
         with transaction.atomic():
             urgent_request = ExchangeUrgentRequests.objects.create(
                 user_nmec=request.user.username,
@@ -153,26 +164,28 @@ class MarketplaceExchangeView(APIView):
                     course_unit_id=int(exchange["courseUnitId"]),
                     class_user_goes_from=exchange["classNameRequesterGoesFrom"],
                     class_user_goes_to=exchange["classNameRequesterGoesTo"],
-                    exchange_urgent_request=urgent_request
+                    exchange_urgent_request=urgent_request,
+                    hash=exchange_hash
                 ))
 
             ExchangeUrgentRequestOptions.objects.bulk_create(models_to_save)
 
         return JsonResponse({"success": True}, safe=False)
 
-    def add_normal_marketplace_exchange(self, request, exchanges):
-        self.insert_marketplace_exchange(exchanges, request.user)
+    def add_normal_marketplace_exchange(self, request, exchanges, exchange_hash):
+        self.insert_marketplace_exchange(exchanges, request.user, exchange_hash)
     
         return JsonResponse({"success": True}, safe=False)
 
-
-    def insert_marketplace_exchange(self, exchanges, user):
+    def insert_marketplace_exchange(self, exchanges, user, exchange_hash):
         issuer_name = f"{user.first_name} {user.last_name.split(' ')[-1]}"
+
         marketplace_exchange = MarketplaceExchange.objects.create(
             id=MarketplaceExchange.objects.latest("id").id + 1,
             issuer_name=issuer_name,
             issuer_nmec=user.username, 
-            accepted=False
+            accepted=False,
+            hash=exchange_hash
         )
         for exchange in exchanges:
             course_unit_id = int(exchange["courseUnitId"])

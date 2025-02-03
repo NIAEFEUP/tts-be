@@ -1,6 +1,7 @@
 import json
 import jwt
 import datetime
+import hashlib
 
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -111,6 +112,13 @@ class DirectExchangeView(View):
             ExchangeController.update_schedule_accepted_exchanges(student, student_schedule)
             student_schedules[student] = build_student_schedule_dict(student_schedule)
 
+        # Restricts repeated exchange requests
+        exchange_data_str = json.dumps(exchanges, sort_keys=True)
+        exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
+
+        if DirectExchange.objects.filter(hash=exchange_hash).exists():
+            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+
         with transaction.atomic():
             exchange_model = DirectExchange(
                 accepted=False, 
@@ -118,7 +126,8 @@ class DirectExchangeView(View):
                 issuer_nmec=request.user.username,
                 date=timezone.now(),
                 admin_state="untreated",
-                canceled=False
+                canceled=False,
+                hash=exchange_hash 
             )
 
             inserted_exchanges = []
