@@ -10,6 +10,7 @@ from university.routes.student.course_units.eligible.StudentEligibleCourseUnits 
 from university.routes.student.exchange.StudentReceivedExchangesView import StudentReceivedExchangesView
 from university.routes.student.exchange.StudentSentExchangesView import StudentSentExchangesView
 from university.routes.student.schedule.StudentScheduleView import StudentScheduleView
+from university.routes.exchange.ExchangeCancelView import ExchangeCancelView
 from university.routes.auth.InfoView import InfoView
 from university.routes.exchange.AdminExchangeRequestRejectView import AdminExchangeRequestRejectView
 from university.routes.exchange.AdminExchangeRequestAcceptView import AdminExchangeRequestAcceptView
@@ -52,6 +53,7 @@ urlpatterns = [
     path('exchange/direct/<int:id>', DirectExchangeView.as_view(), name="direct_exchange-id"),
     path('exchange/direct/validate/<int:id>', DirectExchangeValidationView.as_view()),
     path('exchange/options/', ExchangeOptionsView.as_view()),
+    path('exchange/<str:request_type>/<int:id>/cancel/', ExchangeCancelView.as_view()),
     path('exchange/export/csv', ExchangeExportView.as_view()),
     path('exchange/urgent/', ExchangeUrgentView.as_view()),
     path('course_unit/<int:course_unit_id>/exchange/metadata', ExchangeCardMetadataView.as_view()),

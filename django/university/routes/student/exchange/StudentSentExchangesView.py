@@ -61,6 +61,7 @@ class StudentSentExchangesView(APIView):
                 "issuer_name": exchange.issuer_name,
                 "issuer_nmec": exchange.issuer_nmec,
                 "accepted": exchange.accepted,
+                "canceled": exchange.canceled,
                 "options": ExchangeController.getOptionsDependinOnExchangeType(exchange),
                 "date": exchange.date
             } for exchange in page_obj]
