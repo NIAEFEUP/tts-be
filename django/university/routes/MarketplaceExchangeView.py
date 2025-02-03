@@ -185,7 +185,7 @@ class MarketplaceExchangeView(APIView):
             issuer_name=issuer_name,
             issuer_nmec=user.username, 
             accepted=False,
-            hash=exchange_hash
+            hash=exchange_hash,
             canceled=False
         )
         for exchange in exchanges:
