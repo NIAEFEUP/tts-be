@@ -66,7 +66,6 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
         course_unit = course_unit.id
         class_auth_student_goes_to = curr_exchange["classNameRequesterGoesTo"]
         class_other_student_goes_to = curr_exchange["classNameRequesterGoesFrom"] # The other student goes to its new class
-
         # If participant is neither enrolled in that course unit or in that class
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
         auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[auth_username]
@@ -103,7 +102,7 @@ def build_student_schedule_dicts(student_schedules, exchanges):
 
 def build_student_schedule_dict(schedule: list):
     return {
-        (class_schedule["turma_sigla"], class_schedule["ocorrencia_id"]): class_schedule for class_schedule in schedule if class_schedule["tipo"] == "TP"
+        (class_schedule["turma_sigla"], class_schedule["ocorrencia_id"]): class_schedule for class_schedule in schedule if (class_schedule["tipo"] == "TP" or class_schedule["tipo"] == "PL")
     }
 
 def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: int, start_2: int, end_2: int) -> bool:
