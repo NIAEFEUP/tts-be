@@ -59,7 +59,6 @@ def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
     sigarra schedule of the users
 """
 def build_new_schedules(student_schedules, exchanges, auth_username):
-    print(f"student schedules is {student_schedules}")
     for curr_exchange in exchanges:
         # There are 2 students involved in the exchange. THe other student is the student other than the currently authenticated user
         other_student = curr_exchange["other_student"]["mecNumber"]
@@ -67,10 +66,6 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
         course_unit = course_unit.id
         class_auth_student_goes_to = curr_exchange["classNameRequesterGoesTo"]
         class_other_student_goes_to = curr_exchange["classNameRequesterGoesFrom"] # The other student goes to its new class
-        print(f"first tuple {(class_auth_student_goes_to, course_unit)}")
-        print(f"second tuple {(class_other_student_goes_to, course_unit)}")
-        print(f"my array { student_schedules[other_student]}")
-        print(f"fother array { student_schedules[auth_username]}")
         # If participant is neither enrolled in that course unit or in that class
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
         auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[auth_username]
