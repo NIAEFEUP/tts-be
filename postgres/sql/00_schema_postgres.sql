@@ -179,6 +179,7 @@ CREATE TABLE "public"."marketplace_exchange" (
   "issuer_name" varchar(256) NOT NULL,
   "issuer_nmec" varchar(32) NOT NULl,
   "accepted" boolean NOT NULL,
+  "canceled" boolean DEFAULT false,
   "date" TIMESTAMP DEFAULT now()
 );
 
