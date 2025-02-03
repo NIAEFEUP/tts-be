@@ -148,6 +148,7 @@ class MarketplaceExchangeView(APIView):
 
         
     def add_urgent_exchange(self, request, exchanges, message: str, exchange_hash):
+        
         with transaction.atomic():
             urgent_request = ExchangeUrgentRequests.objects.create(
                 user_nmec=request.user.username,
@@ -165,7 +166,6 @@ class MarketplaceExchangeView(APIView):
                     class_user_goes_from=exchange["classNameRequesterGoesFrom"],
                     class_user_goes_to=exchange["classNameRequesterGoesTo"],
                     exchange_urgent_request=urgent_request,
-                    hash=exchange_hash
                 ))
 
             ExchangeUrgentRequestOptions.objects.bulk_create(models_to_save)
