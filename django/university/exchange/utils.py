@@ -11,7 +11,8 @@ class ExchangeStatus(Enum):
     FETCH_SCHEDULE_ERROR = 1
     STUDENTS_NOT_ENROLLED = 2
     CLASSES_OVERLAP = 3
-    SUCCESS = 4
+    DUPLICATE_REQUEST = 4
+    SUCCESS = 5
 
 def exchange_status_message(status: ExchangeStatus):
     if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
@@ -20,6 +21,8 @@ def exchange_status_message(status: ExchangeStatus):
         return incorrect_class_error()
     elif status == ExchangeStatus.CLASSES_OVERLAP:
         return "classes-overlap"
+    elif status == ExchangeStatus.DUPLICATE_REQUEST:
+        return "duplicate-request"
     elif status == ExchangeStatus.SUCCESS:
         return "success"
 
@@ -69,7 +72,6 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
         course_unit = course_unit.id
         class_auth_student_goes_to = curr_exchange["classNameRequesterGoesTo"]
         class_other_student_goes_to = curr_exchange["classNameRequesterGoesFrom"] # The other student goes to its new class
-
         # If participant is neither enrolled in that course unit or in that class
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
         auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[auth_username]
@@ -106,7 +108,7 @@ def build_student_schedule_dicts(student_schedules, exchanges):
 
 def build_student_schedule_dict(schedule: list):
     return {
-        (class_schedule["turma_sigla"], class_schedule["ocorrencia_id"]): class_schedule for class_schedule in schedule if class_schedule["tipo"] == "TP"
+        (class_schedule["turma_sigla"], class_schedule["ocorrencia_id"]): class_schedule for class_schedule in schedule if (class_schedule["tipo"] == "TP" or class_schedule["tipo"] == "PL")
     }
 
 def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: int, start_2: int, end_2: int) -> bool:

@@ -1,6 +1,7 @@
 import json
 import jwt
 import datetime
+import hashlib
 
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -85,6 +86,7 @@ class DirectExchangeView(View):
         return JsonResponse(direct_exchanges, safe=False)
 
     def post(self, request):
+        print(f" OLLLLAAAA")
         student_schedules = {}
         
         sigarra_res = SigarraController().get_student_schedule(request.user.username)
@@ -104,12 +106,18 @@ class DirectExchangeView(View):
         (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges)
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return HttpResponse(status=trailing)
-
         # Update student schedule with exchange updates that are not in sigarra currently
         for student in student_schedules.keys():
             student_schedule = list(student_schedules[student].values())
             ExchangeController.update_schedule_accepted_exchanges(student, student_schedule)
             student_schedules[student] = build_student_schedule_dict(student_schedule)
+
+        # Restricts repeated exchange requests
+        exchange_data_str = json.dumps(exchanges, sort_keys=True)
+        exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
+
+        if DirectExchange.objects.filter(hash=exchange_hash).exists():
+            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         with transaction.atomic():
             exchange_model = DirectExchange(
@@ -118,7 +126,8 @@ class DirectExchangeView(View):
                 issuer_nmec=request.user.username,
                 date=timezone.now(),
                 admin_state="untreated",
-                canceled=False
+                canceled=False,
+                hash=exchange_hash 
             )
 
             inserted_exchanges = []
@@ -142,21 +151,27 @@ class DirectExchangeView(View):
             tokens_to_generate = {}
             for inserted_exchange in inserted_exchanges:
                 inserted_exchange.save()
-        
+    
         for inserted_exchange in inserted_exchanges:
             participant = inserted_exchange.participant_nmec
-
+      
             # A participant may appear multiple times since there is one line in the table for each course unit inside of the exhange
             if participant not in tokens_to_generate.keys():
                 token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
                 tokens_to_generate[participant] = token
-                html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}tts/verify_direct_exchange/{token}"})
-                send_mail(
-                    'Confirmação de troca',
-                    strip_tags(html_message),
-                    'tts@exchange.com',
-                    [f'up{participant}@up.pt']
-                )
+        participants = set([(inserted_exchange.participant_nmec, inserted_exchange.participant_name) for inserted_exchange in inserted_exchanges ])
+
+        for (participant_num,participant_name) in participants:
+            
+            filtered_exchanges = [inserted_exchange for inserted_exchange in inserted_exchanges if inserted_exchange.participant_nmec == participant_num]
+
+            html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}tts/verify_direct_exchange/{token}", 'exchanges': filtered_exchanges})
+            send_mail(
+                'Confirmação de troca',
+                strip_tags(html_message),
+                'tts@exchange.com',
+                [f'up{participant_num}@up.pt']
+            )
         
         return JsonResponse({"success": True}, safe=False)
 

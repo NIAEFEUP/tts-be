@@ -1,7 +1,7 @@
 import json
 
-from university.routes.student.schedule.StudentScheduleView import StudentScheduleView
 from university.controllers.SigarraController import SigarraController
+from university.controllers.StudentScheduleController import StudentScheduleController
 
 from university.models import UserCourseUnits, Class, StudentCourseMetadata, Course
 
@@ -27,7 +27,7 @@ class StudentController:
         if(erase_previous):
             UserCourseUnits.objects.filter(user_nmec=nmec).delete()
 
-        course_units = StudentScheduleView.retrieveCourseUnitClasses(SigarraController(), nmec)
+        course_units = StudentScheduleController.retrieveCourseUnitClasses(SigarraController(), nmec)
         
         for item in course_units:
             (course_unit_id, class_acronym) = item
@@ -44,7 +44,10 @@ class StudentController:
             user_course_unit.save()
 
     @staticmethod
-    def populate_course_metadata(nmec):
+    def populate_course_metadata(nmec, erase_previous: bool = False):
+        if(erase_previous):
+            StudentCourseMetadata.objects.filter(nmec=nmec).delete()
+
         sigarra_controller = SigarraController()
 
         student_festid = sigarra_controller.get_student_festid(nmec)
