@@ -36,13 +36,17 @@ services:
       - ./nginx/certs/:/etc/nginx/certs/
 
   django:
-    build: ./django
+    build:
+      context: ./
+      dockerfile: django/Dockerfile
     container_name: tts_django
     env_file:
       - django/.env.dev
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:
       - ./django/:/usr/src/django/
+      - ./tts-protobufs/protos/:/usr/src/django/protos/
+      - ./protos/:/usr/src/django/generated/
     ports:
       - 8100:8000
       
