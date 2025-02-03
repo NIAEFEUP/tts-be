@@ -20,6 +20,7 @@ class CourseUnitEnrollmentsSerializer(serializers.Serializer):
 
 class CourseUnitEnrollmentOptionsSerializer(serializers.Serializer):
     course_unit = serializers.SerializerMethodField()
+    enrolling = serializers.BooleanField()
 
     def get_course_unit(self, obj):
         course_unit_id = obj.course_unit.id
