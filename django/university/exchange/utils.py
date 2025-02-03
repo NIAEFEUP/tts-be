@@ -187,7 +187,7 @@ def convert_sigarra_schedule(schedule_data):
                     'id': schedule['ocorrencia_id'],
                     'lesson_type': schedule["tipo"],
                     'day': schedule['dia'] - 2,
-                    'start_time': str(schedule['hora_inicio'] / 3600),
+                    'start_time': schedule['hora_inicio'] / 3600,
                     'duration': schedule['aula_duracao'],
                     'location': schedule['sala_sigla'],
                     'professors_link': '',
