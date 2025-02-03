@@ -107,7 +107,7 @@ def build_student_schedule_dict(schedule: list):
     }
 
 def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: int, start_2: int, end_2: int) -> bool:
-    return day_1 == day_2 and start_1 <= end_2 and start_2 <= end_1
+    return day_1 == day_2 and start_1 < end_2 and start_2 < end_1
 
 def exchange_overlap(student_schedules, username) -> bool:
     for (key, class_schedule) in student_schedules[username].items():
