@@ -85,6 +85,7 @@ class DirectExchangeView(View):
         return JsonResponse(direct_exchanges, safe=False)
 
     def post(self, request):
+        print(f" OLLLLAAAA")
         student_schedules = {}
         
         sigarra_res = SigarraController().get_student_schedule(request.user.username)
@@ -149,15 +150,19 @@ class DirectExchangeView(View):
             if participant not in tokens_to_generate.keys():
                 token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
                 tokens_to_generate[participant] = token
+        participants = set([(inserted_exchange.participant_nmec, inserted_exchange.participant_name) for inserted_exchange in inserted_exchanges ])
 
-        filtered_exchanges = list(filter(lambda x: x.participant_name != request.user.username, inserted_exchanges))
-        html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}tts/verify_direct_exchange/{token}", 'exchanges': filtered_exchanges})
-        send_mail(
-            'Confirmação de troca',
-            strip_tags(html_message),
-            'tts@exchange.com',
-            [f'up{participant}@up.pt']
-        )
+        for (participant_num,participant_name) in participants:
+            
+            filtered_exchanges = [inserted_exchange for inserted_exchange in inserted_exchanges if inserted_exchange.participant_nmec == participant_num]
+
+            html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}tts/verify_direct_exchange/{token}", 'exchanges': filtered_exchanges})
+            send_mail(
+                'Confirmação de troca',
+                strip_tags(html_message),
+                'tts@exchange.com',
+                [f'up{participant_num}@up.pt']
+            )
         
         return JsonResponse({"success": True}, safe=False)
 

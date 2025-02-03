@@ -13,8 +13,7 @@
     <ul>
         {% for exchange in exchanges %}
             <li>
-                <strong>Participante:</strong> {{ exchange.participant_name }}<br>
-                <strong>Curso:</strong> {{ exchange.course_unit.acronym }}<br>
+                <strong>Unidade Curricular:</strong> {{ exchange.course_unit.acronym }}<br>
                 <strong>De:</strong> {{ exchange.class_participant_goes_from }}<br>
                 <strong>Para:</strong> {{ exchange.class_participant_goes_to }}<br>
             </li>
