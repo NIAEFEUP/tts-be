@@ -4,7 +4,7 @@ import json
 from django.core.paginator import Paginator
 from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
-from university.exchange.utils import ExchangeStatus, check_class_schedule_overlap, course_unit_by_id
+from university.exchange.utils import ExchangeStatus, check_class_mandatory, check_class_schedule_overlap, course_unit_by_id
 from university.models import DirectExchange, DirectExchangeParticipants, ExchangeExpirations, MarketplaceExchange
 from django.utils import timezone
 from enum import Enum
@@ -148,10 +148,11 @@ class ExchangeController:
                 if key == other_key:
                     continue
 
-                (class_schedule_day, class_schedule_start, class_schedule_end) = (class_schedule["dia"], class_schedule["hora_inicio"] / 3600, class_schedule["aula_duracao"] + class_schedule["hora_inicio"] / 3600)
-                (overlap_param_day, overlap_param_start, overlap_param_end) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"] / 3600, other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"] / 3600)
+                (class_schedule_day, class_schedule_start, class_schedule_end, class_schedule_type) = (class_schedule["dia"], class_schedule["hora_inicio"] / 3600, class_schedule["aula_duracao"] + class_schedule["hora_inicio"] / 3600, class_schedule['tipo'])
+                (overlap_param_day, overlap_param_start, overlap_param_end, overlap_param_type) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"] / 3600, other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"] / 3600, other_class_schedule['tipo'])
 
-                if check_class_schedule_overlap(class_schedule_day, class_schedule_start, class_schedule_end, overlap_param_day, overlap_param_start, overlap_param_end):
+                if (check_class_mandatory(class_schedule_type) and check_class_mandatory(overlap_param_type)
+                    and check_class_schedule_overlap(class_schedule_day, class_schedule_start, class_schedule_end, overlap_param_day, overlap_param_start, overlap_param_end)):
                     return True
 
         return False
