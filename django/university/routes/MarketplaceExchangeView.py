@@ -47,7 +47,7 @@ class MarketplaceExchangeView(APIView):
                     'marketplaceexchangeclass_set',
                     to_attr='options'
                 )
-                ).exclude(issuer_nmec=request.user.username).all())
+                ).exclude(issuer_nmec=request.user.username, canceled=False, accepted=False).all())
 
         marketplace_exchanges = self.remove_invalid_dest_class_exchanges(marketplace_exchanges, request.user.username)
         marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
@@ -172,7 +172,8 @@ class MarketplaceExchangeView(APIView):
             id=MarketplaceExchange.objects.latest("id").id + 1,
             issuer_name=issuer_name,
             issuer_nmec=user.username, 
-            accepted=False
+            accepted=False,
+            canceled=False
         )
         for exchange in exchanges:
             course_unit_id = int(exchange["courseUnitId"])

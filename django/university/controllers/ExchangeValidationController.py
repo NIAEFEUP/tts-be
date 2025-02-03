@@ -53,7 +53,7 @@ class ExchangeValidationController:
             for conflicting_exchange in conflicting_exchanges:
                 self.cancel_exchange(conflicting_exchange)
 
-    def cancel_exchange(self, exchange: DirectExchange):
+    def cancel_exchange(self, exchange):
         exchange.canceled = True
         exchange.save()
 
