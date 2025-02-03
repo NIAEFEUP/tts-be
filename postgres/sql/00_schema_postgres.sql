@@ -180,7 +180,8 @@ CREATE TABLE "public"."marketplace_exchange" (
   "issuer_nmec" varchar(32) NOT NULl,
   "accepted" boolean NOT NULL,
   "canceled" boolean DEFAULT false,
-  "date" TIMESTAMP DEFAULT now()
+  "date" TIMESTAMP DEFAULT now(), 
+  "hash" varchar(64) UNIQUE
 );
 
 CREATE TABLE "public"."direct_exchange" (
@@ -190,7 +191,8 @@ CREATE TABLE "public"."direct_exchange" (
   "accepted" boolean NOT NULL,
   "canceled" boolean DEFAULT false,
   "date" TIMESTAMP DEFAULT now(),
-  "admin_state" varchar(32) NOT NULL DEFAULT 'untreated'
+  "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
+  "hash" varchar(64) UNIQUE
 );
 
 CREATE TABLE "public"."direct_exchange_participants" (
@@ -254,7 +256,8 @@ CREATE TABLE "public"."exchange_urgent_requests" (
     "message" varchar(2048) NOT NULL,
     "accepted" boolean DEFAULT false,
     "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
-    "date" TIMESTAMP DEFAULT now()
+    "date" TIMESTAMP DEFAULT now(),
+    "hash" varchar(64) UNIQUE
 );
 
 CREATE TABLE "public"."exchange_urgent_request_options" (

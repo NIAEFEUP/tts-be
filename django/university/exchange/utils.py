@@ -8,7 +8,8 @@ class ExchangeStatus(Enum):
     FETCH_SCHEDULE_ERROR = 1
     STUDENTS_NOT_ENROLLED = 2
     CLASSES_OVERLAP = 3
-    SUCCESS = 4
+    DUPLICATE_REQUEST = 4
+    SUCCESS = 5
 
 def exchange_status_message(status: ExchangeStatus):
     if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
@@ -17,6 +18,8 @@ def exchange_status_message(status: ExchangeStatus):
         return incorrect_class_error()
     elif status == ExchangeStatus.CLASSES_OVERLAP:
         return "classes-overlap"
+    elif status == ExchangeStatus.DUPLICATE_REQUEST:
+        return "duplicate-request"
     elif status == ExchangeStatus.SUCCESS:
         return "success"
 
