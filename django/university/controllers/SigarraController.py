@@ -141,7 +141,7 @@ class SigarraController:
             return SigarraResponse(None, response.status_code)
 
         classes = json.loads(response.content)["horario"]
-        class_schedule = list(filter(lambda c: c["turma_sigla"] == class_name, classes))
+        class_schedule = list(filter(lambda c: any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
         theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
         
         return SigarraResponse((class_schedule, theoretical_schedule), 200)

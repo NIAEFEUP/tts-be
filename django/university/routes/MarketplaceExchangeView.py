@@ -181,7 +181,6 @@ class MarketplaceExchangeView(APIView):
         issuer_name = f"{user.first_name} {user.last_name.split(' ')[-1]}"
 
         marketplace_exchange = MarketplaceExchange.objects.create(
-            id=MarketplaceExchange.objects.latest("id").id + 1,
             issuer_name=issuer_name,
             issuer_nmec=user.username, 
             accepted=False,
@@ -192,7 +191,6 @@ class MarketplaceExchangeView(APIView):
             course_unit_id = int(exchange["courseUnitId"])
             course_unit = CourseUnit.objects.get(pk=course_unit_id)
             MarketplaceExchangeClass.objects.create(
-                id=MarketplaceExchangeClass.objects.latest("id").id + 1,
                 marketplace_exchange=marketplace_exchange,
                 course_unit_acronym=course_unit.acronym,
                 course_unit_id=course_unit_id,

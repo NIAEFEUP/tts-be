@@ -3,6 +3,9 @@ from university.controllers.SigarraController import SigarraController
 from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
 from enum import Enum
 import requests
+import os
+
+T_CLASS_CONFLICT = os.getenv('T_CLASS_CONFLICT', False)
 
 class ExchangeStatus(Enum):
     FETCH_SCHEDULE_ERROR = 1
@@ -109,14 +112,10 @@ def build_student_schedule_dict(schedule: list):
     }
 
 def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: int, start_2: int, end_2: int) -> bool:
-    if day_1 != day_2:
-        return False
+    return day_1 == day_2 and start_1 < end_2 and start_2 < end_1
 
-    if (start_2 >= start_1 and start_2 <= end_1) or (start_1 >= start_2 and start_1 <= end_2):
-        return True
-
-    return False
-
+def check_class_mandatory(class_type) -> bool:
+    return (T_CLASS_CONFLICT or class_type != 'T') and class_type != 'O'
 
 def exchange_overlap(student_schedules, username) -> bool:
     for (key, class_schedule) in student_schedules[username].items():
@@ -124,10 +123,11 @@ def exchange_overlap(student_schedules, username) -> bool:
             if key == other_key:
                 continue
 
-            (class_schedule_day, class_schedule_start, class_schedule_end) = (class_schedule["dia"], class_schedule["hora_inicio"], class_schedule["aula_duracao"] + class_schedule["hora_inicio"])
-            (overlap_param_day, overlap_param_start, overlap_param_end) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"], other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"])
+            (class_schedule_day, class_schedule_start, class_schedule_end, class_schedule_type) = (class_schedule["dia"], class_schedule["hora_inicio"] / 3600, class_schedule["aula_duracao"] + class_schedule["hora_inicio"] / 3600, class_schedule['tipo'])
+            (overlap_param_day, overlap_param_start, overlap_param_end, overlap_param_type) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"] / 3600, other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"] / 3600, other_class_schedule['tipo'])
 
-            if check_class_schedule_overlap(class_schedule_day, class_schedule_start, class_schedule_end, overlap_param_day, overlap_param_start, overlap_param_end):
+            if (check_class_mandatory(class_schedule_type) and check_class_mandatory(overlap_param_type)
+                and check_class_schedule_overlap(class_schedule_day, class_schedule_start, class_schedule_end, overlap_param_day, overlap_param_start, overlap_param_end)):
                 return True
 
     return False
@@ -196,7 +196,7 @@ def convert_sigarra_schedule(schedule_data):
                     'id': schedule['ocorrencia_id'],
                     'lesson_type': schedule["tipo"],
                     'day': schedule['dia'] - 2,
-                    'start_time': str(schedule['hora_inicio'] / 3600),
+                    'start_time': schedule['hora_inicio'] / 3600,
                     'duration': schedule['aula_duracao'],
                     'location': schedule['sala_sigla'],
                     'professors_link': '',
