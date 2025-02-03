@@ -104,7 +104,6 @@ class DirectExchangeView(View):
         (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges)
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return HttpResponse(status=trailing)
-
         # Update student schedule with exchange updates that are not in sigarra currently
         for student in student_schedules.keys():
             student_schedule = list(student_schedules[student].values())
@@ -142,21 +141,23 @@ class DirectExchangeView(View):
             tokens_to_generate = {}
             for inserted_exchange in inserted_exchanges:
                 inserted_exchange.save()
-        
+    
         for inserted_exchange in inserted_exchanges:
             participant = inserted_exchange.participant_nmec
-
+      
             # A participant may appear multiple times since there is one line in the table for each course unit inside of the exhange
             if participant not in tokens_to_generate.keys():
                 token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
                 tokens_to_generate[participant] = token
-                html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}tts/verify_direct_exchange/{token}"})
-                send_mail(
-                    'Confirmação de troca',
-                    strip_tags(html_message),
-                    'tts@exchange.com',
-                    [f'up{participant}@up.pt']
-                )
+
+        filtered_exchanges = list(filter(lambda x: x.participant_name != request.user.username, inserted_exchanges))
+        html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}tts/verify_direct_exchange/{token}", 'exchanges': filtered_exchanges})
+        send_mail(
+            'Confirmação de troca',
+            strip_tags(html_message),
+            'tts@exchange.com',
+            [f'up{participant}@up.pt']
+        )
         
         return JsonResponse({"success": True}, safe=False)
 
