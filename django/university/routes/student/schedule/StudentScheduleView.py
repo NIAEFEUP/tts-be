@@ -37,14 +37,15 @@ class StudentScheduleView(APIView):
             new_response.status_code = sigarra_res.status_code
 
             if(nmec == ""):
-                StudentController.populate_course_metadata(
-                    request.user.username,
-                    erase_previous=len(StudentCourseMetadata.objects.filter(nmec = request.user.username)) > 0
-                )
-                StudentController.populate_user_course_unit_data(
-                    request.user.username, 
-                    erase_previous=len(UserCourseUnits.objects.filter(user_nmec = request.user.username)) > 0
-                ) 
+                if len(StudentCourseMetadata.objects.filter(nmec = request.user.username)) == 0:
+                    StudentController.populate_course_metadata(
+                        request.user.username,
+                    )
+
+                if len(UserCourseUnits.objects.filter(user_nmec = request.user.username)) == 0:
+                    StudentController.populate_user_course_unit_data(
+                        request.user.username, 
+                    ) 
 
             return new_response 
         
