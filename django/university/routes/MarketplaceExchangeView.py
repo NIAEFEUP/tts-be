@@ -1,6 +1,8 @@
 import json
 import hashlib
 
+from django.utils import timezone
+
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
@@ -185,7 +187,8 @@ class MarketplaceExchangeView(APIView):
             issuer_nmec=user.username, 
             accepted=False,
             hash=exchange_hash,
-            canceled=False
+            canceled=False,
+            date=timezone.now()
         )
         for exchange in exchanges:
             course_unit_id = int(exchange["courseUnitId"])
