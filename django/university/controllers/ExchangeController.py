@@ -167,7 +167,6 @@ class ExchangeController:
 
         return (ExchangeStatus.SUCCESS, None)
 
-    @staticmethod
     def update_schedule(student_schedule, exchanges):
         for exchange in exchanges:
             for i, schedule in enumerate(student_schedule):
@@ -185,8 +184,7 @@ class ExchangeController:
 
                     for new_schedule in new_schedules:
                         for turma in new_schedule["turmas"]:
-                            if turma["turma_sigla"] == exchange.class_participant_goes_to and schedule["tipo"] == class_type:
-                                del student_schedule[i]
-                                student_schedule.append(new_schedule)
+                            if turma["turma_sigla"] == exchange.class_participant_goes_to and new_schedule["tipo"] == class_type:
+                                student_schedule[i] = new_schedule
 
         return (ExchangeStatus.SUCCESS, None)
