@@ -86,7 +86,6 @@ class DirectExchangeView(View):
         return JsonResponse(direct_exchanges, safe=False)
 
     def post(self, request):
-        print(f" OLLLLAAAA")
         student_schedules = {}
         
         sigarra_res = SigarraController().get_student_schedule(request.user.username)
