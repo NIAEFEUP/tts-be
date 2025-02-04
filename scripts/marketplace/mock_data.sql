@@ -10,6 +10,7 @@ INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES
 INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (2, 'Aprendizagem Computacional', 'AC', 540676 , '1MEIC04', '1MEIC01');
 INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (4, 'João Horácio', '202108883', false);
 INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (4, 'Aprendizagem Computacional', 'AC', 540676, '1MEIC06', '1MEIC05');
+INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (4, 'Desenvolvimento de Software de Larga Escala', 'DS', 540677, '1MEIC06', '1MEIC05');
 INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (5, 'Óscar Cardoso', '202108884', false);
 INSERT INTO marketplace_exchange_class (marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES (5, 'Aprendizagem Computacional', 'AC', 540676, '1MEIC01', '1MEIC07');
 INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (6, 'Ana Oliveira', '202108885', false);
@@ -28,6 +29,8 @@ INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec
 INSERT INTO direct_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (2, 'José Santos', '202109260', true);
 INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (3, 'José Santos', 202109260, '1MEIC06', '1MEIC05', 'AC', 540676, 2, true);
 INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (4, 'Armindo Osório', 202108880, '1MEIC05', '1MEIC06', 'AC', 540676, 2, true);
+INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (5, 'Armindo Osório', 202108880, '1MEIC01', '1MEIC06', 'DS', 540677, 2, true);
+INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (6, 'José Santos', 202109260, '1MEIC06', '1MEIC01', 'DS', 540677, 2, true);
 
 
 INSERT INTO exchange_admin(id, username) VALUES (1, '202109260');
