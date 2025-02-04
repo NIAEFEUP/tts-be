@@ -14,6 +14,8 @@ from pathlib import Path
 import os 
 from dotenv import dotenv_values
 
+import logging.config
+
 CONFIG={
     **dotenv_values(".env"),  # load variables
     **os.environ,  # override loaded values with environment variables
@@ -42,6 +44,28 @@ ALLOWED_HOSTS = ['tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
 
 if DEBUG:
     ALLOWED_HOSTS.extend(['localhost', 'tts-dev.niaefeup.pt'])
+
+if not DEBUG:
+    LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': '/var/log/django_errors.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
+    }
+    
+    logging.config.dictConfig(LOGGING)
 
 
 # Application definition
