@@ -10,15 +10,13 @@ from university.serializers.DirectExchangeSerializer import DirectExchangeSerial
 
 class StudentReceivedExchangesView(APIView):
     def get(self, request):
-        exchanges = DirectExchange.objects.prefetch_related(
-            Prefetch(
-                'directexchangeparticipants_set',
-                queryset=DirectExchangeParticipants.objects.all(),
-                to_attr='options'
-            )
-        ).filter(
-            directexchangeparticipants__participant_nmec=request.user.username
-        ).all()
+        exchange_participants = DirectExchangeParticipants.objects.filter(
+            participant_nmec=request.user.username
+        )
+
+        exchanges = DirectExchange.objects.filter(
+            id__in=exchange_participants.values_list("direct_exchange", flat=True).distinct()
+        )
 
         return JsonResponse(self.build_pagination_payload(request, exchanges), safe=False)
 

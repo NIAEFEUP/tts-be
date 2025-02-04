@@ -51,7 +51,7 @@ class MarketplaceExchangeView(APIView):
                     'marketplaceexchangeclass_set',
                     to_attr='options'
                 )
-                ).exclude(issuer_nmec=request.user.username, canceled=False, accepted=False).all())
+                ).exclude(issuer_nmec=request.user.username, canceled=False, accepted=False).distinct())
 
         marketplace_exchanges = self.remove_invalid_dest_class_exchanges(marketplace_exchanges, request.user.username)
         marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
