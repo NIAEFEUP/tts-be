@@ -5,12 +5,12 @@ from university.models import StudentCourseMetadata, Course, CourseUnit
 from university.serializers.StudentCourseMetadataSerializer import StudentCourseMetadataSerializer
 
 class StudentCourseMetadataView(APIView):
-    def get(self, request, nmec, course_unit_id):
-        course_unit = CourseUnit.objects.get(pk=course_unit_id)
+    def get(self, request, nmec, course_id):
+        course = Course.objects.get(pk=course_id)
 
         student_course_metadata = list(StudentCourseMetadata.objects.filter(
             nmec = f"{nmec}",
-            course__id = course_unit.course.id
+            course__id = course.id
         ).all())
 
 

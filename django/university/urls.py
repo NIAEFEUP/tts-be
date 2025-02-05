@@ -43,7 +43,7 @@ urlpatterns = [
     path('student/<str:nmec>/schedule', exchange_admin_required(StudentScheduleView.as_view()), name="student-schedule"),
     path('student/exchange/sent/', StudentSentExchangesView.as_view()),
     path('student/exchange/received/', StudentReceivedExchangesView.as_view()),
-    path('student/<str:nmec>/<int:course_unit_id>/metadata', exchange_admin_required(StudentCourseMetadataView.as_view())),
+    path('student/<str:nmec>/<int:course_id>/metadata', exchange_admin_required(StudentCourseMetadataView.as_view())),
     path('student/course_units/eligible', StudentEligibleCourseUnits.as_view()),
     path('student/<str:nmec>/photo', StudentPhotoView.as_view()),
     path('exchange/verify/<str:token>', ExchangeVerifyView.as_view()),
