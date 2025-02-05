@@ -97,7 +97,7 @@ class StudentScheduleView(APIView):
 
         sigarra_synchronized = old_schedule == new_schedule
 
-        new_response = JsonResponse({"schedule": convert_sigarra_schedule(schedule_data), "noChanges": sigarra_synchronized}, safe=False)
+        new_response = JsonResponse({"schedule": schedule_data, "noChanges": sigarra_synchronized}, safe=False)
         new_response.status_code = sigarra_res.status_code
 
         return new_response

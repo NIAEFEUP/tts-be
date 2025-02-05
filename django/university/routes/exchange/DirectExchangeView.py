@@ -106,13 +106,15 @@ class DirectExchangeView(View):
         exchange_choices = request.POST.getlist('exchangeChoices[]')
         exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
 
+        print("VOU-ME MATAR: ", student_schedules[username])
+
         # Add the other students schedule to the dictionary
         (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges)
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return HttpResponse(status=trailing)
         # Update student schedule with exchange updates that are not in sigarra currently
         for student in student_schedules.keys():
-            student_schedule = list(student_schedules[student].values())
+            student_schedule = student_schedules[student].values()
             ExchangeController.update_schedule_accepted_exchanges(student, student_schedule)
             student_schedules[student] = build_student_schedule_dict(student_schedule)
 
@@ -181,6 +183,7 @@ class DirectExchangeView(View):
 
     def put(self, request, id):
         # Validate if exchange is still valid
+        # fetches from sigarra
         if not ExchangeValidationController().validate_direct_exchange(id).status:
             ExchangeValidationController().cancel_exchange(DirectExchange.objects.get(id=id))
             return JsonResponse({"error": ExchangeValidationController().validate_direct_exchange(id).message}, status=400, safe=False)
@@ -202,6 +205,7 @@ class DirectExchangeView(View):
 
                     for participant in participants:
                         StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
+                        
 
                     ExchangeValidationController().cancel_conflicting_exchanges(exchange.id)
 

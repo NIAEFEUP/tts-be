@@ -5,7 +5,6 @@ from university.models import CourseUnit, DirectExchangeParticipants
 from university.controllers.ClassController import ClassController
 
 from university.controllers.SigarraController import SigarraController
-from university.exchange.utils import convert_sigarra_schedule
 
 class DirectExchangeSerializer(serializers.Serializer):
     id = serializers.IntegerField()

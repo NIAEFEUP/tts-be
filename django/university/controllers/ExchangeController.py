@@ -143,15 +143,21 @@ class ExchangeController:
         Checks if schedule for a user with a given username has overlpas
     """
     @staticmethod
-    def exchange_overlap(student_schedules, username) -> bool:
-        
+    def exchange_overlap(student_schedules, username, from_local_db: bool = False) -> bool:
+
         for (key, class_schedule) in student_schedules[username].items():
             for (other_key, other_class_schedule) in student_schedules[username].items():
                 if key == other_key:
                     continue
 
-                (class_schedule_day, class_schedule_start, class_schedule_end, class_schedule_type) = (class_schedule["dia"], class_schedule["hora_inicio"] / 3600, class_schedule["aula_duracao"] + class_schedule["hora_inicio"] / 3600, class_schedule['tipo'])
-                (overlap_param_day, overlap_param_start, overlap_param_end, overlap_param_type) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"] / 3600, other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"] / 3600, other_class_schedule['tipo'])
+                print("CLASS SCHEDULE: ", class_schedule)
+                print("OTHER CLASS SCHEDULE: ", other_class_schedule)
+
+                class_slot = class_schedule["classInfo"]["slots"][0]
+                other_class_slot = other_class_schedule["classInfo"]["slots"][0]
+
+                (class_schedule_day, class_schedule_start, class_schedule_end, class_schedule_type) = (class_slot["day"], class_slot["start_time"], class_slot["duration"] + class_slot["start_time"], class_slot['lesson_type'])
+                (overlap_param_day, overlap_param_start, overlap_param_end, overlap_param_type) = (other_class_slot["day"], other_class_slot["start_time"], other_class_slot["duration"] + other_class_slot["start_time"], other_class_slot['lesson_type'])
 
                 if (check_class_mandatory(class_schedule_type) and check_class_mandatory(overlap_param_type)
                     and check_class_schedule_overlap(class_schedule_day, class_schedule_start, class_schedule_end, overlap_param_day, overlap_param_start, overlap_param_end)):
@@ -160,34 +166,39 @@ class ExchangeController:
         return False
 
     @staticmethod
-    def update_schedule_accepted_exchanges(student, schedule):
+    def update_schedule_accepted_exchanges(student, schedule, from_local_db: bool = False):
         accepted_options = DirectExchangeParticipants.objects.filter(participant_nmec=student, accepted=True, direct_exchange__canceled=False, direct_exchange__accepted=True)
-        (status, trailing) = ExchangeController.update_schedule(schedule, accepted_options) 
+        (status, trailing) = ExchangeController.update_schedule(schedule, accepted_options, from_local_db) 
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
 
         return (ExchangeStatus.SUCCESS, None)
 
-    def update_schedule(student_schedule, exchanges):
-
-        for exchange in exchanges:
-            for i, schedule in enumerate(student_schedule):
-                ocurr_id = int(schedule["ocorrencia_id"])
-
-                if ocurr_id == int(exchange.course_unit_id):
-                    class_type = schedule["tipo"]
-
-                    res = SigarraController().get_class_schedule(int(exchange.course_unit_id), exchange.class_participant_goes_to)
-                    if res.status_code != 200: 
-                        return (ExchangeStatus.FETCH_SCHEDULE_ERROR, None)
-
-                    (tp_schedule, t_schedule) = res.data
-                    tp_schedule.extend(t_schedule)
-                    new_schedules = tp_schedule
-
-                    for new_schedule in new_schedules:
-                        for turma in new_schedule["turmas"]:
-                            if turma["turma_sigla"] == exchange.class_participant_goes_to and new_schedule["tipo"] == class_type:
-                                student_schedule[i] = new_schedule
-        
+    def update_schedule(student_schedule, exchanges, from_local_db: bool = False):
+        print("UPDATING SCHEDULE: ", student_schedule)
         return (ExchangeStatus.SUCCESS, None)
+
+        # if from_local_db:
+        #     return (ExchangeStatus.SUCCESS, None)
+        # else:
+        #     for exchange in exchanges:
+        #         for i, schedule in enumerate(student_schedule):
+        #             ocurr_id = int(schedule["ocorrencia_id"])
+
+        #             if ocurr_id == int(exchange.course_unit_id):
+        #                 class_type = schedule["tipo"]
+
+        #                 res = SigarraController().get_class_schedule(int(exchange.course_unit_id), exchange.class_participant_goes_to)
+        #                 if res.status_code != 200: 
+        #                     return (ExchangeStatus.FETCH_SCHEDULE_ERROR, None)
+
+        #                 (tp_schedule, t_schedule) = res.data
+        #                 tp_schedule.extend(t_schedule)
+        #                 new_schedules = tp_schedule
+
+        #                 for new_schedule in new_schedules:
+        #                     for turma in new_schedule["turmas"]:
+        #                         if turma["turma_sigla"] == exchange.class_participant_goes_to and new_schedule["tipo"] == class_type:
+        #                             student_schedule[i] = new_schedule
+            
+        #     return (ExchangeStatus.SUCCESS, None)

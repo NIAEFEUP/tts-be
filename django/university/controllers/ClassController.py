@@ -28,6 +28,19 @@ class ClassController:
         }
 
     @staticmethod
+    def get_schedule_from_class(class_):
+        slot_ids = [sc.slot_id for sc in class_.slotclass_set.all()]
+        slots = Slot.objects.filter(id__in=slot_ids)
+
+        slot_list = list(map(ClassController.get_professors, slots))
+
+        return {
+            'id': class_.id,
+            'name': class_.name,
+            'slots': slot_list
+        }
+
+    @staticmethod
     def get_classes(course_unit_id: int):
         classes = Class.objects.filter(course_unit=course_unit_id).select_related(
             'course_unit').prefetch_related('slotclass_set__slot').order_by("name")

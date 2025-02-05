@@ -1,8 +1,11 @@
 import requests
 import json
 
+from django.utils import timezone
 from datetime import date
 from tts_be.settings import CONFIG
+
+from university.models import CourseUnit, Professor
 
 class SigarraResponse:
     def __init__(self, data, status_code):
@@ -79,6 +82,47 @@ class SigarraController:
             "course_name": course["cur_nome"]
         }, courses))
 
+    def convert_sigarra_schedule(self, schedule_data):
+        new_schedule_data = []
+            
+        for schedule in schedule_data:
+            course_unit = CourseUnit.objects.filter(id=schedule['ocorrencia_id'])[0]
+            professors = []
+            for docente in schedule['docentes']:
+                professor = Professor.objects.filter(id=docente['doc_codigo'])
+                if(len(professor) < 1):
+                    continue
+                professors.append({"name": docente['doc_nome'], "acronym": professor[0].professor_acronym})
+
+            new_schedule = {
+                'courseInfo': {
+                    'id': schedule['ocorrencia_id'],
+                    'course_unit_id': schedule['ocorrencia_id'],
+                    'acronym': course_unit.acronym,
+                    'name': course_unit.name,
+                    'url': course_unit.url
+                },
+                'classInfo': {
+                    'id': schedule['ocorrencia_id'],
+                    'name': schedule['turma_sigla'],
+                    'filteredTeachers': [],
+                    'slots': [{
+                        'id': schedule['ocorrencia_id'],
+                        'lesson_type': schedule["tipo"],
+                        'day': schedule['dia'] - 2,
+                        'start_time': schedule['hora_inicio'] / 3600,
+                        'duration': schedule['aula_duracao'],
+                        'location': schedule['sala_sigla'],
+                        'professors_link': '',
+                        'professors': professors
+                    }],
+                }
+            }
+
+            new_schedule_data.append(new_schedule)
+
+        return new_schedule_data
+
     def login(self):
         try:
             response = requests.post("https://sigarra.up.pt/feup/pt/mob_val_geral.autentica/", data={
@@ -102,7 +146,7 @@ class SigarraController:
         if(response.status_code != 200):
             return SigarraResponse(None, response.status_code)
 
-        return SigarraResponse(response.json()['horario'], response.status_code)
+        return SigarraResponse(self.convert_sigarra_schedule(response.json()['horario']), response.status_code)
 
     def get_student_course_units(self, nmec: int) -> SigarraResponse:
         schedule = self.get_student_schedule(nmec)

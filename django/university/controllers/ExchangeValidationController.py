@@ -1,9 +1,11 @@
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
+from university.controllers.StudentScheduleController import StudentScheduleController
+from university.controllers.ClassController import ClassController
 
 from university.exchange.utils import exchange_overlap, build_student_schedule_dict, ExchangeStatus, exchange_status_message
 
-from university.models import DirectExchangeParticipants, DirectExchange
+from university.models import DirectExchangeParticipants, DirectExchange, UserCourseUnits, Class
 
 from django.db import transaction
 
@@ -71,11 +73,13 @@ class ExchangeValidationController:
         # 1. Build new schedule of each student
         schedule = {}
         for participant in exchange_participants:
+            has_participant_schedule_in_local_db = UserCourseUnits.objects.filter(user_nmec=participant.participant_nmec).exists()
             if participant.participant_nmec not in schedule.keys():
-                schedule[participant.participant_nmec] = build_student_schedule_dict(SigarraController().get_student_schedule(int(participant.participant_nmec)).data)
+                fetched_schedule = StudentScheduleController.getSchedule(int(participant.participant_nmec))
+                schedule[participant.participant_nmec] = build_student_schedule_dict(fetched_schedule, from_local_db=has_participant_schedule_in_local_db)
 
             # Get new schedule from accepted changes
-            ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, list(schedule[participant.participant_nmec].values()))
+            ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, list(schedule[participant.participant_nmec].values()), from_local_db=has_participant_schedule_in_local_db)
 
         # 2. Check if users are inside classes they will exchange from with
         for username in schedule.keys():
@@ -86,14 +90,19 @@ class ExchangeValidationController:
                     return ExchangeValidationResponse(False, ExchangeStatus.STUDENTS_NOT_ENROLLED)
 
                 # 3. Alter the schedule of the users according to the exchange metadata 
-                class_schedule = SigarraController().get_class_schedule(int(entry.course_unit_id), entry.class_participant_goes_to).data[0][0] # For other courses we will need to have pratical class as a list in the dictionary
+                # class_schedule = SigarraController().get_class_schedule(int(entry.course_unit_id), entry.class_participant_goes_to).data[0][0] # For other courses we will need to have pratical class as a list in the dictionary
+                class_ = Class.objects.filter(name=entry.class_participant_goes_to, course_unit__id=entry.course_unit_id).first()
+                class_schedule = StudentScheduleController.getScheduleFromClass(class_)
+
+                print("TENHO A CERTEZA QUE TEM A HAVER COM ISTO: ", class_schedule)
 
                 schedule[username][(entry.class_participant_goes_to, int(entry.course_unit_id))] = class_schedule
                 del schedule[username][(entry.class_participant_goes_from, int(entry.course_unit_id))]
 
         # 4. Verify if the exchanges will have overlaps after building the new schedules
         for username in schedule.keys():
-            if ExchangeController.exchange_overlap(schedule, username):
+            has_username_schedule_in_local_db = UserCourseUnits.objects.filter(user_nmec=username).exists()
+            if ExchangeController.exchange_overlap(schedule, username, has_username_schedule_in_local_db):
                 return ExchangeValidationResponse(False, ExchangeStatus.CLASSES_OVERLAP)
 
         return ExchangeValidationResponse(True, ExchangeStatus.SUCCESS)
