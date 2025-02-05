@@ -160,7 +160,6 @@ class ExchangeController:
     @staticmethod
     def update_schedule_accepted_exchanges(student, schedule):
         accepted_options = DirectExchangeParticipants.objects.filter(participant_nmec=student, accepted=True, direct_exchange__accepted=True)
-
         (status, trailing) = ExchangeController.update_schedule(schedule, accepted_options) 
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
@@ -168,9 +167,11 @@ class ExchangeController:
         return (ExchangeStatus.SUCCESS, None)
 
     def update_schedule(student_schedule, exchanges):
+
         for exchange in exchanges:
             for i, schedule in enumerate(student_schedule):
                 ocurr_id = int(schedule["ocorrencia_id"])
+
                 if ocurr_id == int(exchange.course_unit_id):
                     class_type = schedule["tipo"]
 
@@ -186,5 +187,5 @@ class ExchangeController:
                         for turma in new_schedule["turmas"]:
                             if turma["turma_sigla"] == exchange.class_participant_goes_to and new_schedule["tipo"] == class_type:
                                 student_schedule[i] = new_schedule
-
+        
         return (ExchangeStatus.SUCCESS, None)

@@ -75,7 +75,7 @@ class ExchangeValidationController:
                 schedule[participant.participant_nmec] = build_student_schedule_dict(SigarraController().get_student_schedule(int(participant.participant_nmec)).data)
 
             # Get new schedule from accepted changes
-            ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, schedule)
+            ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, list(schedule[participant.participant_nmec].values()))
 
         # 2. Check if users are inside classes they will exchange from with
         for username in schedule.keys():
