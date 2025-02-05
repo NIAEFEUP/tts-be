@@ -83,7 +83,11 @@ class DirectExchangeView(View):
             if request.GET.get(filter):
                 direct_exchanges = self.filter_actions[filter](direct_exchanges, request.GET.get(filter))
 
-        return JsonResponse(direct_exchanges, safe=False)
+        return JsonResponse({
+            "exchanges": direct_exchanges,
+            "total_pages": paginator.num_pages
+        }
+        , safe=False)
 
     def post(self, request):
         student_schedules = {}
