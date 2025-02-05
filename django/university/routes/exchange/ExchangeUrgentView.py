@@ -67,5 +67,8 @@ class ExchangeUrgentView(View):
             if request.GET.get(filter):
                 exchanges = self.filter_actions[filter](exchanges, request.GET.get(filter))
 
-        return JsonResponse(exchanges, safe=False)
+        return JsonResponse({
+            "exchanges": exchanges,
+            "total_pages": paginator.num_pages
+        }, safe=False)
     

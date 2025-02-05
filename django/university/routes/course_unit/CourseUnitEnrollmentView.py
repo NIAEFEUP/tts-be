@@ -66,7 +66,10 @@ class CourseUnitEnrollmentView(APIView):
             if request.GET.get(filter):
                 enrollments = self.filter_actions[filter](enrollments, request.GET.get(filter))
 
-        return JsonResponse(enrollments, safe=False)
+        return JsonResponse({
+            "enrollments": enrollments,
+            "total_pages": paginator.num_pages
+        }, safe=False)
 
     def post(self, request):
         enrollments = request.POST.getlist("enrollCourses[]")
