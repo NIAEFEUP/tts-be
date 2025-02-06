@@ -30,10 +30,10 @@ class ExchangeVerifyView(View):
                 return JsonResponse({"verified": False}, safe=False, status=403)
 
             with transaction.atomic():
-                participant = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
+                participant = DirectExchangeParticipants.objects.filter(participant_nmec=request.user.username)
                 participant.update(accepted=True)
 
-                all_participants = DirectExchangeParticipants.objects.filter(direct_exchange_id=exchange_info["exchange_id"])
+                all_participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=exchange_info["exchange_id"])
             
                 accepted_participants = 0
                 for participant in all_participants:
