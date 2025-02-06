@@ -17,7 +17,7 @@ from university.models import UserCourseUnits
 class StudentScheduleView(APIView):
     def get(self, request, nmec=""):
         username = nmec if nmec != "" else request.user.username
-        
+
         try:
             student_course_units = list(UserCourseUnits.objects.filter(user_nmec=username))
 
