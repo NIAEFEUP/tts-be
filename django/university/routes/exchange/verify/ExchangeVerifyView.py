@@ -21,19 +21,25 @@ class ExchangeVerifyView(View):
 
             direct_exchange = DirectExchange.objects.get(id=exchange_info["exchange_id"])
 
+            if(
+                len(DirectExchangeParticipants.objects.filter(direct_exchange=direct_exchange, participant_nmec=request.user.username, accepted=True)) ==
+                len(DirectExchangeParticipants.objects.filter(direct_exchange=direct_exchange, participant_nmec=request.user.username))
+            ):
+                return JsonResponse({"verified": True}, safe=False)
+
             if not ExchangeValidationController().validate_direct_exchange(exchange_info["exchange_id"]).status:
                 ExchangeValidationController().cancel_exchange(direct_exchange)
                 return JsonResponse({"verified": False}, safe=False, status=403)
         
             token_seconds_elapsed = time.time() - exchange_info["exp"]
             if token_seconds_elapsed > VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS:
-                return JsonResponse({"verified": False}, safe=False, status=403)
+                return JsonResponse({"verified": False}, safe=False, status=400)
 
             with transaction.atomic():
-                participant = DirectExchangeParticipants.objects.filter(participant=request.session["username"])
+                participant = DirectExchangeParticipants.objects.filter(participant_nmec=request.user.username)
                 participant.update(accepted=True)
 
-                all_participants = DirectExchangeParticipants.objects.filter(direct_exchange_id=exchange_info["exchange_id"])
+                all_participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=exchange_info["exchange_id"])
             
                 accepted_participants = 0
                 for participant in all_participants:
