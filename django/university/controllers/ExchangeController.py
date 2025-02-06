@@ -118,10 +118,11 @@ class ExchangeController:
                 participant_nmec=curr_exchange["other_student"]["mecNumber"],
                 class_participant_goes_from=ExchangeController.getStudentClass(student_schedules, other_student, curr_exchange["courseUnitId"]),
                 class_participant_goes_to=curr_exchange["classNameRequesterGoesFrom"],
-                course_unit=course_unit,
+                course_unit=course_unit.acronym,
                 course_unit_id=curr_exchange["courseUnitId"],
                 direct_exchange=exchange_db_model,
-                accepted=False
+                accepted=False,
+                date=timezone.now()
             ))
 
             inserted_exchanges.append(DirectExchangeParticipants(
@@ -129,10 +130,11 @@ class ExchangeController:
                 participant_nmec=auth_user,
                 class_participant_goes_from=curr_exchange["classNameRequesterGoesFrom"], # This is not a typo, the old class of the authenticted student is the new class of the other student
                 class_participant_goes_to=curr_exchange["classNameRequesterGoesTo"],
-                course_unit=course_unit,
+                course_unit=course_unit.acronym,
                 course_unit_id=curr_exchange["courseUnitId"],
                 direct_exchange=exchange_db_model,
-                accepted=False
+                accepted=False,
+                date=timezone.now()
             ))
 
         return (ExchangeStatus.SUCCESS, None)
