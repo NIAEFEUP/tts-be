@@ -15,7 +15,6 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, DOMAIN
 
-from university.controllers.DirectExchangeController import DirectExchangeController
 from university.controllers.CourseUnitController import CourseUnitController
 from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController
 from university.controllers.ExchangeController import ExchangeController
