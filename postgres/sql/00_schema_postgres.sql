@@ -24,12 +24,11 @@ SET row_security = off;
 --
 
 CREATE TABLE "public"."class" (
-    "id" bigint NOT NULL,
+    "id" bigint NOT NULL UNIQUE,
     "name" character varying(31) NOT NULL,
     "course_unit_id" integer NOT NULL,
     "last_updated" timestamp with time zone NOT NULL
 );
-
 
 --
 -- TOC entry 223 (class 1259 OID 16797)
@@ -59,7 +58,7 @@ ALTER SEQUENCE "public"."class_id_seq" OWNED BY "public"."class"."id";
 --
 
 CREATE TABLE "public"."course" (
-    "id" integer NOT NULL,
+    "id" integer NOT NULL UNIQUE,
     "faculty_id" character varying(10) NOT NULL,
     "name" character varying(200) NOT NULL,
     "acronym" character varying(10) NOT NULL,
@@ -90,7 +89,7 @@ CREATE TABLE "public"."course_metadata" (
 --
 
 CREATE TABLE "public"."course_unit" (
-    "id" integer NOT NULL,
+    "id" integer NOT NULL UNIQUE,
     "course_id" integer NOT NULL,
     "name" character varying(200) NOT NULL,
     "acronym" character varying(16) NOT NULL,
@@ -154,7 +153,6 @@ CREATE TABLE "public"."slot" (
     "last_updated" timestamp with time zone NOT NULL
 );
 
-
 --
 -- TOC entry 226 (class 1259 OID 16811)
 -- Name: slot_class; Type: TABLE; Schema: public; Owner: -
@@ -176,7 +174,124 @@ CREATE TABLE "public"."slot_professor" (
     "professor_id" integer NOT NULL
 );
 
+CREATE TABLE "public"."marketplace_exchange" (
+  "id" SERIAL PRIMARY KEY, 
+  "issuer_name" varchar(256) NOT NULL,
+  "issuer_nmec" varchar(32) NOT NULl,
+  "accepted" boolean NOT NULL,
+  "canceled" boolean DEFAULT false,
+  "date" TIMESTAMP DEFAULT now(), 
+  "hash" varchar(64) UNIQUE
+);
 
+CREATE TABLE "public"."direct_exchange" (
+  "id" SERIAL PRIMARY KEY,
+  "issuer_name" varchar(32) NOT NULL,
+  "issuer_nmec" varchar(32) NOT NULL,
+  "accepted" boolean NOT NULL,
+  "canceled" boolean DEFAULT false,
+  "date" TIMESTAMP DEFAULT now(),
+  "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
+  "marketplace_exchange" INTEGER REFERENCES "public"."marketplace_exchange"("id"),
+  "hash" varchar(64) UNIQUE
+);
+
+CREATE TABLE "public"."direct_exchange_participants" (
+  "id" SERIAL PRIMARY KEY,
+  "participant_name" varchar(32) NOT NULL,
+  "participant_nmec" varchar(32) NOT NULL,
+  "class_participant_goes_from" varchar(16) NOT NULL,
+  "class_participant_goes_to" varchar(16) NOT NULL,
+  "course_unit" varchar(64) NOT NULL,
+  "course_unit_id" varchar(16) NOT NULL,
+  "direct_exchange" INTEGER NOT NULL REFERENCES "public"."direct_exchange"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "accepted" boolean NOT NULL,
+  "date" TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE "public"."marketplace_exchange_class" (
+    "id" SERIAL PRIMARY KEY, 
+    "marketplace_exchange" INTEGER NOT NULL REFERENCES "public"."marketplace_exchange"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "course_unit_name" varchar(256) NOT NULL,
+    "course_unit_acronym" varchar(256) NOT NULL,
+    "course_unit_id" varchar(256) NOT NULL,
+    "class_issuer_goes_from" varchar(16) NOT NULL,
+    "class_issuer_goes_to" varchar(16) NOT NULL,
+    "date" TIMESTAMP DEFAULT now()
+); 
+
+CREATE TABLE "public"."exchange_expirations"(
+  "id" SERIAL PRIMARY KEY,
+  "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "active_date" TIMESTAMP WITH TIME ZONE NOT NULL,
+  "end_date" TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE TABLE "public"."exchange_admin" (
+  "id" SERIAL PRIMARY KEY,
+  "username" varchar(32) NOT NULL UNIQUE
+); 
+
+CREATE TABLE "public"."exchange_admin_courses" (
+    "id" SERIAL PRIMARY KEY,
+    "exchange_admin_id" INTEGER NOT NULL REFERENCES "public"."exchange_admin"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "course_id" INTEGER NOT NULL REFERENCES "public"."course"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "public"."exchange_admin_course_units" (
+    "id" SERIAL PRIMARY KEY,
+    "exchange_admin_id" INTEGER NOT NULL REFERENCES "public"."exchange_admin"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "public"."user_course_units" (
+    "id" SERIAL PRIMARY KEY,
+    "user_nmec" varchar(32) NOT NULL,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "class_id" INTEGER NOT NULL REFERENCES "public"."class"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "public"."exchange_urgent_requests" (
+    "id" SERIAL PRIMARY KEY,
+    "user_nmec" varchar(32) NOT NULL,
+    "message" varchar(2048) NOT NULL,
+    "accepted" boolean DEFAULT false,
+    "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
+    "date" TIMESTAMP DEFAULT now(),
+    "hash" varchar(64) UNIQUE
+);
+
+CREATE TABLE "public"."exchange_urgent_request_options" (
+    id SERIAL PRIMARY KEY,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "class_user_goes_from" varchar(16) NOT NULL,
+    "class_user_goes_to" varchar(16) NOT NULL,
+    "exchange_urgent_request_id" INTEGER NOT NULL REFERENCES "public"."exchange_urgent_requests"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "date" TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE "public"."course_unit_enrollments" (
+    "id" SERIAL PRIMARY KEY,
+    "user_nmec" varchar(32) NOT NULL,
+    "accepted" boolean DEFAULT false,
+    "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
+    "date" TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE "public"."course_unit_enrollment_options" (
+    id SERIAL PRIMARY KEY,
+    "course_unit_id" INTEGER NOT NULL REFERENCES "public"."course_unit"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "enrolling" boolean DEFAULT true,
+    "course_unit_enrollment_id" INTEGER NOT NULL REFERENCES "public"."course_unit_enrollments"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    "date" TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE "public"."student_course_metadata"(
+    "id" SERIAL PRIMARY KEY,
+    "nmec" VARCHAR(255) NOT NULL,
+    "fest_id" INTEGER NOT NULL,
+    "course_id" INTEGER NOT NULL REFERENCES "public"."course"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
 --
 -- TOC entry 3276 (class 2604 OID 16801)
 -- Name: class id; Type: DEFAULT; Schema: public; Owner: -

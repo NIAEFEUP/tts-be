@@ -1,3 +1,6 @@
+from django.utils import timezone
+from django.http.response import HttpResponse
+from university.exchange.utils import get_student_data
 from university.models import Faculty
 from university.models import Course
 from university.models import CourseUnit
@@ -5,19 +8,27 @@ from university.models import Professor
 from university.models import SlotProfessor
 from university.models import CourseMetadata
 from university.models import Info
+from university.models import Info
 from university.controllers.ClassController import ClassController
 from university.response.errors import course_unit_not_found_error
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
+import requests
 from rest_framework import status
+from django.core.mail import send_mail
 
-import os
 from django.utils import timezone
 from django.forms.models import model_to_dict
 
 
 def get_field(value):
     return value.field
+
+@api_view(['GET'])
+def emailtest(request):
+    send_mail("subject", "message", "from_email", ["recipient_list"])
+    
+    return HttpResponse()
 
 
 @api_view(['GET'])
@@ -72,16 +83,12 @@ def course_units(request, course_id, year, semester):
 
     return JsonResponse(json_data, safe=False)
 
-
 """
     Returns the classes of a course unit.
 """
-
-
 @ api_view(['GET'])
 def classes(request, course_unit_id):
     return JsonResponse(ClassController.get_classes(course_unit_id), safe=False)
-
 
 """
     Returns all the professors of a class of the class id
@@ -121,15 +128,31 @@ def info(request):
     else:
         return JsonResponse({}, safe=False)
 
+"""
+    Returns student data
+"""    
+@api_view(["GET"])
+def student_data(request, codigo):
+    try:
+        response = get_student_data(codigo, request.COOKIES)
+
+        if(response.status_code != 200):
+            return HttpResponse(status=response.status_code)
+
+        new_response = JsonResponse(response.json(), safe=False)
+
+        new_response.status_code = response.status_code
+
+        return new_response
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": e}, safe=False)
 
 """
     Verifies if course units have the correct hash
 """
-
-
 @api_view(['GET'])
 def get_course_unit_hashes(request):
-
     ids_param = request.query_params.get('ids', '')
 
     try:
