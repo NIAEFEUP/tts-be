@@ -126,8 +126,8 @@ class ExchangeController:
             ))
 
             inserted_exchanges.append(DirectExchangeParticipants(
-                participant_name=auth_user,
-                participant_nmec=auth_user,
+                participant_name=f"{auth_user.first_name} {auth_user.last_name}",
+                participant_nmec=auth_user.username,
                 class_participant_goes_from=curr_exchange["classNameRequesterGoesFrom"], # This is not a typo, the old class of the authenticted student is the new class of the other student
                 class_participant_goes_to=curr_exchange["classNameRequesterGoesTo"],
                 course_unit=course_unit.acronym,

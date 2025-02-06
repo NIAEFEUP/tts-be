@@ -136,7 +136,7 @@ class DirectExchangeView(View):
 
             inserted_exchanges = []
             ExchangeController.create_direct_exchange_participants(
-                student_schedules, exchanges, inserted_exchanges, exchange_model, request.user.username
+                student_schedules, exchanges, inserted_exchanges, exchange_model, request.user
             )
 
             # Change the schedules to the final result of the exchange so it is easier to detect overlaps

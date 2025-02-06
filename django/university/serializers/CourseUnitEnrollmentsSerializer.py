@@ -1,10 +1,9 @@
 from django.forms.models import model_to_dict
 from rest_framework import serializers
 
-from university.models import CourseUnitEnrollmentOptions, CourseUnit
+from university.models import CourseUnitEnrollmentOptions, CourseUnit, Course
 from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
-from university.exchange.utils import convert_sigarra_schedule
 
 class CourseUnitEnrollmentsSerializer(serializers.Serializer):
     id = serializers.IntegerField()
@@ -21,6 +20,14 @@ class CourseUnitEnrollmentsSerializer(serializers.Serializer):
 class CourseUnitEnrollmentOptionsSerializer(serializers.Serializer):
     course_unit = serializers.SerializerMethodField()
     enrolling = serializers.BooleanField()
+    course = serializers.SerializerMethodField()
+
+    def get_course(self, obj):
+        try:
+            course_unit = CourseUnit.objects.get(id=obj.course_unit.id)
+            return model_to_dict(course_unit.course)
+        except:
+            return None
 
     def get_course_unit(self, obj):
         course_unit_id = obj.course_unit.id
