@@ -2,6 +2,7 @@ import json
 import jwt
 import datetime
 import hashlib
+import os
 
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -168,11 +169,11 @@ class DirectExchangeView(View):
             
             filtered_exchanges = [inserted_exchange for inserted_exchange in inserted_exchanges if inserted_exchange.participant_nmec == participant_num]
 
-            html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}tts/verify_direct_exchange/{token}", 'exchanges': filtered_exchanges})
+            html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}/exchange/verify/{token}", 'exchanges': filtered_exchanges})
             send_mail(
                 'Confirmação de troca',
                 strip_tags(html_message),
-                'tts@exchange.com',
+                os.getenv('SENDER_EMAIL_ADDRESS'),
                 [f'up{participant_num}@up.pt']
             )
         
