@@ -192,6 +192,7 @@ CREATE TABLE "public"."direct_exchange" (
   "canceled" boolean DEFAULT false,
   "date" TIMESTAMP DEFAULT now(),
   "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
+  "marketplace_exchange" INTEGER REFERENCES "public"."marketplace_exchange"("id"),
   "hash" varchar(64) UNIQUE
 );
 

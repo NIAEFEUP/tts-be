@@ -1,7 +1,4 @@
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
-from university.controllers.SigarraController import SigarraController
-from university.controllers.StudentController import StudentController
-from university.models import UserCourseUnits, Class
 
 class CustomOIDCAuthentationBackend(OIDCAuthenticationBackend):
     

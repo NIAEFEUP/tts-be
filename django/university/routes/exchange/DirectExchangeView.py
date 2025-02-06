@@ -19,7 +19,7 @@ from university.controllers.CourseUnitController import CourseUnitController
 from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.models import DirectExchange, DirectExchangeParticipants, DirectExchangeParticipants, ExchangeAdmin
+from university.models import DirectExchange, DirectExchangeParticipants, DirectExchangeParticipants, ExchangeAdmin, MarketplaceExchange, MarketplaceExchangeClass
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
 from university.controllers.ExchangeValidationController import ExchangeValidationController
 from university.controllers.StudentController import StudentController
@@ -106,6 +106,8 @@ class DirectExchangeView(View):
         exchange_choices = request.POST.getlist('exchangeChoices[]')
         exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
 
+        marketplace_id = exchanges[0].get("marketplace_id", None)
+
         # Add the other students schedule to the dictionary
         (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges)
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
@@ -131,7 +133,8 @@ class DirectExchangeView(View):
                 date=timezone.now(),
                 admin_state="untreated",
                 canceled=False,
-                hash=exchange_hash 
+                hash=exchange_hash,
+                marketplace_exchange=None if not marketplace_id else MarketplaceExchange.objects.get(id=marketplace_id)
             )
 
             inserted_exchanges = []
@@ -202,6 +205,9 @@ class DirectExchangeView(View):
 
                     for participant in participants:
                         StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
+
+                    if exchange.marketplace_exchange:
+                        exchange.marketplace_exchange.delete() 
 
                     ExchangeValidationController().cancel_conflicting_exchanges(exchange.id)
 

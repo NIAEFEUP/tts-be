@@ -3,6 +3,8 @@ import hashlib
 
 from django.utils import timezone
 
+from django.db.models import Q
+
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
@@ -21,7 +23,7 @@ from university.serializers.MarketplaceExchangeClassSerializer import Marketplac
 class MarketplaceExchangeView(APIView):
     def build_pagination_payload(self, request, exchanges):
         page_number = request.GET.get("page")
-        paginator = Paginator(exchanges, 10)
+        paginator = Paginator(exchanges, 15)
         page_obj = paginator.get_page(page_number if page_number != None else 1)
 
         return {
@@ -51,11 +53,12 @@ class MarketplaceExchangeView(APIView):
                     'marketplaceexchangeclass_set',
                     to_attr='options'
                 )
-                ).exclude(issuer_nmec=request.user.username, canceled=False, accepted=False).distinct())
+                ).exclude(Q(issuer_nmec=request.user.username) | Q(canceled=True) | Q(accepted=True)).distinct())
 
         marketplace_exchanges = self.remove_invalid_dest_class_exchanges(marketplace_exchanges, request.user.username)
+
         marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
-        
+
         if course_unit_name_filter:
             marketplace_exchanges = list(filter(
                 lambda x: ExchangeController.courseUnitNameFilterInExchangeOptions(x.options, course_unit_name_filter),
@@ -72,11 +75,15 @@ class MarketplaceExchangeView(APIView):
 
         exchanges_with_valid_dest_class = []
         for exchange in marketplace_exchanges:
+            add_to_result = False
             for option in exchange.options:
                 course_unit_id = option.course_unit_id
                 class_issuer_goes_to = option.class_issuer_goes_to
                 if Class.objects.filter(course_unit_id=course_unit_id, name=class_issuer_goes_to).get().id == user_ucs_map[int(course_unit_id)].class_field.id:
-                    exchanges_with_valid_dest_class.append(exchange)
+                    add_to_result = True
+            
+            if add_to_result:
+                exchanges_with_valid_dest_class.append(exchange)
 
         return exchanges_with_valid_dest_class
 
