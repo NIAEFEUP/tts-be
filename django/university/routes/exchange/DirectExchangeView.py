@@ -173,7 +173,7 @@ class DirectExchangeView(View):
             
             filtered_exchanges = [inserted_exchange for inserted_exchange in inserted_exchanges if inserted_exchange.participant_nmec == participant_num]
 
-            base64_token = base64.b64encode(token.encode('utf-8')).decode('utf-8')
+            base64_token = base64.b64encode(tokens_to_generate[participant_num].encode('utf-8')).decode('utf-8')
             html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}/exchange/verify/{base64_token}", 'exchanges': filtered_exchanges})
             try:
                 send_mail(
