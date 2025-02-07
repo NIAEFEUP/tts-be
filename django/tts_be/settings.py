@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import os 
 from dotenv import dotenv_values
+from django.core import mail
 
 import logging.config
 
@@ -72,6 +73,7 @@ if not DEBUG:
 
 INSTALLED_APPS = [ 
     'corsheaders',
+    'anymail',
     'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -84,6 +86,24 @@ INSTALLED_APPS = [
     'university',
     'channels',
 ]
+
+EMAIL_HOST = os.getenv("EMAIL_HOST", "tts-mailpit")
+EMAIL_PORT = os.getenv("EMAIL_PORT", 1025)
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", None)
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", None)
+
+ANYMAIL = {
+    "MAILJET_API_KEY": CONFIG['MAILJET_API_KEY'],
+    "MAILJET_SECRET_KEY": CONFIG['MAILJET_SECRET_KEY'],
+}
+
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+else:
+    EMAIL_BACKEND = "anymail.backends.mailjet.EmailBackend"  # or sendgrid.EmailBackend, or...
+
+DEFAULT_FROM_EMAIL = CONFIG['SENDER_EMAIL_ADDRESS']  # if you don't already have this in settings
+SERVER_EMAIL = CONFIG['SENDER_EMAIL_ADDRESS']  # if you don't already have this in settings
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -230,8 +250,3 @@ CORS_ALLOW_HEADERS = [
 ]
 
 VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS = int(os.getenv("VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS", 3600 * 24))
-
-EMAIL_HOST = os.getenv("EMAIL_HOST", "tts-mailpit")
-EMAIL_PORT = os.getenv("EMAIL_PORT", 1025)
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", None)
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", None)
