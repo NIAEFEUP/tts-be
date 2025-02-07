@@ -47,7 +47,7 @@ class SigarraController:
         return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
     
     def retrieve_student_photo(self, nmec):
-        response = requests.get(self.get_student_photo_url(nmec), cookies=self.cookies)
+        response = requests.get(self.get_student_photo_url(nmec), cookies=self.cookies, timeout=5)
 
         if response.status_code != 200:
             return SigarraResponse(None, response.status_code)
@@ -55,7 +55,7 @@ class SigarraController:
         return SigarraResponse(response.content, 200)
 
     def get_student_profile(self, nmec):
-        response = requests.get(self.student_profile_url(nmec), cookies=self.cookies)
+        response = requests.get(self.student_profile_url(nmec), cookies=self.cookies, timeout=5)
 
         if response.status_code != 200:
             return SigarraResponse(None, response.status_code)
@@ -84,7 +84,7 @@ class SigarraController:
             response = requests.post("https://sigarra.up.pt/feup/pt/mob_val_geral.autentica/", data={
                 "pv_login": self.username,  
                 "pv_password": self.password
-            })
+            }, timeout=5)
 
             self.cookies = response.cookies
         except requests.exceptions.RequestException as e:
@@ -97,7 +97,7 @@ class SigarraController:
             nmec,
             semana_ini,
             semana_fim
-        ), cookies=self.cookies)
+        ), cookies=self.cookies, timeout=5)
 
         if(response.status_code != 200):
             return SigarraResponse(None, response.status_code)
@@ -118,7 +118,7 @@ class SigarraController:
 
     def get_course_unit_classes(self, course_unit_id: int) -> SigarraResponse:
         url = f"https://sigarra.up.pt/feup/pt/mob_ucurr_geral.uc_inscritos?pv_ocorrencia_id={course_unit_id}"
-        response = requests.get(url, cookies=self.cookies)
+        response = requests.get(url, cookies=self.cookies, timeout=5)
 
         if response.status_code != 200:
             return SigarraResponse(None, response.status_code)
@@ -135,7 +135,7 @@ class SigarraController:
             course_unit_id, 
             semana_ini, 
             semana_fim
-        ), cookies=self.cookies)
+        ), cookies=self.cookies, timeout=5)
 
         if(response.status_code != 200):
             return SigarraResponse(None, response.status_code)
