@@ -27,14 +27,14 @@ class SigarraController:
     def semester_weeks(self):
         currdate = date.today()
         year = str(currdate.year)
-        first_semester = currdate.month >= 10 or currdate.month <= 2
+        first_semester = currdate.month >= 10 or currdate.month <= 1
         if first_semester: 
             semana_ini = "20241001"
             semana_fim = "20250131"
         else:
             semana_ini = year + "0210"
             semana_fim = year + "0601"
-        
+
         return (semana_ini, semana_fim)
 
     def student_profile_url(self, nmec):
