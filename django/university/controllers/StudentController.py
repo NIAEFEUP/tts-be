@@ -31,11 +31,12 @@ class StudentController:
         
         for item in course_units:
             (course_unit_id, class_acronym) = item
-            corresponding_class = Class.objects.filter(course_unit__id=course_unit_id, name=class_acronym).first()
+
+            corresponding_class = Class.objects.filter(course_unit__id=course_unit_id, name=class_acronym.split("+")[0]).first()
 
             if not corresponding_class:
                 continue
-
+            
             user_course_unit = UserCourseUnits(
                 user_nmec=nmec,
                 course_unit_id=course_unit_id, 
