@@ -17,7 +17,7 @@ class StudentScheduleController:
         ids = set()
         course_unit_classes = set()
         for scheduleItem in schedule_data:
-            if scheduleItem["tipo"] != "T" or scheduleItem["tipo"] != 'O':
+            if scheduleItem["tipo"] != "T" and scheduleItem["tipo"] != 'O':
                 if int(scheduleItem["ocorrencia_id"]) in ids:
                     continue
                 else:
