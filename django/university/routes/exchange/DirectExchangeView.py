@@ -1,4 +1,5 @@
 import json
+import base64
 import jwt
 import datetime
 import hashlib
@@ -172,7 +173,8 @@ class DirectExchangeView(View):
             
             filtered_exchanges = [inserted_exchange for inserted_exchange in inserted_exchanges if inserted_exchange.participant_nmec == participant_num]
 
-            html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}/exchange/verify/{token}", 'exchanges': filtered_exchanges})
+            base64_token = base64.b64encode(token.encode('utf-8')).decode('utf-8')
+            html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}/exchange/verify/{base64_token}", 'exchanges': filtered_exchanges})
             try:
                 send_mail(
                     'Confirmação de troca',
