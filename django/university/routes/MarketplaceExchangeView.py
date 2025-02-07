@@ -79,8 +79,9 @@ class MarketplaceExchangeView(APIView):
             for option in exchange.options:
                 course_unit_id = option.course_unit_id
                 class_issuer_goes_to = option.class_issuer_goes_to
-                if Class.objects.filter(course_unit_id=course_unit_id, name=class_issuer_goes_to).get().id == user_ucs_map[int(course_unit_id)].class_field.id:
-                    add_to_result = True
+                if int(course_unit_id) in user_ucs_map.keys():
+                    if Class.objects.filter(course_unit_id=course_unit_id, name=class_issuer_goes_to).get().id == user_ucs_map[int(course_unit_id)].class_field.id:
+                        add_to_result = True
             
             if add_to_result:
                 exchanges_with_valid_dest_class.append(exchange)
