@@ -11,7 +11,7 @@ import os
 from django.core.asgi import get_asgi_application
 
 # import socketio
-from university.socket.views import sessions_server
+# from university.socket.views import sessions_server
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tts_be.settings')
 
