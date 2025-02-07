@@ -173,12 +173,15 @@ class DirectExchangeView(View):
             filtered_exchanges = [inserted_exchange for inserted_exchange in inserted_exchanges if inserted_exchange.participant_nmec == participant_num]
 
             html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}/exchange/verify/{token}", 'exchanges': filtered_exchanges})
-            send_mail(
-                'Confirmação de troca',
-                strip_tags(html_message),
-                os.getenv('SENDER_EMAIL_ADDRESS'),
-                [f'up{participant_num}@up.pt']
-            )
+            try:
+                send_mail(
+                    'Confirmação de troca',
+                    strip_tags(html_message),
+                    os.getenv('SENDER_EMAIL_ADDRESS'),
+                    [f'up{participant_num}@up.pt']
+                )
+            except Exception as e:
+                print("Error: ", e)
         
         return JsonResponse({"success": True}, safe=False)
 
