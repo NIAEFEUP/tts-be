@@ -59,9 +59,9 @@ class ExchangeUrgentView(View):
 
         exchanges = list(map(lambda exchange: ExchangeUrgentRequestSerializer(exchange).data, ExchangeUrgentRequests.objects.all().order_by('date')))
 
-        paginator = Paginator(exchanges, 20)
+        paginator = Paginator(exchanges, 10)
         page_number = request.GET.get("page")
-        exchanges = [x for x in paginator.get_page(page_number if page_number != None else 1)]
+        exchanges = paginator.get_page(page_number)
 
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):

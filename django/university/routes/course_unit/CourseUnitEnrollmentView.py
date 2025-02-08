@@ -60,7 +60,7 @@ class CourseUnitEnrollmentView(APIView):
 
         paginator = Paginator(enrollments, 10)
         page_number = request.GET.get("page")
-        enrollments = [x for x in paginator.get_page(page_number if page_number != None else 1)]
+        enrollments = paginator.get_page(page_number)
 
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
