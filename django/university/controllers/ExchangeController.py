@@ -9,7 +9,7 @@ from university.models import DirectExchange, DirectExchangeParticipants, Exchan
 from django.utils import timezone
 from enum import Enum
 
-from university.models import UserCourseUnits
+from university.models import UserCourseUnits, Class
 
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
@@ -152,14 +152,29 @@ class ExchangeController:
 
                 (class_schedule_day, class_schedule_start, class_schedule_end, class_schedule_type) = (class_schedule["dia"], class_schedule["hora_inicio"] / 3600, class_schedule["aula_duracao"] + class_schedule["hora_inicio"] / 3600, class_schedule['tipo'])
                 (overlap_param_day, overlap_param_start, overlap_param_end, overlap_param_type) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"] / 3600, other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"] / 3600, other_class_schedule['tipo'])
-                
-                original_class = UserCourseUnits.objects.filter(user_nmec=username, course_unit__id=int(class_schedule["ocorrencia_id"])).class_field.id
-                original_other_class = UserCourseUnits.objects.filter(user_nmec=username, course_unit__id=int(other_class_schedule["ocorrencia_id"])).class_field.id
 
+                class_changed = False
+                other_class_changed = False
+
+                # Obtain ids of classes before change in the new schedule
+                original_class = UserCourseUnits.objects.filter(user_nmec=username, course_unit__id=int(class_schedule["ocorrencia_id"])).first()
+                if original_class is not None:
+                    original_class = original_class.class_field.id
+                    new_class_id = Class.objects.filter(name=class_schedule["turma_sigla"].split("+")[0], course_unit_id=int(class_schedule["ocorrencia_id"])).first().id
+                    class_changed = new_class_id != original_class    
+
+                original_other_class = UserCourseUnits.objects.filter(user_nmec=username, course_unit__id=int(other_class_schedule["ocorrencia_id"])).first()
+                if original_other_class is not None:   
+                    original_other_class = original_other_class.class_field.id
+                    # Need to check if the classes are the same as the previous ]ones or not 
+                    new_other_class_id = Class.objects.filter(name=other_class_schedule["turma_sigla"].split("+")[0], course_unit_id=int(other_class_schedule["ocorrencia_id"])).first().id
+
+                    other_class_changed = new_other_class_id != original_other_class
 
                 if (check_class_mandatory(class_schedule_type) and check_class_mandatory(overlap_param_type)
                     and check_class_schedule_overlap(class_schedule_day, class_schedule_start, class_schedule_end, overlap_param_day, overlap_param_start, overlap_param_end)):
-                    return True
+                    if class_changed or other_class_changed:
+                        return True
 
         return False
 

@@ -139,7 +139,7 @@ class MarketplaceExchangeView(APIView):
         if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
             return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
 
-        if exchange_overlap(student_schedules, curr_student):
+        if ExchangeController.exchange_overlap(student_schedules, curr_student):
             return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
         
         exchange_data_str = json.dumps(exchanges, sort_keys=True)
