@@ -56,7 +56,7 @@ class CourseUnitEnrollmentView(APIView):
         if not(is_admin):
             return HttpResponse(status=403) 
 
-        enrollments = list(map(lambda enrollment: CourseUnitEnrollmentsSerializer(enrollment).data, CourseUnitEnrollments.objects.all().order_by('date')))
+        enrollments = CourseUnitEnrollments.objects.all().order_by('date')
 
         paginator = Paginator(enrollments, 10)
         page_number = request.GET.get("page")
@@ -65,6 +65,8 @@ class CourseUnitEnrollmentView(APIView):
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
                 enrollments = self.filter_actions[filter](enrollments, request.GET.get(filter))
+
+        enrollments = CourseUnitEnrollmentsSerializer(enrollments, many=True).data
 
         return JsonResponse({
             "enrollments": enrollments,
