@@ -63,9 +63,9 @@ class ExchangeUrgentView(View):
             if request.GET.get(filter):
                 exchanges = self.filter_actions[filter](exchanges, request.GET.get(filter))
 
-        paginator = Paginator(exchanges, 20)
+        paginator = Paginator(exchanges, 10)
         page_number = request.GET.get("page")
-        exchanges = [x for x in paginator.get_page(page_number if page_number != None else 1)]
+        exchanges = paginator.get_page(page_number)
 
         exchanges = ExchangeUrgentRequestSerializer(exchanges, many=True).data
 

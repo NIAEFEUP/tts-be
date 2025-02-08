@@ -80,10 +80,9 @@ class DirectExchangeView(View):
             if request.GET.get(filter):
                 direct_exchanges = self.filter_actions[filter](direct_exchanges, request.GET.get(filter))
 
-        paginator = Paginator(direct_exchanges, 20)
+        paginator = Paginator(direct_exchanges, 10)
         page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number if page_number != None else 1)
-        direct_exchanges = [x for x in page_obj]
+        direct_exchanges = paginator.get_page(page_number)
 
         direct_exchanges = DirectExchangeSerializer(direct_exchanges, many=True).data
         
