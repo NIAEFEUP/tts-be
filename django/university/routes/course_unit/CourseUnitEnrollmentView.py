@@ -46,7 +46,7 @@ class CourseUnitEnrollmentView(APIView):
         states = state.split(",")
         return list(
             filter(
-                lambda exchange: exchange.get("admin_state") in states,
+                lambda exchange: exchange.admin_state in states,
                 exchanges
             )
         )
@@ -58,13 +58,13 @@ class CourseUnitEnrollmentView(APIView):
 
         enrollments = CourseUnitEnrollments.objects.all().order_by('date')
 
-        paginator = Paginator(enrollments, 10)
-        page_number = request.GET.get("page")
-        enrollments = [x for x in paginator.get_page(page_number if page_number != None else 1)]
-
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
                 enrollments = self.filter_actions[filter](enrollments, request.GET.get(filter))
+
+        paginator = Paginator(enrollments, 10)
+        page_number = request.GET.get("page")
+        enrollments = [x for x in paginator.get_page(page_number if page_number != None else 1)]
 
         enrollments = CourseUnitEnrollmentsSerializer(enrollments, many=True).data
 

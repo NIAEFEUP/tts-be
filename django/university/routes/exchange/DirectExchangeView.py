@@ -60,7 +60,7 @@ class DirectExchangeView(View):
         states = state.split(",")
         return list(
             filter(
-                lambda exchange: exchange.get("admin_state") in states,
+                lambda exchange: exchange.admin_state in states,
                 exchanges
             )
         )
@@ -74,17 +74,19 @@ class DirectExchangeView(View):
         if not(is_admin):
             return HttpResponse(status=403) 
 
-        direct_exchanges = list(map(lambda exchange: DirectExchangeSerializer(exchange).data, DirectExchange.objects.filter(accepted=True).order_by('date')))
+        direct_exchanges = DirectExchange.objects.filter(accepted=True).order_by('date')
+
+        for filter in AdminRequestFiltersController.filter_values():
+            if request.GET.get(filter):
+                direct_exchanges = self.filter_actions[filter](direct_exchanges, request.GET.get(filter))
 
         paginator = Paginator(direct_exchanges, 20)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number if page_number != None else 1)
         direct_exchanges = [x for x in page_obj]
 
-        for filter in AdminRequestFiltersController.filter_values():
-            if request.GET.get(filter):
-                direct_exchanges = self.filter_actions[filter](direct_exchanges, request.GET.get(filter))
-
+        direct_exchanges = DirectExchangeSerializer(direct_exchanges, many=True).data
+        
         return JsonResponse({
             "exchanges": direct_exchanges,
             "total_pages": paginator.num_pages
