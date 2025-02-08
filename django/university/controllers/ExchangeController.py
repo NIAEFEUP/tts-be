@@ -140,7 +140,7 @@ class ExchangeController:
         return (ExchangeStatus.SUCCESS, None)
 
     """
-        Checks if schedule for a user with a given username has overlpas
+        Checks if schedule for a user with a given username has overlaps
     """
     @staticmethod
     def exchange_overlap(student_schedules, username) -> bool:
@@ -152,6 +152,10 @@ class ExchangeController:
 
                 (class_schedule_day, class_schedule_start, class_schedule_end, class_schedule_type) = (class_schedule["dia"], class_schedule["hora_inicio"] / 3600, class_schedule["aula_duracao"] + class_schedule["hora_inicio"] / 3600, class_schedule['tipo'])
                 (overlap_param_day, overlap_param_start, overlap_param_end, overlap_param_type) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"] / 3600, other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"] / 3600, other_class_schedule['tipo'])
+                
+                original_class = UserCourseUnits.objects.filter(user_nmec=username, course_unit__id=int(class_schedule["ocorrencia_id"])).class_field.id
+                original_other_class = UserCourseUnits.objects.filter(user_nmec=username, course_unit__id=int(other_class_schedule["ocorrencia_id"])).class_field.id
+
 
                 if (check_class_mandatory(class_schedule_type) and check_class_mandatory(overlap_param_type)
                     and check_class_schedule_overlap(class_schedule_day, class_schedule_start, class_schedule_end, overlap_param_day, overlap_param_start, overlap_param_end)):
