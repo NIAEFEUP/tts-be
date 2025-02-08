@@ -186,7 +186,7 @@ CREATE TABLE "public"."marketplace_exchange" (
 
 CREATE TABLE "public"."direct_exchange" (
   "id" SERIAL PRIMARY KEY,
-  "issuer_name" varchar(32) NOT NULL,
+  "issuer_name" varchar(256) NOT NULL,
   "issuer_nmec" varchar(32) NOT NULL,
   "accepted" boolean NOT NULL,
   "canceled" boolean DEFAULT false,
@@ -198,7 +198,7 @@ CREATE TABLE "public"."direct_exchange" (
 
 CREATE TABLE "public"."direct_exchange_participants" (
   "id" SERIAL PRIMARY KEY,
-  "participant_name" varchar(32) NOT NULL,
+  "participant_name" varchar(256) NOT NULL,
   "participant_nmec" varchar(32) NOT NULL,
   "class_participant_goes_from" varchar(16) NOT NULL,
   "class_participant_goes_to" varchar(16) NOT NULL,
