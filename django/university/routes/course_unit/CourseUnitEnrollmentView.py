@@ -58,7 +58,7 @@ class CourseUnitEnrollmentView(APIView):
 
         enrollments = list(map(lambda enrollment: CourseUnitEnrollmentsSerializer(enrollment).data, CourseUnitEnrollments.objects.all().order_by('date')))
 
-        paginator = Paginator(enrollments, 48)
+        paginator = Paginator(enrollments, 20)
         page_number = request.GET.get("page")
         enrollments = [x for x in paginator.get_page(page_number if page_number != None else 1)]
 

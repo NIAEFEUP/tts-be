@@ -76,7 +76,7 @@ class DirectExchangeView(View):
 
         direct_exchanges = list(map(lambda exchange: DirectExchangeSerializer(exchange).data, DirectExchange.objects.filter(accepted=True).order_by('date')))
 
-        paginator = Paginator(direct_exchanges, 48)
+        paginator = Paginator(direct_exchanges, 20)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number if page_number != None else 1)
         direct_exchanges = [x for x in page_obj]
