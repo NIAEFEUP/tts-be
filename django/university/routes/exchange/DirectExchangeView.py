@@ -216,7 +216,7 @@ class DirectExchangeView(View):
                     if exchange.marketplace_exchange:
                         exchange.marketplace_exchange.delete() 
 
-                    ExchangeValidationController().cancel_conflicting_exchanges(exchange.id)
+                    ExchangeValidationController().cancel_conflicting_exchanges(int(exchange.id))
 
                 return JsonResponse({"success": True}, safe=False)
         except Exception as e:

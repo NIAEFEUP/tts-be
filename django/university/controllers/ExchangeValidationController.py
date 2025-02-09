@@ -25,6 +25,9 @@ class ExchangeValidationController:
         All of the exchanges that include classes that were changed by the accepted exchange need to be revalidated or even canceled.
     """
     def cancel_conflicting_exchanges(self, accepted_exchange_id: int):
+        if(DirectExchange.objects.filter(id=accepted_exchange_id).first().canceled):
+            return 
+
         conflicting_exchanges = []
 
         with transaction.atomic():
@@ -33,7 +36,8 @@ class ExchangeValidationController:
                 # 1. Are there any exchanges that include classes that a participant changed from?
                 conflicting = DirectExchangeParticipants.objects.exclude(direct_exchange__id=accepted_exchange_id).filter(
                     participant_nmec=participant.participant_nmec, 
-                    class_participant_goes_from=participant.class_participant_goes_from
+                    class_participant_goes_from=participant.class_participant_goes_from,
+                    direct_exchange__accepted=True
                 )
                 conflicting_exchanges.extend(list(map(lambda conflicting_exchange: conflicting_exchange.direct_exchange, conflicting)))
                 
