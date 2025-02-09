@@ -93,7 +93,7 @@ class CourseUnitEnrollmentView(APIView):
             for enrollment in enrollments:
                 enrollment_metadata = json.loads(enrollment) 
 
-                if len(list(CourseUnitEnrollmentOptions.objects.filter(course_unit__id=int(enrollment_metadata["course_unit_id"]), enrolling=enrollment_metadata["enrolling"]))) > 0:
+                if len(list(CourseUnitEnrollmentOptions.objects.filter(course_unit__id=int(enrollment_metadata["course_unit_id"]), course_unit_enrollment__user_nmec=request.user.username, enrolling=enrollment_metadata["enrolling"]))) > 0:
                     return JsonResponse({"error": "Não podes fazer pedidos com disciplinas em que já pediste noutros!"}, status=400)
 
                 if enrollment_metadata["enrolling"] and len(list(filter(lambda x: int(x.course_unit_id) == int(enrollment_metadata["course_unit_id"]), student_course_units))) > 0:
