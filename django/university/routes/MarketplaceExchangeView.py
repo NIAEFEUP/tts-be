@@ -145,11 +145,11 @@ class MarketplaceExchangeView(APIView):
         exchange_data_str = json.dumps(exchanges, sort_keys=True)
         exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
 
-        if MarketplaceExchange.objects.filter(hash=exchange_hash).exists():
-            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        # if MarketplaceExchange.objects.filter(hash=exchange_hash).exists():
+        #     return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
-        if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
-            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        # if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
+        #     return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         if urgentMessage:
             return self.add_urgent_exchange(request, exchanges, urgentMessage, exchange_hash)
