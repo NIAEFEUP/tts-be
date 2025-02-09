@@ -76,10 +76,9 @@ class ExchangeValidationController:
         schedule = {}
         for participant in exchange_participants:
             if participant.participant_nmec not in schedule.keys():
-                schedule[participant.participant_nmec] = build_student_schedule_dict(SigarraController().get_student_schedule(int(participant.participant_nmec)).data)
-
-            # Get new schedule from accepted changes
-            ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, list(schedule[participant.participant_nmec].values()))
+                new_schedule = SigarraController().get_student_schedule(int(participant.participant_nmec)).data
+                ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, new_schedule)
+                schedule[participant.participant_nmec] = build_student_schedule_dict(new_schedule)
 
         # 2. Check if users are inside classes they will exchange from with
         for username in schedule.keys():
@@ -87,6 +86,7 @@ class ExchangeValidationController:
 
             for entry in participant_entries:
                 if (entry.class_participant_goes_from, int(entry.course_unit_id)) not in list(schedule[username].keys()):
+                    
                     return ExchangeValidationResponse(False, ExchangeStatus.STUDENTS_NOT_ENROLLED)
 
                 # 3. Alter the schedule of the users according to the exchange metadata 
