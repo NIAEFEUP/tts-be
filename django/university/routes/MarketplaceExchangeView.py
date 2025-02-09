@@ -134,13 +134,14 @@ class MarketplaceExchangeView(APIView):
         student_schedule = list(student_schedules[curr_student].values())
         ExchangeController.update_schedule_accepted_exchanges(curr_student, student_schedule)
         student_schedules[curr_student] = build_student_schedule_dict(student_schedule)
-
+        
         (status, new_marketplace_schedule) = build_marketplace_submission_schedule(student_schedules, exchanges, curr_student)
         if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
             return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
 
-        if ExchangeController.exchange_overlap(student_schedules, curr_student):
-            return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+        if not urgentMessage or urgentMessage == "":
+            if ExchangeController.exchange_overlap(student_schedules, curr_student):
+                return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
         
         exchange_data_str = json.dumps(exchanges, sort_keys=True)
         exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
