@@ -54,7 +54,10 @@ class ExchangeVerifyView(View):
                         StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
 
                     if direct_exchange.marketplace_exchange:
-                        direct_exchange.marketplace_exchange.delete() 
+                        marketplace_exchange = direct_exchange.marketplace_exchange
+                        direct_exchange.marketplace_exchange = None
+                        direct_exchange.save()
+                        marketplace_exchange.delete()
 
                     ExchangeValidationController().cancel_conflicting_exchanges(int(exchange_info["exchange_id"]))
 
