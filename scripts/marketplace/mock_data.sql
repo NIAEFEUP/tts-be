@@ -32,7 +32,6 @@ INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec
 INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (5, 'Armindo Osório', 202108880, '1MEIC01', '1MEIC06', 'DS', 540677, 2, true);
 INSERT INTO direct_exchange_participants (id, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, direct_exchange, accepted) VALUES (6, 'José Santos', 202109260, '1MEIC06', '1MEIC01', 'DS', 540677, 2, true);
 
-
 INSERT INTO exchange_admin(id, username) VALUES (1, '202109260');
 
 --INSERT INTO marketplace_exchange (id, issuer_name, issuer_nmec, accepted) VALUES (1, 'Armindo Santos', '202108881', false);

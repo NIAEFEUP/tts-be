@@ -1,6 +1,7 @@
 from django.urls import path, include
 
 from university.routes.course_unit.CourseUnitEnrollmentView import CourseUnitEnrollmentView
+from university.routes.exchange.AdminMarketplaceView import AdminMarketplaceView
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
 from university.routes.auth.Csrf import Csrf
 from university.routes.exchange.DirectExchangeView import DirectExchangeView
@@ -64,6 +65,7 @@ urlpatterns = [
     path('course_unit/enrollment/', CourseUnitEnrollmentView.as_view()), 
     path('oidc-auth/', include('mozilla_django_oidc.urls')),
     path('exchange/admin/courses/', exchange_admin_required(AdminExchangeCoursesView.as_view())),
+    path('exchange/admin/marketplace', exchange_admin_required(AdminMarketplaceView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/reject/', exchange_admin_required(AdminExchangeRequestRejectView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/accept/', exchange_admin_required(AdminExchangeRequestAcceptView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/awaiting-information/', exchange_admin_required(AdminRequestAwaitingInformationView.as_view())),

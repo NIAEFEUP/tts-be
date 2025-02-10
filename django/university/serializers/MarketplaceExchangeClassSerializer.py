@@ -4,6 +4,15 @@ from rest_framework import serializers
 from university.models import CourseUnit
 from university.controllers.ClassController import ClassController
 
+class MarketplaceExchangeSerializer(serializers.Serializer):
+    issuer_nmec = serializers.CharField(max_length=32)
+    issuer_name = serializers.CharField(max_length=256)
+    accepted = serializers.BooleanField()
+    canceled = serializers.BooleanField()
+    admin_state = serializers.CharField(max_length=32)
+    hash = serializers.CharField(max_length=64)
+    date = serializers.DateTimeField()
+
 class MarketplaceExchangeClassSerializer(serializers.Serializer):
     course_info = serializers.SerializerMethodField()
     class_issuer_goes_from = serializers.SerializerMethodField()
