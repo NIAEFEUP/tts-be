@@ -181,7 +181,8 @@ CREATE TABLE "public"."marketplace_exchange" (
   "accepted" boolean NOT NULL,
   "canceled" boolean DEFAULT false,
   "date" TIMESTAMP DEFAULT now(), 
-  "hash" varchar(64) UNIQUE
+  "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
+  "hash" varchar(64)
 );
 
 CREATE TABLE "public"."direct_exchange" (
@@ -193,7 +194,7 @@ CREATE TABLE "public"."direct_exchange" (
   "date" TIMESTAMP DEFAULT now(),
   "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
   "marketplace_exchange" INTEGER REFERENCES "public"."marketplace_exchange"("id"),
-  "hash" varchar(64) UNIQUE
+  "hash" varchar(64)
 );
 
 CREATE TABLE "public"."direct_exchange_participants" (
@@ -258,7 +259,7 @@ CREATE TABLE "public"."exchange_urgent_requests" (
     "accepted" boolean DEFAULT false,
     "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
     "date" TIMESTAMP DEFAULT now(),
-    "hash" varchar(64) UNIQUE
+    "hash" varchar(64) 
 );
 
 CREATE TABLE "public"."exchange_urgent_request_options" (
