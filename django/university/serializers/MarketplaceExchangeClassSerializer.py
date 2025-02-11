@@ -27,7 +27,7 @@ class MarketplaceExchangeClassSerializer(serializers.Serializer):
             return None
 
     def get_class_issuer_goes_from(self, obj):
-        class_issuer_id = obj.class_issuer_goes_from
+        class_issuer_id = obj.class_issuer_goes_from.split("+")[0]
         classes = ClassController.get_classes(obj.course_unit_id)
         filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
         try:
@@ -36,7 +36,7 @@ class MarketplaceExchangeClassSerializer(serializers.Serializer):
             return None
 
     def get_class_issuer_goes_to(self, obj):
-        class_issuer_id = obj.class_issuer_goes_to
+        class_issuer_id = obj.class_issuer_goes_to.split("+")[0]
         classes = ClassController.get_classes(obj.course_unit_id)
         filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
         try:
