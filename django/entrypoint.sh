@@ -16,9 +16,13 @@ until PGPASSWORD="${POSTGRES_PASSWORD}" psql -h "${POSTGRES_HOST}" -U "${POSTGRE
 	>&2 echo "PostgreSQL is unavailable - sleeping"
 	sleep 4
 done
->&2 echo "PostgreSQL is up - executing command"
 
-echo "ENTRYPOINT RAN"
+>&2 echo "PostgreSQL is up - executing commands" 
+
+# Compile protobuf files
+echo "Compiling protobuf files..."
+protoc --python_out=generated -I=./protos/ ./protos/**/*.proto
+echo "Protobuf files compiled successfully."
 
 # Migrate the Django.
 python manage.py makemigrations
