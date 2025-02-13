@@ -10,11 +10,9 @@ https://docs.djangoproject.com/en/4.0/howto/deployment/asgi/
 import os
 from django.core.asgi import get_asgi_application
 
-import socketio
-from university.socket.views import sessions_server
+# import socketio
+# from university.socket.views import sessions_server
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tts_be.settings')
 
-django_app = get_asgi_application()
-
-application = socketio.ASGIApp(sessions_server.sio, django_app)
+application = get_asgi_application()

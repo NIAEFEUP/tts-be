@@ -46,7 +46,7 @@ class CourseUnitEnrollmentView(APIView):
         states = state.split(",")
         return list(
             filter(
-                lambda exchange: exchange.get("admin_state") in states,
+                lambda exchange: exchange.admin_state in states,
                 exchanges
             )
         )
@@ -56,15 +56,17 @@ class CourseUnitEnrollmentView(APIView):
         if not(is_admin):
             return HttpResponse(status=403) 
 
-        enrollments = list(map(lambda enrollment: CourseUnitEnrollmentsSerializer(enrollment).data, CourseUnitEnrollments.objects.all().order_by('date')))
-
-        paginator = Paginator(enrollments, 48)
-        page_number = request.GET.get("page")
-        enrollments = [x for x in paginator.get_page(page_number if page_number != None else 1)]
+        enrollments = CourseUnitEnrollments.objects.all().order_by('date')
 
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
                 enrollments = self.filter_actions[filter](enrollments, request.GET.get(filter))
+
+        paginator = Paginator(enrollments, 10)
+        page_number = request.GET.get("page")
+        enrollments = [x for x in paginator.get_page(page_number if page_number != None else 1)]
+
+        enrollments = CourseUnitEnrollmentsSerializer(enrollments, many=True).data
 
         return JsonResponse({
             "enrollments": enrollments,
@@ -74,22 +76,27 @@ class CourseUnitEnrollmentView(APIView):
     def post(self, request):
         enrollments = request.POST.getlist("enrollCourses[]")
 
+        if(len(enrollments) == 0):
+            return JsonResponse({"error": "Pedido vazio"}, status=400)
+
         student_course_units = list(UserCourseUnits.objects.filter(user_nmec=request.user.username).all())
 
         with transaction.atomic():
-            course_unit_enrollment = CourseUnitEnrollments.objects.create(
+            course_unit_enrollment = CourseUnitEnrollments(
                 user_nmec=request.user.username,
                 accepted=False,
                 admin_state="untreated",
                 date=timezone.now()
             )
-            course_unit_enrollment.save()
 
             models_to_save = []
             for enrollment in enrollments:
                 enrollment_metadata = json.loads(enrollment) 
 
-                if enrollment_metadata["enrolling"] and len(list(filter(lambda x: x.course_unit_id == enrollment_metadata["course_unit_id"], student_course_units))) > 0:
+                if len(list(CourseUnitEnrollmentOptions.objects.filter(course_unit__id=int(enrollment_metadata["course_unit_id"]), course_unit_enrollment__user_nmec=request.user.username, enrolling=enrollment_metadata["enrolling"]))) > 0:
+                    return JsonResponse({"error": "Não podes fazer pedidos com disciplinas em que já pediste noutros!"}, status=400)
+
+                if enrollment_metadata["enrolling"] and len(list(filter(lambda x: int(x.course_unit_id) == int(enrollment_metadata["course_unit_id"]), student_course_units))) > 0:
                     return JsonResponse({"error": "Não te podes inscrever a disciplinas em que já tens uma inscrição!"}, status=400)
 
                 db_enrollment = CourseUnitEnrollmentOptions(
@@ -100,6 +107,8 @@ class CourseUnitEnrollmentView(APIView):
                 )
                 models_to_save.append(db_enrollment)
 
+            
+            course_unit_enrollment.save()
             CourseUnitEnrollmentOptions.objects.bulk_create(models_to_save)
         
         return HttpResponse(status=200)

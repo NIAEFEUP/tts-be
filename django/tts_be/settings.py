@@ -74,7 +74,7 @@ if not DEBUG:
 INSTALLED_APPS = [ 
     'corsheaders',
     'anymail',
-    'daphne',
+    # 'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -84,7 +84,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mozilla_django_oidc',
     'university',
-    'channels',
+    # 'channels',
 ]
 
 EMAIL_HOST = os.getenv("EMAIL_HOST", "tts-mailpit")
@@ -168,8 +168,6 @@ OIDC_RP_SCOPES = "openid email profile uporto_data"
 LOGIN_REDIRECT_URL = "/"
 
 OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 3600 * 60
-
-ASGI_APPLICATION = 'tts_be.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases

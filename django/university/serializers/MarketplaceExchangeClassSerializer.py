@@ -4,6 +4,15 @@ from rest_framework import serializers
 from university.models import CourseUnit
 from university.controllers.ClassController import ClassController
 
+class MarketplaceExchangeSerializer(serializers.Serializer):
+    issuer_nmec = serializers.CharField(max_length=32)
+    issuer_name = serializers.CharField(max_length=256)
+    accepted = serializers.BooleanField()
+    canceled = serializers.BooleanField()
+    admin_state = serializers.CharField(max_length=32)
+    hash = serializers.CharField(max_length=64)
+    date = serializers.DateTimeField()
+
 class MarketplaceExchangeClassSerializer(serializers.Serializer):
     course_info = serializers.SerializerMethodField()
     class_issuer_goes_from = serializers.SerializerMethodField()
@@ -18,7 +27,7 @@ class MarketplaceExchangeClassSerializer(serializers.Serializer):
             return None
 
     def get_class_issuer_goes_from(self, obj):
-        class_issuer_id = obj.class_issuer_goes_from
+        class_issuer_id = obj.class_issuer_goes_from.split("+")[0]
         classes = ClassController.get_classes(obj.course_unit_id)
         filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
         try:
@@ -27,7 +36,7 @@ class MarketplaceExchangeClassSerializer(serializers.Serializer):
             return None
 
     def get_class_issuer_goes_to(self, obj):
-        class_issuer_id = obj.class_issuer_goes_to
+        class_issuer_id = obj.class_issuer_goes_to.split("+")[0]
         classes = ClassController.get_classes(obj.course_unit_id)
         filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
         try:

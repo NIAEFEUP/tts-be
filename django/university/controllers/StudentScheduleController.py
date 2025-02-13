@@ -14,9 +14,15 @@ class StudentScheduleController:
 
         ExchangeController.update_schedule_accepted_exchanges(username, schedule_data)
 
+        ids = set()
         course_unit_classes = set()
         for scheduleItem in schedule_data:
-            course_unit_classes.add((scheduleItem["ocorrencia_id"], scheduleItem["turma_sigla"]))
+            if scheduleItem["tipo"] != "T" and scheduleItem["tipo"] != 'O':
+                if int(scheduleItem["ocorrencia_id"]) in ids:
+                    continue
+                else:
+                    course_unit_classes.add((scheduleItem["ocorrencia_id"], scheduleItem["turma_sigla"]))
+                    ids.add(int(scheduleItem["ocorrencia_id"]))
         
         return course_unit_classes
 

@@ -181,24 +181,25 @@ CREATE TABLE "public"."marketplace_exchange" (
   "accepted" boolean NOT NULL,
   "canceled" boolean DEFAULT false,
   "date" TIMESTAMP DEFAULT now(), 
-  "hash" varchar(64) UNIQUE
+  "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
+  "hash" varchar(64)
 );
 
 CREATE TABLE "public"."direct_exchange" (
   "id" SERIAL PRIMARY KEY,
-  "issuer_name" varchar(32) NOT NULL,
+  "issuer_name" varchar(256) NOT NULL,
   "issuer_nmec" varchar(32) NOT NULL,
   "accepted" boolean NOT NULL,
   "canceled" boolean DEFAULT false,
   "date" TIMESTAMP DEFAULT now(),
   "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
   "marketplace_exchange" INTEGER REFERENCES "public"."marketplace_exchange"("id"),
-  "hash" varchar(64) UNIQUE
+  "hash" varchar(64)
 );
 
 CREATE TABLE "public"."direct_exchange_participants" (
   "id" SERIAL PRIMARY KEY,
-  "participant_name" varchar(32) NOT NULL,
+  "participant_name" varchar(256) NOT NULL,
   "participant_nmec" varchar(32) NOT NULL,
   "class_participant_goes_from" varchar(16) NOT NULL,
   "class_participant_goes_to" varchar(16) NOT NULL,
@@ -258,7 +259,7 @@ CREATE TABLE "public"."exchange_urgent_requests" (
     "accepted" boolean DEFAULT false,
     "admin_state" varchar(32) NOT NULL DEFAULT 'untreated',
     "date" TIMESTAMP DEFAULT now(),
-    "hash" varchar(64) UNIQUE
+    "hash" varchar(64) 
 );
 
 CREATE TABLE "public"."exchange_urgent_request_options" (

@@ -60,7 +60,7 @@ class DirectExchangeView(View):
         states = state.split(",")
         return list(
             filter(
-                lambda exchange: exchange.get("admin_state") in states,
+                lambda exchange: exchange.admin_state in states,
                 exchanges
             )
         )
@@ -74,17 +74,19 @@ class DirectExchangeView(View):
         if not(is_admin):
             return HttpResponse(status=403) 
 
-        direct_exchanges = list(map(lambda exchange: DirectExchangeSerializer(exchange).data, DirectExchange.objects.filter(accepted=True).order_by('date')))
-
-        paginator = Paginator(direct_exchanges, 48)
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number if page_number != None else 1)
-        direct_exchanges = [x for x in page_obj]
+        direct_exchanges = DirectExchange.objects.filter(accepted=True).order_by('date')
 
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
                 direct_exchanges = self.filter_actions[filter](direct_exchanges, request.GET.get(filter))
 
+        paginator = Paginator(direct_exchanges, 10)
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number if page_number != None else 1)
+        direct_exchanges = [x for x in page_obj]
+
+        direct_exchanges = DirectExchangeSerializer(direct_exchanges, many=True).data
+        
         return JsonResponse({
             "exchanges": direct_exchanges,
             "total_pages": paginator.num_pages
@@ -123,8 +125,8 @@ class DirectExchangeView(View):
         exchange_data_str = json.dumps(exchanges, sort_keys=True)
         exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
 
-        if DirectExchange.objects.filter(hash=exchange_hash).exists():
-            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        # if DirectExchange.objects.filter(hash=exchange_hash).exists():
+        #     return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         with transaction.atomic():
             exchange_model = DirectExchange(
@@ -212,9 +214,12 @@ class DirectExchangeView(View):
                         StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
 
                     if exchange.marketplace_exchange:
-                        exchange.marketplace_exchange.delete() 
+                        marketplace_exchange = exchange.marketplace_exchange
+                        exchange.marketplace_exchange = None
+                        exchange.save()
+                        marketplace_exchange.delete()
 
-                    ExchangeValidationController().cancel_conflicting_exchanges(exchange.id)
+                    ExchangeValidationController().cancel_conflicting_exchanges(int(exchange.id))
 
                 return JsonResponse({"success": True}, safe=False)
         except Exception as e:

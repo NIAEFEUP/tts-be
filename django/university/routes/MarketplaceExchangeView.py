@@ -79,8 +79,9 @@ class MarketplaceExchangeView(APIView):
             for option in exchange.options:
                 course_unit_id = option.course_unit_id
                 class_issuer_goes_to = option.class_issuer_goes_to
-                if Class.objects.filter(course_unit_id=course_unit_id, name=class_issuer_goes_to).get().id == user_ucs_map[int(course_unit_id)].class_field.id:
-                    add_to_result = True
+                if int(course_unit_id) in user_ucs_map.keys():
+                    if Class.objects.filter(course_unit_id=course_unit_id, name=class_issuer_goes_to).get().id == user_ucs_map[int(course_unit_id)].class_field.id:
+                        add_to_result = True
             
             if add_to_result:
                 exchanges_with_valid_dest_class.append(exchange)
@@ -133,22 +134,23 @@ class MarketplaceExchangeView(APIView):
         student_schedule = list(student_schedules[curr_student].values())
         ExchangeController.update_schedule_accepted_exchanges(curr_student, student_schedule)
         student_schedules[curr_student] = build_student_schedule_dict(student_schedule)
-
+        
         (status, new_marketplace_schedule) = build_marketplace_submission_schedule(student_schedules, exchanges, curr_student)
         if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
             return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
 
-        if exchange_overlap(student_schedules, curr_student):
-            return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
+        if not urgentMessage or urgentMessage == "":
+            if ExchangeController.exchange_overlap(student_schedules, curr_student):
+                return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
         
         exchange_data_str = json.dumps(exchanges, sort_keys=True)
         exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
 
-        if MarketplaceExchange.objects.filter(hash=exchange_hash).exists():
-            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        # if MarketplaceExchange.objects.filter(hash=exchange_hash).exists():
+        #     return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
-        if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
-            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        # if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
+        #     return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         if urgentMessage:
             return self.add_urgent_exchange(request, exchanges, urgentMessage, exchange_hash)

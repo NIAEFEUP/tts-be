@@ -53,6 +53,11 @@ class StudentScheduleView(APIView):
             classes = ClassController.get_classes(course_unit.course_unit.id)
             classes = list(filter(lambda class_: class_["id"] in class_ids, classes))
 
+            if course_unit.course_unit.id == 548052:
+                sigarra_schedule = SigarraController().get_student_schedule(username).data
+                schedule.extend(convert_sigarra_schedule([list(filter(lambda schedule: schedule["ocorrencia_id"] == 548052, sigarra_schedule))[0]]))
+                continue
+
             for class_ in classes:
                 for slot in class_["slots"]:
                     schedule.append({
@@ -97,7 +102,11 @@ class StudentScheduleView(APIView):
 
         sigarra_synchronized = old_schedule == new_schedule
 
-        new_response = JsonResponse({"schedule": convert_sigarra_schedule(schedule_data), "noChanges": sigarra_synchronized}, safe=False)
+        converted_schedule = convert_sigarra_schedule(schedule_data)
+        for item in converted_schedule:
+            item["classInfo"]["name"] = item["classInfo"]["name"].split("+")[0]
+
+        new_response = JsonResponse({"schedule": converted_schedule, "noChanges": sigarra_synchronized}, safe=False)
         new_response.status_code = sigarra_res.status_code
 
         return new_response

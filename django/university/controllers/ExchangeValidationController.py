@@ -25,6 +25,9 @@ class ExchangeValidationController:
         All of the exchanges that include classes that were changed by the accepted exchange need to be revalidated or even canceled.
     """
     def cancel_conflicting_exchanges(self, accepted_exchange_id: int):
+        if(DirectExchange.objects.filter(id=accepted_exchange_id).first().canceled):
+            return 
+
         conflicting_exchanges = []
 
         with transaction.atomic():
@@ -33,7 +36,8 @@ class ExchangeValidationController:
                 # 1. Are there any exchanges that include classes that a participant changed from?
                 conflicting = DirectExchangeParticipants.objects.exclude(direct_exchange__id=accepted_exchange_id).filter(
                     participant_nmec=participant.participant_nmec, 
-                    class_participant_goes_from=participant.class_participant_goes_from
+                    class_participant_goes_from=participant.class_participant_goes_from,
+                    direct_exchange__accepted=True
                 )
                 conflicting_exchanges.extend(list(map(lambda conflicting_exchange: conflicting_exchange.direct_exchange, conflicting)))
                 
@@ -72,10 +76,9 @@ class ExchangeValidationController:
         schedule = {}
         for participant in exchange_participants:
             if participant.participant_nmec not in schedule.keys():
-                schedule[participant.participant_nmec] = build_student_schedule_dict(SigarraController().get_student_schedule(int(participant.participant_nmec)).data)
-
-            # Get new schedule from accepted changes
-            ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, list(schedule[participant.participant_nmec].values()))
+                new_schedule = SigarraController().get_student_schedule(int(participant.participant_nmec)).data
+                ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, new_schedule)
+                schedule[participant.participant_nmec] = build_student_schedule_dict(new_schedule)
 
         # 2. Check if users are inside classes they will exchange from with
         for username in schedule.keys():
@@ -83,6 +86,7 @@ class ExchangeValidationController:
 
             for entry in participant_entries:
                 if (entry.class_participant_goes_from, int(entry.course_unit_id)) not in list(schedule[username].keys()):
+                    
                     return ExchangeValidationResponse(False, ExchangeStatus.STUDENTS_NOT_ENROLLED)
 
                 # 3. Alter the schedule of the users according to the exchange metadata 
