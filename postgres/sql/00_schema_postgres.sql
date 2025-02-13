@@ -163,6 +163,10 @@ CREATE TABLE "public"."slot_class" (
     "class_id" bigint NOT NULL
 );
 
+CREATE TABLE "public"."professor_link" (
+  id SERIAL PRIMARY KEY,
+  "link" varchar(256) NOT NULL
+);
 
 --
 -- TOC entry 225 (class 1259 OID 16806)
@@ -171,7 +175,8 @@ CREATE TABLE "public"."slot_class" (
 
 CREATE TABLE "public"."slot_professor" (
     "slot_id" integer NOT NULL,
-    "professor_id" integer NOT NULL
+    "professor_id" integer NOT NULL,
+    "link_id" integer NOT NULL
 );
 
 CREATE TABLE "public"."marketplace_exchange" (
@@ -588,6 +593,10 @@ ALTER TABLE ONLY "public"."slot_professor"
 
 ALTER TABLE ONLY "public"."slot_professor"
     ADD CONSTRAINT "slot_professor_slot_id_ddc4b9c2_fk_slot_id" FOREIGN KEY ("slot_id") REFERENCES "public"."slot"("id") DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE ONLY "public"."slot_professor"
+    ADD CONSTRAINT "slot_professor_professor_link_id" FOREIGN KEY ("link_id") REFERENCES "public"."professor_link"("id") DEFERRABLE INITIALLY DEFERRED;
+
 
 
 -- Completed on 2024-08-13 22:21:25 UTC
