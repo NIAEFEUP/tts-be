@@ -5,11 +5,11 @@ from django.core.paginator import Paginator
 from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, check_class_mandatory, check_class_schedule_overlap, course_unit_by_id
-from university.models import DirectExchange, DirectExchangeParticipants, ExchangeExpirations, MarketplaceExchange
+from exchange.models import DirectExchange, DirectExchangeParticipants, ExchangeExpirations, MarketplaceExchange, UserCourseUnits
 from django.utils import timezone
 from enum import Enum
 
-from university.models import UserCourseUnits, Class
+from university.models import Class
 
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer

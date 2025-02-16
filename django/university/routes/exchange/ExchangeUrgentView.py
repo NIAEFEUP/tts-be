@@ -10,8 +10,9 @@ from django.views import View
 
 from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController
 from university.controllers.CourseUnitController import CourseUnitController 
-from university.models import ExchangeUrgentRequests, ExchangeAdmin
 from university.serializers.ExchangeUrgentRequestSerializer import ExchangeUrgentRequestSerializer
+
+from exchange.models import ExchangeUrgentRequests, ExchangeAdmin
 
 class ExchangeUrgentView(View):
     def __init__(self):

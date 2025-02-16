@@ -3,7 +3,9 @@ import json
 from university.controllers.SigarraController import SigarraController
 from university.controllers.StudentScheduleController import StudentScheduleController
 
-from university.models import UserCourseUnits, Class, StudentCourseMetadata, Course
+from university.models import Class, Course
+
+from exchange.models import UserCourseUnits, StudentCourseMetadata
 
 class StudentController:
     """

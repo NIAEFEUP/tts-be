@@ -17,7 +17,8 @@ from django.db import transaction
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, exchange_overlap, incorrect_class_error 
-from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, Class, ExchangeUrgentRequests, ExchangeUrgentRequestOptions
+from university.models import CourseUnit, Class
+from exchange.models import MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, ExchangeUrgentRequests, ExchangeUrgentRequestOptions
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):

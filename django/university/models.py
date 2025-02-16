@@ -62,118 +62,6 @@ class Class(models.Model):
         db_table = 'class'
         unique_together = (('name', 'course_unit'),)
 
-class CourseUnitEnrollmentOptions(models.Model):
-    course_unit = models.ForeignKey(CourseUnit, models.DO_NOTHING)
-    enrolling = models.BooleanField(blank=True, null=True)
-    course_unit_enrollment = models.ForeignKey('CourseUnitEnrollments', models.DO_NOTHING)
-    date = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'course_unit_enrollment_options'
-
-
-class CourseUnitEnrollments(models.Model):
-    user_nmec = models.CharField(max_length=32)
-    accepted = models.BooleanField(blank=True, null=True)
-    admin_state = models.CharField(max_length=32)
-    date = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'course_unit_enrollments'
-
-
-class DirectExchange(models.Model):
-    issuer_name = models.CharField(max_length=256)
-    issuer_nmec = models.CharField(max_length=32)
-    accepted = models.BooleanField()
-    canceled = models.BooleanField(blank=True, null=True)
-    date = models.DateTimeField(blank=True, null=True)
-    admin_state = models.CharField(max_length=32)
-    marketplace_exchange = models.ForeignKey('MarketplaceExchange', models.DO_NOTHING, db_column='marketplace_exchange', blank=True, null=True)
-    hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'direct_exchange'
-
-
-class DirectExchangeParticipants(models.Model):
-    participant_name = models.CharField(max_length=256)
-    participant_nmec = models.CharField(max_length=32)
-    class_participant_goes_from = models.CharField(max_length=16)
-    class_participant_goes_to = models.CharField(max_length=16)
-    course_unit = models.CharField(max_length=64)
-    course_unit_id = models.CharField(max_length=16)
-    direct_exchange = models.ForeignKey(DirectExchange, models.DO_NOTHING, db_column='direct_exchange')
-    accepted = models.BooleanField()
-    date = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'direct_exchange_participants'
-
-class ExchangeAdmin(models.Model):
-    username = models.CharField(unique=True, max_length=32)
-
-    class Meta:
-        managed = True
-        db_table = 'exchange_admin'
-
-class ExchangeAdminCourseUnits(models.Model):
-    exchange_admin = models.ForeignKey(ExchangeAdmin, models.DO_NOTHING)
-    course_unit = models.ForeignKey(CourseUnit, models.DO_NOTHING)
-
-    class Meta:
-        managed = True
-        db_table = 'exchange_admin_course_units'
-
-
-class ExchangeAdminCourses(models.Model):
-    exchange_admin = models.ForeignKey(ExchangeAdmin, models.DO_NOTHING)
-    course = models.ForeignKey(Course, models.DO_NOTHING)
-
-    class Meta:
-        managed = True
-        db_table = 'exchange_admin_courses'
-
-
-class ExchangeExpirations(models.Model):
-    course_unit = models.ForeignKey(CourseUnit, models.DO_NOTHING)
-    active_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-
-    class Meta:
-        managed = True
-        db_table = 'exchange_expirations'
-
-
-class ExchangeUrgentRequestOptions(models.Model):
-    course_unit = models.ForeignKey(CourseUnit, models.DO_NOTHING)
-    class_user_goes_from = models.CharField(max_length=16)
-    class_user_goes_to = models.CharField(max_length=16)
-    exchange_urgent_request = models.ForeignKey('ExchangeUrgentRequests', models.DO_NOTHING)
-    date = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'exchange_urgent_request_options'
-
-
-class ExchangeUrgentRequests(models.Model):
-    user_nmec = models.CharField(max_length=32)
-    message = models.CharField(max_length=2048)
-    accepted = models.BooleanField(blank=True, null=True)
-    admin_state = models.CharField(max_length=32)
-    date = models.DateTimeField(blank=True, null=True)
-    hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'exchange_urgent_requests'
-
-
 class Faculty(models.Model):
     acronym = models.CharField(primary_key=True, max_length=10)
     name = models.TextField(blank=True, null=True)
@@ -190,35 +78,6 @@ class Info(models.Model):
     class Meta:
         managed = True
         db_table = 'info'
-
-
-class MarketplaceExchange(models.Model):
-    issuer_name = models.CharField(max_length=256)
-    issuer_nmec = models.CharField(max_length=32)
-    accepted = models.BooleanField()
-    canceled = models.BooleanField(blank=True, null=True)
-    date = models.DateTimeField(blank=True, null=True)
-    hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
-    admin_state = models.CharField(max_length=32)
-
-    class Meta:
-        managed = True
-        db_table = 'marketplace_exchange'
-
-
-class MarketplaceExchangeClass(models.Model):
-    marketplace_exchange = models.ForeignKey(MarketplaceExchange, models.DO_NOTHING, db_column='marketplace_exchange')
-    course_unit_name = models.CharField(max_length=256)
-    course_unit_acronym = models.CharField(max_length=256)
-    course_unit_id = models.CharField(max_length=256)
-    class_issuer_goes_from = models.CharField(max_length=16)
-    class_issuer_goes_to = models.CharField(max_length=16)
-    date = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        managed = True
-        db_table = 'marketplace_exchange_class'
-
 
 class Professor(models.Model):
     id = models.IntegerField(primary_key=True)
@@ -265,22 +124,3 @@ class SlotProfessor(models.Model):
         db_table = 'slot_professor'
         unique_together = (('slot', 'professor'), ('slot', 'professor'),)
 
-
-class StudentCourseMetadata(models.Model):
-    nmec = models.CharField(max_length=255)
-    fest_id = models.IntegerField()
-    course = models.ForeignKey(Course, models.DO_NOTHING)
-
-    class Meta:
-        managed = True
-        db_table = 'student_course_metadata'
-
-
-class UserCourseUnits(models.Model):
-    user_nmec = models.CharField(max_length=32)
-    course_unit = models.ForeignKey(CourseUnit, models.DO_NOTHING)
-    class_field = models.ForeignKey(Class, models.DO_NOTHING, db_column='class_id')  # Field renamed because it was a Python reserved word.
-
-    class Meta:
-        managed = True
-        db_table = 'user_course_units'

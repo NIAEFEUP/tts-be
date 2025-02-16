@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mozilla_django_oidc',
     'university',
+    'exchange',
     # 'channels',
 ]
 
@@ -178,7 +179,7 @@ if DEBUG:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(os.path.dirname(__file__), 'db.sqlite3'),
+            'NAME': os.path.join(os.path.dirname(__file__), 'database.db'),
         }
     }
 else :

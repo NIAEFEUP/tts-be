@@ -8,8 +8,9 @@ from rest_framework.views import APIView
 from university.controllers.ClassController import ClassController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
+
+from exchange.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchange, MarketplaceExchangeClass
 
 class StudentSentExchangesView(APIView):
     def get(self, request):

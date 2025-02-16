@@ -12,7 +12,8 @@ from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS
 
 from university.controllers.StudentController import StudentController
 from university.controllers.ExchangeValidationController import ExchangeValidationController
-from university.models import DirectExchange, DirectExchangeParticipants
+
+from exchange.models import DirectExchange, DirectExchangeParticipants
 
 class ExchangeVerifyView(View):
     def post(self, request, token):

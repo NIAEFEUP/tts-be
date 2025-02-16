@@ -1,6 +1,6 @@
 import json
 from rest_framework.views import APIView
-from university.models import CourseUnitEnrollments, CourseUnitEnrollmentOptions, UserCourseUnits, ExchangeAdmin
+from exchange.models import CourseUnitEnrollments, CourseUnitEnrollmentOptions, UserCourseUnits, ExchangeAdmin
 from university.serializers.CourseUnitEnrollmentsSerializer import CourseUnitEnrollmentsSerializer
 from university.controllers.CourseUnitController import CourseUnitController
 from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController

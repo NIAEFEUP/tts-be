@@ -20,11 +20,12 @@ from university.controllers.CourseUnitController import CourseUnitController
 from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.models import DirectExchange, DirectExchangeParticipants, DirectExchangeParticipants, ExchangeAdmin, MarketplaceExchange, MarketplaceExchangeClass
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
 from university.controllers.ExchangeValidationController import ExchangeValidationController
 from university.controllers.StudentController import StudentController
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error 
+
+from exchange.models import DirectExchange, DirectExchangeParticipants, DirectExchangeParticipants, ExchangeAdmin, MarketplaceExchange, MarketplaceExchangeClass
 
 class DirectExchangeView(View):
     def __init__(self):

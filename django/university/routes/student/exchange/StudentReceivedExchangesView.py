@@ -4,9 +4,10 @@ from rest_framework.views import APIView
 from django.db.models import Prefetch
 
 from university.controllers.ExchangeController import DirectExchangePendingMotive
-from university.models import DirectExchange, DirectExchangeParticipants
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
 from university.serializers.DirectExchangeSerializer import DirectExchangeSerializer
+
+from exchange.models import DirectExchange, DirectExchangeParticipants
 
 class StudentReceivedExchangesView(APIView):
     def get(self, request):

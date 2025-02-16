@@ -1,6 +1,7 @@
 from django.http import HttpResponseForbidden
 from functools import wraps
-from university.models import ExchangeAdmin
+
+from exchange.models import ExchangeAdmin
 
 def exchange_admin_required(view_func):
     @wraps(view_func)

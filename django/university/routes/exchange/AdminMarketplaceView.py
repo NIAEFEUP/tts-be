@@ -7,7 +7,7 @@ from django.db.models import Prefetch
 
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
-from university.models import MarketplaceExchange, DirectExchange
+from exchange.models import MarketplaceExchange, DirectExchange
 
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.CourseUnitController import CourseUnitController
