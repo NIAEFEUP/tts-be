@@ -35,3 +35,4 @@ clean_fetcher:
 clean_database:
 	@echo [CLEANING] Removing database data...
 	@-docker volume rm tts_postgres_data || true
+	@rm -rf django/university/migrations
