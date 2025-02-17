@@ -19,4 +19,8 @@ python manage.py makemigrations university
 python manage.py makemigrations exchange
 python manage.py migrate university 0001_initial --fake
 python manage.py migrate exchange 0001_initial --fake
+python manage.py migrate admin 
+python manage.py migrate auth 
+python manage.py migrate sessions 
+python manage.py migrate contenttypes
 python manage.py runserver 0.0.0.0:8000
