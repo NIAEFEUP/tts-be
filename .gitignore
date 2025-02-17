@@ -15,7 +15,7 @@ postgres/sql/01_data.sql
 
 # django 
 django/.env.dev
-django/tts_be/db.sqlite3
+django/tts_be/database.db
 
 nginx/certs/*.key
 
