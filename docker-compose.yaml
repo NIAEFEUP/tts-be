@@ -1,31 +1,4 @@
-version: "3.7"
-
 services:
-  db:
-    build: ./postgres
-    container_name: tts_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    env_file:
-      - postgres/.env.dev
-    ports:
-      - 5432:5432
-    ulimits:
-      nofile:
-        soft: 262144
-        hard: 262144
-
-  pgadmin:
-    build:
-      context: ./pgadmin
-    container_name: tts_pgadmin
-    env_file:
-      - pgadmin/.env.dev
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    ports:
-      - 4000:80
-  
   nginx:
     image: nginx:1-alpine
     container_name: tts_nginx
@@ -69,8 +42,3 @@ services:
 networks:
   default:
     name: tts-docker-network
-
-volumes:
-  postgres_data:
-    name: tts_postgres_data
-  pgadmin_data:

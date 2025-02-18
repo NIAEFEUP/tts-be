@@ -1,10 +1,12 @@
 from django.forms.models import model_to_dict
 from rest_framework import serializers
 
-from university.models import CourseUnit, ExchangeUrgentRequestOptions
+from university.models import CourseUnit
 from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import convert_sigarra_schedule
+
+from exchange.models import ExchangeUrgentRequestOptions
 
 class ExchangeUrgentRequestSerializer(serializers.Serializer):
     id = serializers.IntegerField()

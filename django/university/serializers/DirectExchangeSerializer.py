@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from university.models import DirectExchangeParticipants
+from exchange.models import DirectExchangeParticipants
+
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
 
 class DirectExchangeSerializer(serializers.Serializer):

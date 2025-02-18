@@ -20,17 +20,7 @@ The data is available at the NIAEFEUP drive (Only for NIAEFEUP members):
 
 https://drive.google.com/drive/folders/1hyiwPwwPWhbAPeJm03c0MAo1HTF6s_zK?usp=sharing
 
-- The ```00_schema_postgres.sql``` corresponds to the schema for the most recent data.
-
-- Copy the ```01_data.sql``` and ```00_schema_postgres.sql``` of year and semester you desire to the ```postgres/sql``` folder.
-
-Then you can run
-
-```bash
-make populate
-```
-
-This will down the container, clearing the data from the database and then build and running the container again. This can be both used for people who are first running the project as well as for people that have already run the project but want to insert a new sql data file.
+You can paste the `database.db` file in `django/tts_be` folder.
 
 ## Usage 
 
@@ -59,21 +49,3 @@ uploaded to `github` with sensitive information.*
 ```yaml
 docker compose up 
 ```
-#### Some django caveats after running the container
-
-- The first time you run this docker container or after you clean the database, you will need to a wait for some time (5-10 minutes) until the database is populated. It is normal to see django giving a `115` error since the database is not yet ready to anwser to connection requests since it is busy populating itself.
-
-- There are some times on the first execution of this command that django will start giving a`2` error. If that happens, you need to close the container with `docker compose down` and then turning it on with `docker compose up` again.
-
-#### Accessing the development database
-
-We are currently using `pgadmin` and you can access it
-
-1. Go to `localhost:4000`
-
-2. On the login screen, both the credentials are as follows:
-   
-    - Email: admin@example.com
-    - Password: admin
-    
-    This is fine, since this is only a development environment.

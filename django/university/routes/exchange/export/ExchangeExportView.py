@@ -3,7 +3,7 @@ import csv
 from rest_framework.views import APIView
 from django.http import HttpResponse
 
-from university.models import DirectExchange, DirectExchangeParticipants, ExchangeAdmin
+from exchange.models import DirectExchange, DirectExchangeParticipants, ExchangeAdmin
 
 class ExchangeExportView(APIView):
     def get(self, request):

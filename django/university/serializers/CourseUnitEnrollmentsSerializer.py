@@ -1,7 +1,8 @@
 from django.forms.models import model_to_dict
 from rest_framework import serializers
 
-from university.models import CourseUnitEnrollmentOptions, CourseUnit, Course
+from university.models import CourseUnit, Course
+from exchange.models import CourseUnitEnrollmentOptions
 from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
 

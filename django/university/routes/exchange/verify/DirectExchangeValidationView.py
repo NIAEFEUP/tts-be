@@ -3,7 +3,7 @@ from django.views import View
 
 from university.controllers.ExchangeValidationController import ExchangeValidationController
 
-from university.models import DirectExchange
+from exchange.models import DirectExchange
 
 class DirectExchangeValidationView(View):
     def get(self, request, id):

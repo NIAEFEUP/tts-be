@@ -9,7 +9,8 @@ import requests
 
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.models import ExchangeExpirations, ExchangeAdmin
+
+from exchange.models import ExchangeExpirations, ExchangeAdmin
 
 class InfoView(View):
     def get(self, request):

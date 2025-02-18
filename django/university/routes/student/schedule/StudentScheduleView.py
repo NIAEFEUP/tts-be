@@ -4,15 +4,13 @@ from django.http.response import HttpResponse, JsonResponse
 import requests
 from rest_framework.views import APIView
 
-from university.models import StudentCourseMetadata, DirectExchange, DirectExchangeParticipants
+from exchange.models import StudentCourseMetadata, DirectExchange, DirectExchangeParticipants, UserCourseUnits
 
 from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.StudentController import StudentController
 from university.exchange.utils import convert_sigarra_schedule
-
-from university.models import UserCourseUnits
 
 class StudentScheduleView(APIView):
     def get(self, request, nmec=""):

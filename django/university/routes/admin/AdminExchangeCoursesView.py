@@ -1,7 +1,9 @@
 from rest_framework.views import APIView
 from django.http import HttpResponse, JsonResponse
 
-from university.models import ExchangeAdminCourses, Course
+from university.models import Course
+
+from exchange.models import ExchangeAdminCourses
 
 class AdminExchangeCoursesView(APIView):
     def get(self, request):
