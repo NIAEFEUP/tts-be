@@ -33,6 +33,7 @@ FROM deps AS prod
 
 COPY tts_be/ ./tts_be
 COPY university/ ./university
+COPY exchange ./exchange
 COPY manage.py tasks.py ./
 
 COPY ./entrypoint_prod.sh ./entrypoint_prod.sh
