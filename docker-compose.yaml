@@ -9,7 +9,9 @@ services:
       - ./nginx/certs/:/etc/nginx/certs/
 
   django:
-    build: ./django
+    build: 
+      context: ./django
+      target: dev
     container_name: tts_django
     env_file:
       - django/.env.dev

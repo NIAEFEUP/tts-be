@@ -25,6 +25,13 @@ RUN pip install -r requirements.txt
 
 EXPOSE 8000
 
+FROM deps AS dev
+
+COPY tts_be/ ./tts_be
+COPY university/ ./university
+COPY exchange ./exchange
+COPY manage.py tasks.py ./
+
 COPY ./entrypoint.sh ./entrypoint.sh  
 ENTRYPOINT ["/usr/src/django/entrypoint.sh"]
 
