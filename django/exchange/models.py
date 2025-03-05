@@ -1,12 +1,13 @@
 from django.db import models
+from django.utils import timezone
 
 from university.models import Course, CourseUnit, Class
 
 class CourseUnitEnrollmentOptions(models.Model):
     course_unit = models.ForeignKey(CourseUnit, models.DO_NOTHING)
-    enrolling = models.BooleanField(blank=True, null=True)
+    enrolling = models.BooleanField(blank=True, null=True, default=True)
     course_unit_enrollment = models.ForeignKey('CourseUnitEnrollments', models.DO_NOTHING)
-    date = models.DateTimeField(blank=True, null=True)
+    date = models.DateTimeField(blank=True, null=True, default=timezone.now)
 
     class Meta:
         managed = True
@@ -15,9 +16,9 @@ class CourseUnitEnrollmentOptions(models.Model):
 
 class CourseUnitEnrollments(models.Model):
     user_nmec = models.CharField(max_length=32)
-    accepted = models.BooleanField(blank=True, null=True)
-    admin_state = models.CharField(max_length=32)
-    date = models.DateTimeField(blank=True, null=True)
+    accepted = models.BooleanField(blank=True, null=True, default=False)
+    admin_state = models.CharField(max_length=32, default='untreated')
+    date = models.DateTimeField(blank=True, null=True, default=timezone.now)
 
     class Meta:
         managed = True
@@ -28,9 +29,9 @@ class DirectExchange(models.Model):
     issuer_name = models.CharField(max_length=256)
     issuer_nmec = models.CharField(max_length=32)
     accepted = models.BooleanField()
-    canceled = models.BooleanField(blank=True, null=True)
-    date = models.DateTimeField(blank=True, null=True)
-    admin_state = models.CharField(max_length=32)
+    canceled = models.BooleanField(blank=True, null=True, default=False)
+    date = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    admin_state = models.CharField(max_length=32, default='untreated')
     marketplace_exchange = models.ForeignKey('MarketplaceExchange', models.DO_NOTHING, db_column='marketplace_exchange', blank=True, null=True)
     hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
 
@@ -48,7 +49,7 @@ class DirectExchangeParticipants(models.Model):
     course_unit_id = models.CharField(max_length=16)
     direct_exchange = models.ForeignKey(DirectExchange, models.DO_NOTHING, db_column='direct_exchange')
     accepted = models.BooleanField()
-    date = models.DateTimeField(blank=True, null=True)
+    date = models.DateTimeField(blank=True, null=True, default=timezone.now)
 
     class Meta:
         managed = True
@@ -94,7 +95,7 @@ class ExchangeUrgentRequestOptions(models.Model):
     class_user_goes_from = models.CharField(max_length=16)
     class_user_goes_to = models.CharField(max_length=16)
     exchange_urgent_request = models.ForeignKey('ExchangeUrgentRequests', models.DO_NOTHING)
-    date = models.DateTimeField(blank=True, null=True)
+    date = models.DateTimeField(blank=True, null=True, default=timezone.now)
 
     class Meta:
         managed = True
@@ -104,9 +105,9 @@ class ExchangeUrgentRequestOptions(models.Model):
 class ExchangeUrgentRequests(models.Model):
     user_nmec = models.CharField(max_length=32)
     message = models.CharField(max_length=2048)
-    accepted = models.BooleanField(blank=True, null=True)
-    admin_state = models.CharField(max_length=32)
-    date = models.DateTimeField(blank=True, null=True)
+    accepted = models.BooleanField(blank=True, null=True, default=False)
+    admin_state = models.CharField(max_length=32, default='untreated')
+    date = models.DateTimeField(blank=True, null=True, default=timezone.now)
     hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
 
     class Meta:
@@ -117,15 +118,14 @@ class MarketplaceExchange(models.Model):
     issuer_name = models.CharField(max_length=256)
     issuer_nmec = models.CharField(max_length=32)
     accepted = models.BooleanField()
-    canceled = models.BooleanField(blank=True, null=True)
-    date = models.DateTimeField(blank=True, null=True)
+    canceled = models.BooleanField(blank=True, null=True, default=False)
+    date = models.DateTimeField(blank=True, null=True, default=timezone.now)
     hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
-    admin_state = models.CharField(max_length=32)
+    admin_state = models.CharField(max_length=32, default='untreated')
 
     class Meta:
         managed = True
         db_table = 'marketplace_exchange'
-
 
 class MarketplaceExchangeClass(models.Model):
     marketplace_exchange = models.ForeignKey(MarketplaceExchange, models.DO_NOTHING, db_column='marketplace_exchange')
@@ -134,7 +134,7 @@ class MarketplaceExchangeClass(models.Model):
     course_unit_id = models.CharField(max_length=256)
     class_issuer_goes_from = models.CharField(max_length=16)
     class_issuer_goes_to = models.CharField(max_length=16)
-    date = models.DateTimeField(blank=True, null=True)
+    date = models.DateTimeField(blank=True, null=True, default=timezone.now)
 
     class Meta:
         managed = True
