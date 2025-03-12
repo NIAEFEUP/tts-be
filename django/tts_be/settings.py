@@ -41,6 +41,8 @@ DEBUG = int(DEBUG) != 0 if DEBUG else False
 DOMAIN = os.getenv('DOMAIN')
 DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
 
+EXCHANGE_SEMESTER = CONFIG["EXCHANGE_SEMESTER"]
+
 ALLOWED_HOSTS = ['tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
 
 if DEBUG:
