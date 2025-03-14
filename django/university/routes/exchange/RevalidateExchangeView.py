@@ -1,0 +1,47 @@
+import json
+import base64
+import jwt
+import datetime
+import hashlib
+import os
+
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.utils import timezone
+
+from django.http import HttpResponse, JsonResponse
+from django.views import View
+from django.utils.html import strip_tags
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django_ratelimit.decorators import ratelimit
+from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, DOMAIN
+
+
+from exchange.models import DirectExchange
+
+class RevalidateExchangeView(View):
+    def post(self, request, exchange_id):
+        username = request.user.username
+        exchange_model = DirectExchange.objects.filter(id=exchange_id).first()
+
+        if exchange_model is None:
+            return JsonResponse({"success": False}, safe=False)
+        
+        
+        token = jwt.encode({"username": username, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
+
+        base64_token = base64.b64encode(token.encode('utf-8')).decode('utf-8')
+        html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}/exchange/verify/{base64_token}"})
+        try:
+            send_mail(
+                'Confirmação de troca',
+                strip_tags(html_message),
+                os.getenv('SENDER_EMAIL_ADDRESS'),
+                [f'up{username}@up.pt']
+            )
+        except Exception as e:
+            print("Error: ", e)
+        
+        return JsonResponse({"success": True}, safe=False)
+        

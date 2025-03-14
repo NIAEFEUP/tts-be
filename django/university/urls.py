@@ -20,6 +20,7 @@ from university.routes.exchange.card.metadata.ExchangeCardMetadataView import Ex
 from university.routes.exchange.verify.ExchangeVerifyView import ExchangeVerifyView
 from university.routes.admin.AdminExchangeCoursesView import AdminExchangeCoursesView
 from university.routes.exchange.ExchangeUrgentView import ExchangeUrgentView
+from university.routes.exchange.RevalidateExchangeView import RevalidateExchangeView
 from university.routes.student.StudentCourseMetadataView import StudentCourseMetadataView
 from university.routes.exchange.AdminRequestAwaitingInformationView import AdminRequestAwaitingInformationView
 
@@ -57,6 +58,7 @@ urlpatterns = [
     path('exchange/<str:request_type>/<int:id>/cancel/', ExchangeCancelView.as_view()),
     path('exchange/export/csv', ExchangeExportView.as_view()),
     path('exchange/urgent/', ExchangeUrgentView.as_view()),
+    path('exchange/<int:exchange_id>/revalidate/', RevalidateExchangeView.as_view(), name='revalidate_exchange'),
     path('course_unit/<int:course_unit_id>/exchange/metadata', ExchangeCardMetadataView.as_view()),
     path('course_unit/<int:course_unit_id>/', views.course_unit_by_id),
     path('class/<int:course_unit_id>/', views.classes),
