@@ -18,7 +18,7 @@ In case you're using linux, after installing docker check the [`Manage Docker as
 
 The data is available at the NIAEFEUP drive (Only for NIAEFEUP members):
 
-https://drive.google.com/drive/folders/1hyiwPwwPWhbAPeJm03c0MAo1HTF6s_zK?usp=sharing
+https://drive.google.com/drive/folders/10pLBjrQyfZO2onBK92T4E8R8fBqdWRGE
 
 You can paste the `database.db` file in `django/tts_be` folder.
 
