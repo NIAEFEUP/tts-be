@@ -2,12 +2,12 @@ import re
 
 from django.http import HttpResponseForbidden
 
+
 class AuthMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         self.auth_paths = [
             '/logout/',
-            '/auth/info/',
             '/student/schedule/',
             re.compile(r'^/student/\w+/photo/$'),
             re.compile(r'^/schedule_sigarra/\d+/$'),
