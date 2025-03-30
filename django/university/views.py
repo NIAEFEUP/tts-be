@@ -15,21 +15,39 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 import requests
 from rest_framework import status
-from django.core.mail import send_mail
 
 from django.utils import timezone
 from django.forms.models import model_to_dict
 
+from tts_be.settings import CONFIG, FEDERATED_AUTH
+
+from university.controllers.SigarraController import SigarraController
+
+from django.contrib.auth import get_user_model, login
 
 def get_field(value):
     return value.field
 
-@api_view(['GET'])
-def emailtest(request):
-    send_mail("subject", "message", "from_email", ["recipient_list"])
-    
-    return HttpResponse()
+if not FEDERATED_AUTH:
+    @api_view(['POST'])
+    def sigarra_login(request):
+        sigarra_controller = SigarraController()
+        sigarra_controller.login()
 
+        User = get_user_model()
+        
+        user = User.objects.get(username=CONFIG["SIGARRA_USERNAME"])
+
+        if not user:
+            user, created = User.objects.get_or_create(username=CONFIG["username"], defaults={
+                    "email": "",
+                    "first_name": "First",
+                    "last_name": "Last"
+                })
+
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        return HttpResponse(status=200)
 
 @api_view(['GET'])
 def faculty(request):

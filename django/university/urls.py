@@ -26,12 +26,13 @@ from university.routes.exchange.AdminRequestAwaitingInformationView import Admin
 from university.middleware.exchange_admin import exchange_admin_required
 from university.routes.exchange.verify.DirectExchangeValidationView import DirectExchangeValidationView
 
+from tts_be.settings import FEDERATED_AUTH
+
 from . import views
 from mozilla_django_oidc import views as oidc_views
 
 # URLConf
 urlpatterns = [
-    path('emailtest/', views.emailtest),
     path('faculty/', views.faculty),
     path('course/<int:year>', views.course),
     path('course_units/<int:course_id>/<int:year>/<int:semester>/', views.course_units),
@@ -71,3 +72,6 @@ urlpatterns = [
     path('exchange/admin/request/<str:request_type>/<int:id>/awaiting-information/', exchange_admin_required(AdminRequestAwaitingInformationView.as_view())),
     path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback")
 ]
+
+if FEDERATED_AUTH == 0:
+    urlpatterns.append(path('sigarra_login/', views.sigarra_login))
