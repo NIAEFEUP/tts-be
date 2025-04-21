@@ -22,13 +22,13 @@ class RevalidateExchangeView(View):
         exchange_model = DirectExchange.objects.filter(id=exchange_id).first()
         
         if exchange_model is None:
-            return JsonResponse({"success": False}, safe=False)
+            return JsonResponse({"success": False}, status=400, safe=False)
         
         exchanges = DirectExchangeParticipants.objects.filter(direct_exchange=exchange_model)
         filtered_exchanges = [inserted_exchange for inserted_exchange in exchanges if inserted_exchange.participant_nmec == username]
 
         if (len(filtered_exchanges) == 0):
-            return JsonResponse({"success": False}, safe=False)
+            return JsonResponse({"success": False},  status=400, safe=False)
 
         token = jwt.encode({"username": username, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
 
