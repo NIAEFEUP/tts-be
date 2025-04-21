@@ -1,15 +1,9 @@
-import json
 import base64
 import jwt
 import datetime
-import hashlib
 import os
 
-from django.core.paginator import Paginator
-from django.db import transaction
-from django.utils import timezone
-
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.views import View
 from django.utils.html import strip_tags
 from django.core.mail import send_mail
@@ -20,7 +14,6 @@ from tts_be.settings import JWT_KEY, VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS, D
 
 
 from exchange.models import DirectExchange, DirectExchangeParticipants
-
 
 class RevalidateExchangeView(View):
     @method_decorator(ratelimit(key='user', rate='1/h', block=True), name='post')    
@@ -33,6 +26,9 @@ class RevalidateExchangeView(View):
         
         exchanges = DirectExchangeParticipants.objects.filter(direct_exchange=exchange_model)
         filtered_exchanges = [inserted_exchange for inserted_exchange in exchanges if inserted_exchange.participant_nmec == username]
+
+        if (len(filtered_exchanges) == 0):
+            return JsonResponse({"success": False}, safe=False)
 
         token = jwt.encode({"username": username, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
 
