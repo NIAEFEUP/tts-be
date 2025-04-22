@@ -57,6 +57,9 @@ class Class(models.Model):
     course_unit = models.ForeignKey('CourseUnit', models.DO_NOTHING)
     last_updated = models.DateTimeField()
 
+    def from_course_unit(course_unit_id, class_acronym):
+        return Class.objects.filter(course_unit__id=course_unit_id, name=class_acronym.split("+")[0]).first()
+
     class Meta:
         managed = True
         db_table = 'class'

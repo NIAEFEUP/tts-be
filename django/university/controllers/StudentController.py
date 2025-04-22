@@ -47,6 +47,27 @@ class StudentController:
             user_course_unit.save()
 
     @staticmethod
+    def refresh_metadata(nmec):
+        StudentController.populate_course_metadata(nmec, True)
+
+        sigarra_course_units = StudentScheduleController.retrieveCourseUnitClasses(SigarraController(), nmec)
+        current_course_units = UserCourseUnits.objects.filter(user_nmec=nmec)
+
+        for item in sigarra_course_units:
+            (course_unit_id, class_acronym) = item
+
+            course_unit_class = Class.from_course_unit(course_unit_id, class_acronym)
+
+            if not current_course_units.filter(course_unit_id=item[0]).exists():
+                UserCourseUnits.objects.create(
+                    user_nmec=nmec,
+                    course_unit_id=item[0], 
+                    class_field=course_unit_class
+                )
+            else:
+                current_course_units.filter(course_unit_id=item[0]).update(class_field=course_unit_class)
+
+    @staticmethod
     def populate_course_metadata(nmec, erase_previous: bool = False):
         if(erase_previous):
             StudentCourseMetadata.objects.filter(nmec=nmec).delete()
