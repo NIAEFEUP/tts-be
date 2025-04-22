@@ -38,13 +38,17 @@ JWT_KEY= CONFIG['JWT_KEY']
 DEBUG = os.getenv('DEBUG')
 DEBUG = int(DEBUG) != 0 if DEBUG else False
 
+FEDERATED_AUTH = int(os.getenv('FEDERATED_AUTH'))
+
 DOMAIN = os.getenv('DOMAIN')
 DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
+
+EXCHANGE_SEMESTER = CONFIG["EXCHANGE_SEMESTER"]
 
 ALLOWED_HOSTS = ['tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
 
 if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', 'tts-dev.niaefeup.pt'])
+    ALLOWED_HOSTS.extend(['localhost', 'tts-dev.niaefeup.pt', 'http://localhost:3100'])
 
 if not DEBUG:
     LOGGING = {
@@ -115,12 +119,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'university.auth_middleware.AuthMiddleware',
     'mozilla_django_oidc.middleware.SessionRefresh',
-    'django.middleware.csrf.CsrfViewMiddleware'
+    'django.middleware.csrf.CsrfViewMiddleware',
 ]
 
-# AUTH_USER_MODEL = 'university.TtsUser'
+if not DEBUG:
+    MIDDLEWARE.append('university.auth_middleware.AuthMiddleware')
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 

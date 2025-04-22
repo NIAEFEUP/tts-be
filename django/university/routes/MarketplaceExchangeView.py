@@ -3,6 +3,8 @@ import hashlib
 
 from django.utils import timezone
 
+from tts_be.settings import CONFIG
+
 from django.db.models import Q
 
 from rest_framework.views import APIView
@@ -56,7 +58,8 @@ class MarketplaceExchangeView(APIView):
                 )
                 ).exclude(Q(issuer_nmec=request.user.username) | Q(canceled=True) | Q(accepted=True)).distinct())
 
-        marketplace_exchanges = self.remove_invalid_dest_class_exchanges(marketplace_exchanges, request.user.username)
+        if not bool(CONFIG["DEBUG"]):
+            marketplace_exchanges = self.remove_invalid_dest_class_exchanges(marketplace_exchanges, request.user.username)
 
         marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
 
