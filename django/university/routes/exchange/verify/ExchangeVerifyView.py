@@ -26,8 +26,6 @@ class ExchangeVerifyView(View):
                 ExchangeValidationController().cancel_exchange(direct_exchange)
                 return JsonResponse({"verified": False}, safe=False)
             
-            print("Exchange info: ", exchange_info)
-
             token_seconds_elapsed = time.time() - exchange_info["exp"]
             if token_seconds_elapsed > VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS:
                 return JsonResponse({"verified": False, "expired" : True, "exchange_id": exchange_info["exchange_id"]}, safe=False)
