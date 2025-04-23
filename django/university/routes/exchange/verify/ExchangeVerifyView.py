@@ -18,7 +18,7 @@ from exchange.models import DirectExchange, DirectExchangeParticipants
 class ExchangeVerifyView(View):
     def post(self, request, token):
         try:
-            exchange_info = jwt.decode(token, JWT_KEY, algorithms=["HS256"], options={"verify_signature": False})
+            exchange_info = jwt.decode(token, JWT_KEY, algorithms=["HS256"], options={"verify_exp": False})
 
             direct_exchange = DirectExchange.objects.get(id=exchange_info["exchange_id"])
 
