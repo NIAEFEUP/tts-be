@@ -54,7 +54,7 @@ class CourseUnitEnrollmentView(APIView):
     def get(self, request):
         is_admin = ExchangeAdmin.objects.filter(username=request.user.username).exists()
         if not(is_admin):
-            return HttpResponse(status=403) 
+            return HttpResponse(status=403)
 
         enrollments = CourseUnitEnrollments.objects.all().order_by('date')
 
@@ -91,7 +91,7 @@ class CourseUnitEnrollmentView(APIView):
 
             models_to_save = []
             for enrollment in enrollments:
-                enrollment_metadata = json.loads(enrollment) 
+                enrollment_metadata = json.loads(enrollment)
 
                 if len(list(CourseUnitEnrollmentOptions.objects.filter(course_unit__id=int(enrollment_metadata["course_unit_id"]), course_unit_enrollment__user_nmec=request.user.username, enrolling=enrollment_metadata["enrolling"]))) > 0:
                     return JsonResponse({"error": "Não podes fazer pedidos com disciplinas em que já pediste noutros!"}, status=400)
@@ -107,8 +107,8 @@ class CourseUnitEnrollmentView(APIView):
                 )
                 models_to_save.append(db_enrollment)
 
-            
+
             course_unit_enrollment.save()
             CourseUnitEnrollmentOptions.objects.bulk_create(models_to_save)
-        
+
         return HttpResponse(status=200)

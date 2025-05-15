@@ -61,9 +61,6 @@ class ExchangeController:
     def eligible_course_units(nmec):
         course_units = UserCourseUnits.objects.filter(user_nmec=nmec).values_list("course_unit_id", flat=True)
 
-        if DEBUG:
-            return list(course_units)
-
         exchange_expirations = ExchangeExpirations.objects.filter(
             course_unit_id__in=course_units,
             active_date__lte=timezone.now(),
@@ -76,10 +73,8 @@ class ExchangeController:
     def getExchangeType(exchange) -> ExchangeType:
         if type(exchange) == MarketplaceExchange:
             return ExchangeType.MARKETPLACE_EXCHANGE
-        elif type(exchange) == DirectExchange:
-            return ExchangeType.DIRECT_EXCHANGE
-        elif type(exchange) == ExchangeUrgentRequests:
-            return ExchangeType.URGENT_EXCHANGE
+
+        return ExchangeType.DIRECT_EXCHANGE
 
     @staticmethod
     def getOptionsDependinOnExchangeType(exchange):
@@ -184,7 +179,6 @@ class ExchangeController:
                     original_other_class = original_other_class.class_field.id
                     # Need to check if the classes are the same as the previous ]ones or not
                     new_other_class_id = Class.objects.filter(name=other_class_schedule["turma_sigla"].split("+")[0], course_unit_id=int(other_class_schedule["ocorrencia_id"])).first().id
-
                     other_class_changed = new_other_class_id != original_other_class
 
                 if (check_class_mandatory(class_schedule_type) and check_class_mandatory(overlap_param_type)
@@ -197,7 +191,7 @@ class ExchangeController:
     @staticmethod
     def update_schedule_accepted_exchanges(student, schedule, metadata: 'StudentScheduleMetadata | None' = None):
         accepted_options = DirectExchangeParticipants.objects.filter(participant_nmec=student, accepted=True, direct_exchange__canceled=False, direct_exchange__accepted=True)
-        (status, trailing) = ExchangeController.update_schedule(schedule, accepted_options, metadata=metadata)
+        (status, trailing) = ExchangeController.update_schedule(schedule, accepted_options)
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
 
@@ -212,14 +206,11 @@ class ExchangeController:
                 if ocurr_id == int(exchange.course_unit_id):
                     class_type = schedule["tipo"]
 
-                    if metadata is not None:
-                        (tp_schedule, t_schedule) = metadata.class_schedule[(int(exchange.course_unit_id), exchange.class_participant_goes_to)]
-                    else:
-                        res = SigarraController().get_class_schedule(int(exchange.course_unit_id), exchange.class_participant_goes_to)
-                        if res.status_code != 200:
-                            return (ExchangeStatus.FETCH_SCHEDULE_ERROR, None)
-                        (tp_schedule, t_schedule) = res.data
+                    res = SigarraController().get_class_schedule(int(exchange.course_unit_id), exchange.class_participant_goes_to)
+                    if res.status_code != 200:
+                        return (ExchangeStatus.FETCH_SCHEDULE_ERROR, None)
 
+                    (tp_schedule, t_schedule) = res.data
                     tp_schedule.extend(t_schedule)
                     new_schedules = tp_schedule
 
