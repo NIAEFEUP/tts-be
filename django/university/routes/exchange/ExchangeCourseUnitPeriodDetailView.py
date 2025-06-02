@@ -63,3 +63,26 @@ class ExchangeCourseUnitPeriodDetailView(View):
             return JsonResponse({"error": "Period not found"}, status=404)
 
         return JsonResponse({"success": True})
+
+    def delete(self, request, course_unit_id, period_id):
+        is_course_admin = ExchangeAdminCourseUnits.objects.filter(
+            exchange_admin__username=request.user.username,
+            course_unit__id=course_unit_id
+        ).exists()
+
+        if not is_course_admin:
+            return HttpResponse(status=403)
+
+        if not course_unit_id or not period_id:
+            return JsonResponse({"error": "Missing required parameters"}, status=400)
+
+        exchange_expiration = ExchangeExpirations.objects.filter(
+            id=period_id,
+            course_unit_id=course_unit_id
+        ).first()
+
+        if exchange_expiration:
+            exchange_expiration.delete()
+            return JsonResponse({"success": True})
+        else:
+            return JsonResponse({"error": "Period not found"}, status=404)

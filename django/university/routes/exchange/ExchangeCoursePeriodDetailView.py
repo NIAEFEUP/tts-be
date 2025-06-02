@@ -65,3 +65,31 @@ class ExchangeCoursePeriodDetailView(View):
         ).update(active_date=start_date, end_date=end_date)
 
         return JsonResponse({"message": "Exchange period updated successfully"}, status=200)
+
+    def delete(self, request, course_id, period_id):
+        if not ExchangeAdminCourses.objects.filter(
+            exchange_admin__username=request.user.username,
+            course=course_id
+        ).exists():
+            return HttpResponse(status=403)
+
+        expiration = ExchangeExpirations.objects.filter(id=period_id).first()
+        if not expiration:
+            return JsonResponse({"error": "Exchange period not found"}, status=404)
+
+        old_start_date = expiration.active_date
+        old_end_date = expiration.end_date
+
+        course_units = CourseUnit.objects.filter(course__id=course_id)
+
+        deleted_count, _ = ExchangeExpirations.objects.filter(
+            course_unit__in=course_units,
+            active_date=old_start_date,
+            end_date=old_end_date
+        ).delete()
+
+        if deleted_count == 0:
+            return JsonResponse({"error": "No matching exchange periods found to delete"}, status=404)
+
+        return JsonResponse({"message": f"{deleted_count} exchange period(s) deleted successfully"}, status=200)
+
