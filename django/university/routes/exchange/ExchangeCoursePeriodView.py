@@ -56,7 +56,8 @@ class ExchangeCoursePeriodView(View):
             exchange_expiration = ExchangeExpirations(
                 course_unit_id=course_unit_id,
                 active_date=start_date,
-                end_date=end_date
+                end_date=end_date,
+                is_course_expiration=True
             )
             exchange_expiration.save()
 

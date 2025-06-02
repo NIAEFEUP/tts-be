@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import datetime
-
+from django.db.models import Min
 
 from university.models import Course
 from exchange.models import ExchangeAdminCourses, ExchangeExpirations
@@ -20,15 +20,14 @@ class AdminExchangeCoursePeriodsView(APIView):
         for course in courses:
             exchange_expirations = (
                 ExchangeExpirations.objects
-                .filter(course_unit__course__id=course.id)
-                .values('id', 'active_date', 'end_date')
-                .distinct()
+                .filter(course_unit__course__id=course.id, is_course_expiration=True)
+                .values('active_date', 'end_date')
+                .annotate(id=Min('id'))
             )
 
             exchange_periods = []
             for expiration in exchange_expirations:
                 try:
-                    print(f"Processing expiration: {expiration}")
                     start_date = expiration['active_date'].strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     end_date = expiration['end_date'].strftime('%Y-%m-%dT%H:%M:%S.%fZ')
                     exchange_periods.append({

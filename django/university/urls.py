@@ -25,6 +25,8 @@ from university.routes.student.StudentCourseMetadataView import StudentCourseMet
 from university.routes.exchange.AdminRequestAwaitingInformationView import AdminRequestAwaitingInformationView
 from university.routes.exchange.ExchangeCourseUnitPeriodView import ExchangeCourseUnitPeriodView
 from university.routes.exchange.ExchangeCoursePeriodView import ExchangeCoursePeriodView
+from university.routes.exchange.ExchangeCourseUnitPeriodDetailView import ExchangeCourseUnitPeriodDetailView
+from university.routes.exchange.ExchangeCoursePeriodDetailView import ExchangeCoursePeriodDetailView
 from university.routes.admin.AdminExchangeCourseUnitPeriodsView import AdminExchangeCourseUnitPeriodsView
 from university.routes.admin.AdminExchangeCoursePeriodsView import AdminExchangeCoursePeriodsView
 
@@ -80,6 +82,8 @@ urlpatterns = [
     path('exchange/admin/course_unit/periods/', AdminExchangeCourseUnitPeriodsView.as_view()),
     path('exchange/admin/course/<int:course_id>/period/', ExchangeCoursePeriodView.as_view()),
     path('exchange/admin/courses/periods/', AdminExchangeCoursePeriodsView.as_view()),
+    path('exchange/admin/course_unit/<int:course_unit_id>/period/<int:period_id>/', ExchangeCourseUnitPeriodDetailView.as_view()),
+    path('exchange/admin/course/<int:course_id>/period/<int:period_id>/', ExchangeCoursePeriodDetailView.as_view()),
     path('exchange/admin/request/<str:request_type>/<int:id>/reject/', exchange_admin_required(AdminExchangeRequestRejectView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/accept/', exchange_admin_required(AdminExchangeRequestAcceptView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/awaiting-information/', exchange_admin_required(AdminRequestAwaitingInformationView.as_view())),
