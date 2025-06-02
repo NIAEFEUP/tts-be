@@ -84,7 +84,7 @@ class ExchangeExpirations(models.Model):
     course_unit = models.ForeignKey(CourseUnit, models.DO_NOTHING)
     active_date = models.DateTimeField()
     end_date = models.DateTimeField()
-
+    is_course_expiration = models.BooleanField(default=False)
     class Meta:
         managed = True
         db_table = 'exchange_expirations'
