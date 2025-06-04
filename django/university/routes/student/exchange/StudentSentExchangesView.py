@@ -61,7 +61,7 @@ class StudentSentExchangesView(APIView):
         paginator = Paginator(exchanges, 10)
         page_obj = paginator.get_page(page_number if page_number != None else 1)
 
-        data = {
+        return {
             "page": {
                 "current": page_obj.number,
                 "has_next": page_obj.has_next(),
@@ -88,6 +88,3 @@ class StudentSentExchangesView(APIView):
                 }
             for exchange in page_obj]
         }
-        print(data)
-
-        return data
