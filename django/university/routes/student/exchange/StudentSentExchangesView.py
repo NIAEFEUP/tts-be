@@ -41,7 +41,7 @@ class StudentSentExchangesView(APIView):
                 to_attr='options'
             )
         ).filter(
-            user_nmec=request.user.username
+            issuer_nmec=request.user.username
         ).all())
 
         # exchanges = marketplace_exchanges + direct_exchanges
@@ -61,7 +61,7 @@ class StudentSentExchangesView(APIView):
         paginator = Paginator(exchanges, 10)
         page_obj = paginator.get_page(page_number if page_number != None else 1)
 
-        return {
+        data = {
             "page": {
                 "current": page_obj.number,
                 "has_next": page_obj.has_next(),
@@ -80,12 +80,14 @@ class StudentSentExchangesView(APIView):
                 else {
                     "id": exchange.id,
                     "type": ExchangeController.getExchangeType(exchange).toString(),
-                    "issuer_name": "Placeholder", # The DB does not have this field, but it is fetched on the frontend
-                    "issuer_nmec": exchange.user_nmec,
+                    "issuer_name": exchange.issuer_name, # The DB does not have this field, but it is fetched on the frontend
+                    "issuer_nmec": exchange.issuer_nmec,
                     "accepted": exchange.accepted,
-                    "canceled": False, # The DB does not have this field, but it should be False
                     "options": ExchangeController.getOptionsDependinOnExchangeType(exchange),
                     "date": exchange.date
                 }
             for exchange in page_obj]
         }
+        print(data)
+
+        return data
