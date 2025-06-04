@@ -36,6 +36,8 @@ from mozilla_django_oidc import views as oidc_views
 urlpatterns = [
     path('faculty/', views.faculty),
     path('course/<int:year>', views.course),
+    path('course/<int:course_id>/groups', views.course_groups),
+    path('course_group/<int:course_group_id>/course_units', views.course_group_course_units),
     path('course_units/<int:course_id>/<int:year>/<int:semester>/', views.course_units),
     path('professors/<int:schedule>/', views.professor),
     path('info/', views.info),

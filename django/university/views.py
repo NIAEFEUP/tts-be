@@ -9,6 +9,8 @@ from university.models import SlotProfessor
 from university.models import CourseMetadata
 from university.models import Info
 from university.models import Info
+from university.models import CourseGroup
+from university.models import CourseUnitCourseGroup
 from university.controllers.ClassController import ClassController
 from university.response.errors import course_unit_not_found_error
 from django.http import JsonResponse
@@ -65,6 +67,22 @@ def faculty(request):
 def course(request, year):
     json_data = list(Course.objects.filter(year=year).values())
     return JsonResponse(json_data, safe=False)
+
+@api_view(['GET'])
+def course_groups(request, course_id):
+    json_data=list(CourseGroup.objects.filter(course_id=course_id).values())
+    return JsonResponse(json_data, safe=False)
+
+@api_view(['GET'])
+def course_group_course_units(request, course_group_id):
+
+    course_unit_ids = CourseUnitCourseGroup.objects.filter(
+        course_group_id=course_group_id
+    ).values_list('course_unit_id', flat=True)
+    
+    course_units = CourseUnit.objects.filter(id__in=course_unit_ids).values()
+    
+    return JsonResponse(list(course_units), safe=False)
 
 
 @api_view(['GET'])

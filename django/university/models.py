@@ -124,3 +124,25 @@ class SlotProfessor(models.Model):
         db_table = 'slot_professor'
         unique_together = (('slot', 'professor'), ('slot', 'professor'),)
 
+
+
+class CourseGroup(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=64)
+    course = models.ForeignKey('Course', on_delete=models.CASCADE)
+    year = models.IntegerField()
+    semester = models.IntegerField()
+
+    class Meta:
+        managed = True
+        db_table = 'course_group'
+
+
+class CourseUnitCourseGroup(models.Model):
+    course_unit = models.ForeignKey('CourseUnit', on_delete=models.CASCADE)
+    course_group = models.ForeignKey('CourseGroup', on_delete=models.CASCADE)
+
+    class Meta:
+        managed = True
+        db_table = 'course_unit_course_group'
+        unique_together = (('course_unit', 'course_group'),)
