@@ -40,7 +40,8 @@ class ExchangeCourseUnitPeriodView(View):
         if ExchangeExpirations.objects.filter(
                 course_unit_id=course_unit_id,
                 active_date__lt=end_date,   
-                end_date__gt=start_date     
+                end_date__gt=start_date,
+                is_course_expiration=False     
             ).exists():
                 return JsonResponse({"error": "Este período de troca se sobrepõe a um período existente."}, safe=False, status=400)
 
