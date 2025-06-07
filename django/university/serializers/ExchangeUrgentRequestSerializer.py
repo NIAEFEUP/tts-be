@@ -23,11 +23,11 @@ class ExchangeUrgentRequestSerializer(serializers.Serializer):
         return list(map(lambda option: ExchangeUrgentRequestOptionsSerializer(option).data, options))
 
 class ExchangeUrgentRequestOptionsSerializer(serializers.Serializer):
-    course_unit = serializers.SerializerMethodField()
+    course_info = serializers.SerializerMethodField()
     class_issuer_goes_from = serializers.SerializerMethodField()
     class_issuer_goes_to = serializers.SerializerMethodField()
 
-    def get_course_unit(self, obj):
+    def get_course_info(self, obj):
         course_unit_id = obj.course_unit_id
 
         try:
