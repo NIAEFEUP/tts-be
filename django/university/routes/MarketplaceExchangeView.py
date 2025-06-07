@@ -166,7 +166,8 @@ class MarketplaceExchangeView(APIView):
         
         with transaction.atomic():
             urgent_request = ExchangeUrgentRequests.objects.create(
-                user_nmec=request.user.username,
+                issuer_nmec=request.user.first_name + " " + request.user.last_name,
+                issuer_name=request.user.username,
                 message=message,
                 accepted=False,
                 admin_state="untreated",
