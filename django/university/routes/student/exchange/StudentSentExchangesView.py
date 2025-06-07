@@ -83,6 +83,7 @@ class StudentSentExchangesView(APIView):
                     "issuer_name": exchange.issuer_name, # The DB does not have this field, but it is fetched on the frontend
                     "issuer_nmec": exchange.issuer_nmec,
                     "accepted": exchange.accepted,
+                    "message": exchange.message,
                     "options": ExchangeController.getOptionsDependinOnExchangeType(exchange),
                     "date": exchange.date
                 }
