@@ -41,6 +41,7 @@ class AdminExchangeCoursePeriodsView(APIView):
 
             response_data.append({
                 "courseId": course.id,
+                "courseName": course.name,
                 "courseAcronym": course.acronym,
                 "exchangePeriods": exchange_periods
             })

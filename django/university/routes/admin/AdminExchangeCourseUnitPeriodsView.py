@@ -21,7 +21,7 @@ class AdminExchangeCourseUnitPeriodsView(APIView):
         for unit in course_units:
             exchange_expirations = (
                 ExchangeExpirations.objects
-                .filter(course_unit__id=unit.id)
+                .filter(course_unit__id=unit.id, is_course_expiration=False)
                 .values('id','active_date', 'end_date')
                 .distinct()
             )

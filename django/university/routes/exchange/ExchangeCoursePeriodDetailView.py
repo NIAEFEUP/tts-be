@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.views import View
 from django.utils import timezone
 
@@ -21,10 +21,10 @@ class ExchangeCoursePeriodDetailView(View):
             exchange_admin__username=request.user.username,
             course=course_id
         ).exists():
-            return HttpResponse(status=403)
+            return JsonResponse({"error": "Sem permissões suficientes"}, status=403)
 
         if not (start_date_str and end_date_str):
-            return JsonResponse({"error": "Missing required date parameters"}, status=400)
+            return JsonResponse({"error": "Parâmetros obrigatórios ausentes"}, status=400)
 
         try:
             start_date = timezone.make_aware(
@@ -34,16 +34,16 @@ class ExchangeCoursePeriodDetailView(View):
                 datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
             )
         except ValueError as e:
-            return JsonResponse({"error": f"Invalid date format: {str(e)}"}, status=400)
+            return JsonResponse({"error": f"Formato de data inválido: {str(e)}"}, status=400)
 
         if start_date >= end_date:
-            return JsonResponse({"error": "Start date must be before end date"}, status=400)
+            return JsonResponse({"error": "A data de início deve ser anterior à data do fim"}, status=400)
 
         course_units = CourseUnit.objects.filter(course__id=course_id)
 
         expiration = ExchangeExpirations.objects.filter(id=period_id).first()
         if not expiration:
-            return JsonResponse({"error": "Exchange period not found"}, status=404)
+            return JsonResponse({"error": "Este período de troca não existe."}, status=404)
 
         old_start_date = expiration.active_date
         old_end_date = expiration.end_date
@@ -56,7 +56,7 @@ class ExchangeCoursePeriodDetailView(View):
             ).exclude(active_date=old_start_date, end_date=old_end_date)
 
             if overlaps.exists():
-                return JsonResponse({"error": "This exchange period overlaps with another existing period"}, status=400)
+                return JsonResponse({"error": "Este período de troca se sobrepõe a um período existente."}, status=400)
 
         ExchangeExpirations.objects.filter(
             course_unit__in=course_units,
@@ -71,7 +71,7 @@ class ExchangeCoursePeriodDetailView(View):
             exchange_admin__username=request.user.username,
             course=course_id
         ).exists():
-            return HttpResponse(status=403)
+            return JsonResponse({"error": "You do not have admin permissions"}, status=403)
 
         expiration = ExchangeExpirations.objects.filter(id=period_id).first()
         if not expiration:
