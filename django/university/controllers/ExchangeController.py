@@ -1,3 +1,5 @@
+from tts_be.settings import DEBUG
+
 import base64
 import json
 
@@ -59,6 +61,9 @@ class ExchangeController:
     @staticmethod
     def eligible_course_units(nmec):
         course_units = UserCourseUnits.objects.filter(user_nmec=nmec).values_list("course_unit_id", flat=True)
+
+        if DEBUG:
+            return list(course_units)
         
         exchange_expirations = ExchangeExpirations.objects.filter(
             course_unit_id__in=course_units, 
