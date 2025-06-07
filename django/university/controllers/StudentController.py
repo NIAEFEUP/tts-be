@@ -65,7 +65,14 @@ class StudentController:
                     class_field=course_unit_class
                 )
             else:
+                # Check if there is a direct exhange accepted with changes to this class
+                
+                
                 current_course_units.filter(course_unit_id=item[0]).update(class_field=course_unit_class)
+
+        for item in current_course_units:
+            if not sigarra_course_units.filter(course_unit_id=item.course_unit_id).exists():
+                item.delete()
 
     @staticmethod
     def populate_course_metadata(nmec, erase_previous: bool = False):
