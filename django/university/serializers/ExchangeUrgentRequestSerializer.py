@@ -10,7 +10,8 @@ from exchange.models import ExchangeUrgentRequestOptions
 
 class ExchangeUrgentRequestSerializer(serializers.Serializer):
     id = serializers.IntegerField()
-    user_nmec = serializers.CharField(max_length=32)
+    issuer_name = serializers.CharField(max_length=256)
+    issuer_nmec = serializers.CharField(max_length=32)
     message = serializers.CharField(max_length=2048)
     accepted = serializers.BooleanField()
     admin_state = serializers.CharField(max_length=32)
@@ -22,11 +23,11 @@ class ExchangeUrgentRequestSerializer(serializers.Serializer):
         return list(map(lambda option: ExchangeUrgentRequestOptionsSerializer(option).data, options))
 
 class ExchangeUrgentRequestOptionsSerializer(serializers.Serializer):
-    course_unit = serializers.SerializerMethodField()
-    class_user_goes_from = serializers.SerializerMethodField()
-    class_user_goes_to = serializers.SerializerMethodField()
+    course_info = serializers.SerializerMethodField()
+    class_issuer_goes_from = serializers.SerializerMethodField()
+    class_issuer_goes_to = serializers.SerializerMethodField()
 
-    def get_course_unit(self, obj):
+    def get_course_info(self, obj):
         course_unit_id = obj.course_unit_id
 
         try:
@@ -34,8 +35,8 @@ class ExchangeUrgentRequestOptionsSerializer(serializers.Serializer):
         except:
             return None
 
-    def get_class_user_goes_from(self, obj):
-        class_issuer_id = obj.class_user_goes_from.split("+")[0]
+    def get_class_issuer_goes_from(self, obj):
+        class_issuer_id = obj.class_issuer_goes_from.split("+")[0]
         classes = ClassController.get_classes(obj.course_unit_id)
         filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
 
@@ -44,8 +45,8 @@ class ExchangeUrgentRequestOptionsSerializer(serializers.Serializer):
         except:
             return None
 
-    def get_class_user_goes_to(self, obj):
-        class_issuer_id = obj.class_user_goes_to.split("+")[0]
+    def get_class_issuer_goes_to(self, obj):
+        class_issuer_id = obj.class_issuer_goes_to.split("+")[0]
         classes = ClassController.get_classes(obj.course_unit_id)
         filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
 

@@ -166,7 +166,8 @@ class MarketplaceExchangeView(APIView):
         
         with transaction.atomic():
             urgent_request = ExchangeUrgentRequests.objects.create(
-                user_nmec=request.user.username,
+                issuer_name=request.user.first_name + " " + request.user.last_name,
+                issuer_nmec=request.user.username,
                 message=message,
                 accepted=False,
                 admin_state="untreated",
@@ -178,8 +179,8 @@ class MarketplaceExchangeView(APIView):
             for exchange in exchanges:
                 models_to_save.append(ExchangeUrgentRequestOptions(
                     course_unit_id=int(exchange["courseUnitId"]),
-                    class_user_goes_from=exchange["classNameRequesterGoesFrom"],
-                    class_user_goes_to=exchange["classNameRequesterGoesTo"],
+                    class_issuer_goes_from=exchange["classNameRequesterGoesFrom"],
+                    class_issuer_goes_to=exchange["classNameRequesterGoesTo"],
                     exchange_urgent_request=urgent_request,
                 ))
 

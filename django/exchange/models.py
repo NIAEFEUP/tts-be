@@ -91,9 +91,9 @@ class ExchangeExpirations(models.Model):
 
 
 class ExchangeUrgentRequestOptions(models.Model):
+    class_issuer_goes_from = models.CharField(max_length=16)
+    class_issuer_goes_to = models.CharField(max_length=16)
     course_unit = models.ForeignKey(CourseUnit, models.DO_NOTHING)
-    class_user_goes_from = models.CharField(max_length=16)
-    class_user_goes_to = models.CharField(max_length=16)
     exchange_urgent_request = models.ForeignKey('ExchangeUrgentRequests', models.DO_NOTHING)
     date = models.DateTimeField(blank=True, null=True, default=timezone.now)
 
@@ -103,12 +103,13 @@ class ExchangeUrgentRequestOptions(models.Model):
 
 
 class ExchangeUrgentRequests(models.Model):
-    user_nmec = models.CharField(max_length=32)
-    message = models.CharField(max_length=2048)
+    issuer_name = models.CharField(max_length=256, default=None, null=True)
+    issuer_nmec = models.CharField(max_length=32)
     accepted = models.BooleanField(blank=True, null=True, default=False)
-    admin_state = models.CharField(max_length=32, default='untreated')
+    message = models.CharField(max_length=2048)
     date = models.DateTimeField(blank=True, null=True, default=timezone.now)
     hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
+    admin_state = models.CharField(max_length=32, default='untreated')
 
     class Meta:
         managed = True

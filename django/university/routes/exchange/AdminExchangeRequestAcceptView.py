@@ -24,7 +24,7 @@ class AdminExchangeRequestAcceptView(View):
 
             exchange_urgent_request_options = ExchangeUrgentRequestOptions.objects.filter(exchange_urgent_request__id=id)
             for option in exchange_urgent_request_options:
-                class_ = Class.objects.filter(name=option.class_user_goes_to, course_unit__id=option.course_unit.id).first()
+                class_ = Class.objects.filter(name=option.class_issuer_goes_to, course_unit__id=option.course_unit.id).first()
                 UserCourseUnits.objects.filter(user_nmec=exchange_urgent_request.user_nmec, course_unit__id=option.course_unit.id).update(class_field=class_)
 
         elif request_type == "enrollment":
