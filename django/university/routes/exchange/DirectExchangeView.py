@@ -21,7 +21,7 @@ from university.controllers.AdminRequestFiltersController import AdminRequestFil
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
-from university.controllers.ExchangeValidationController import ExchangeValidationController
+from university.controllers.ExchangeValidationController import ExchangeValidationController, ExchangeValidationMetadata
 from university.controllers.StudentController import StudentController
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error
 
@@ -197,36 +197,46 @@ class DirectExchangeView(View):
             return JsonResponse({"error": ExchangeValidationController().validate_direct_exchange(id).message}, status=400, safe=False)
 
         exchange = DirectExchange.objects.get(id=id)
+        exchange_validation_metadata = ExchangeValidationMetadata()
 
-        try:
-            with transaction.atomic():
-                # Update exchange accepted states
-                participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-                for participant in participants:
-                    if participant.participant_nmec == request.user.username:
-                        participant.accepted = True
-                        participant.save()
+        while True:
+            participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+            participant_nmecs = {participant.participant_nmec for participant in participants}
+            ExchangeValidationController().fetch_conflicting_exchanges_metadata(id, metadata=exchange_validation_metadata)
 
-                if all(participant.accepted for participant in participants):
-                    exchange.accepted = True
-                    exchange.save()
+            try:
+                with transaction.atomic():
+                    # Update exchange accepted states
+                    participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+                    new_participant_nmecs = {participant.participant_nmec for participant in participants}
+                    if participant_nmecs != new_participant_nmecs:
+                        continue
 
                     for participant in participants:
-                        StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
+                        if participant.participant_nmec == request.user.username:
+                            participant.accepted = True
+                            participant.save()
 
-                    if exchange.marketplace_exchange:
-                        marketplace_exchange = exchange.marketplace_exchange
-                        exchange.marketplace_exchange = None
-
-                        # Remove references to exchange
-                        MarketplaceExchangeClass.objects.filter(marketplace_exchange=marketplace_exchange).delete()
-
+                    if all(participant.accepted for participant in participants):
+                        exchange.accepted = True
                         exchange.save()
-                        marketplace_exchange.delete()
 
-                    ExchangeValidationController().cancel_conflicting_exchanges(int(exchange.id))
+                        for participant in participants:
+                            StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
 
-                return JsonResponse({"success": True}, safe=False)
-        except Exception as e:
-            print("ERROR: ", e)
-            return JsonResponse({"success": False}, status=400, safe=False)
+                        if exchange.marketplace_exchange:
+                            marketplace_exchange = exchange.marketplace_exchange
+                            exchange.marketplace_exchange = None
+
+                            # Remove references to exchange
+                            MarketplaceExchangeClass.objects.filter(marketplace_exchange=marketplace_exchange).delete()
+
+                            exchange.save()
+                            marketplace_exchange.delete()
+
+                            ExchangeValidationController().cancel_conflicting_exchanges_prefetched(int(exchange.id), metadata=exchange_validation_metadata)
+
+                    return JsonResponse({"success": True}, safe=False)
+            except Exception as e:
+                print("ERROR: ", e)
+                return JsonResponse({"success": False}, status=400, safe=False)
