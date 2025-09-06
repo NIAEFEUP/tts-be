@@ -222,7 +222,7 @@ class DirectExchangeView(View):
                 new_participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
                 new_participant_nmecs = {participant.participant_nmec for participant in new_participants}
                 if participant_nmecs != new_participant_nmecs:
-                    return JsonResponse({"success": True}, safe=False)  # New participant added/removed, need to reverify acceptances
+                    return JsonResponse({"success": False}, safe=False, status=409)  # New participant added/removed, need to reverify acceptances
 
                 exchange.accepted = True
                 exchange.save()
