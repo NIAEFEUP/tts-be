@@ -23,6 +23,7 @@ from university.controllers.SigarraController import SigarraController
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeSerializer
 from university.controllers.ExchangeValidationController import ExchangeValidationController, ExchangeValidationMetadata
 from university.controllers.StudentController import StudentController
+from university.controllers.StudentScheduleController import StudentScheduleController, StudentScheduleMetadata
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error
 
 from exchange.models import DirectExchange, DirectExchangeParticipants, DirectExchangeParticipants, ExchangeAdmin, MarketplaceExchange, MarketplaceExchangeClass
@@ -197,46 +198,61 @@ class DirectExchangeView(View):
             return JsonResponse({"error": ExchangeValidationController().validate_direct_exchange(id).message}, status=400, safe=False)
 
         exchange = DirectExchange.objects.get(id=id)
-        exchange_validation_metadata = ExchangeValidationMetadata()
 
-        while True:
-            participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-            participant_nmecs = {participant.participant_nmec for participant in participants}
+        # Update exchange accepted states
+        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+        participant_nmecs = {participant.participant_nmec for participant in participants}
+
+        self.set_participant_acceptance(participants, request.user.username, True)
+
+        # Do not do anything else if not everybody accepted
+        if not all(participant.accepted for participant in participants):
+            return JsonResponse({"success": True}, safe=False)
+
+        try:
+            exchange_validation_metadata = ExchangeValidationMetadata()
+            student_schedule_metadata = StudentScheduleMetadata()
+
             ExchangeValidationController().fetch_conflicting_exchanges_metadata(id, metadata=exchange_validation_metadata)
+            for participant in participants:
+                StudentScheduleController.fetch_student_schedule_metadata(SigarraController(), student_schedule_metadata, participant.participant_nmec)
 
-            try:
-                with transaction.atomic():
-                    # Update exchange accepted states
-                    participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-                    new_participant_nmecs = {participant.participant_nmec for participant in participants}
-                    if participant_nmecs != new_participant_nmecs:
-                        continue
+            with transaction.atomic():
+                # Ensure fetched participants are consistent with current view
+                new_participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+                new_participant_nmecs = {participant.participant_nmec for participant in new_participants}
+                if participant_nmecs != new_participant_nmecs:
+                    return JsonResponse({"success": True}, safe=False)  # New participant added/removed, need to reverify acceptances
 
-                    for participant in participants:
-                        if participant.participant_nmec == request.user.username:
-                            participant.accepted = True
-                            participant.save()
+                exchange.accepted = True
+                exchange.save()
 
-                    if all(participant.accepted for participant in participants):
-                        exchange.accepted = True
-                        exchange.save()
+                for participant in participants:
+                    StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True, metadata=student_schedule_metadata)
 
-                        for participant in participants:
-                            StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True)
+                if exchange.marketplace_exchange:
+                    marketplace_exchange = exchange.marketplace_exchange
+                    exchange.marketplace_exchange = None
 
-                        if exchange.marketplace_exchange:
-                            marketplace_exchange = exchange.marketplace_exchange
-                            exchange.marketplace_exchange = None
+                    # Remove references to exchange
+                    MarketplaceExchangeClass.objects.filter(marketplace_exchange=marketplace_exchange).delete()
 
-                            # Remove references to exchange
-                            MarketplaceExchangeClass.objects.filter(marketplace_exchange=marketplace_exchange).delete()
+                    exchange.save()
+                    marketplace_exchange.delete()
 
-                            exchange.save()
-                            marketplace_exchange.delete()
+                    ExchangeValidationController().cancel_conflicting_exchanges_prefetched(int(exchange.id), metadata=exchange_validation_metadata)
 
-                            ExchangeValidationController().cancel_conflicting_exchanges_prefetched(int(exchange.id), metadata=exchange_validation_metadata)
+            return JsonResponse({"success": True}, safe=False)
 
-                    return JsonResponse({"success": True}, safe=False)
-            except Exception as e:
-                print("ERROR: ", e)
-                return JsonResponse({"success": False}, status=400, safe=False)
+        except Exception as e:
+            # Revert participant acceptance, to allow to retry in case of an error
+            self.set_participant_acceptance(participants, request.user.username, False)
+
+            print("ERROR: ", e)
+            return JsonResponse({"success": False}, status=400, safe=False)
+
+    def set_participant_acceptance(self, participants, nmec: str, accepted: bool):
+        for participant in participants:
+            if participant.participant_nmec == nmec:
+                participant.accepted = accepted
+                participant.save()
