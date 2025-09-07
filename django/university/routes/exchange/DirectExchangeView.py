@@ -246,6 +246,7 @@ class DirectExchangeView(View):
 
         except Exception as e:
             # Revert participant acceptance, to allow to retry in case of an error
+            participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
             self.set_participant_acceptance(participants, request.user.username, False)
 
             print("ERROR: ", e)
