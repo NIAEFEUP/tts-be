@@ -210,6 +210,7 @@ class DirectExchangeView(View):
             return JsonResponse({"success": True}, safe=False)
 
         try:
+            # Prefetch information before entering the transaction
             exchange_validation_metadata = ExchangeValidationMetadata()
             student_schedule_metadata = StudentScheduleMetadata()
 
@@ -227,6 +228,7 @@ class DirectExchangeView(View):
                 exchange.accepted = True
                 exchange.save()
 
+                # Rewrite participants' schedules
                 for participant in participants:
                     StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True, metadata=student_schedule_metadata)
 
@@ -240,7 +242,7 @@ class DirectExchangeView(View):
                     exchange.save()
                     marketplace_exchange.delete()
 
-                    ExchangeValidationController().cancel_conflicting_exchanges(int(exchange.id), metadata=exchange_validation_metadata)
+                ExchangeValidationController().cancel_conflicting_exchanges(int(exchange.id), metadata=exchange_validation_metadata)
 
             return JsonResponse({"success": True}, safe=False)
 

@@ -15,7 +15,7 @@ from university.controllers.ExchangeValidationController import ExchangeValidati
 from university.controllers.StudentScheduleController import StudentScheduleController, StudentScheduleMetadata
 from university.controllers.SigarraController import SigarraController
 
-from exchange.models import DirectExchange, DirectExchangeParticipants
+from exchange.models import DirectExchange, DirectExchangeParticipants, MarketplaceExchangeClass
 
 class ExchangeVerifyView(View):
     def post(self, request, token):
@@ -39,6 +39,7 @@ class ExchangeVerifyView(View):
                 return JsonResponse({"verified": True}, safe=False)
 
 
+            # Update participant acceptance
             participant = DirectExchangeParticipants.objects.filter(participant_nmec=request.user.username)
             participant.update(accepted=True)
 
@@ -47,10 +48,10 @@ class ExchangeVerifyView(View):
 
             all_participants_accepted = all(participant.accepted for participant in all_participants)
             if all_participants_accepted:
+                # Prefetch important information from SIGARRA
                 exchange_validation_metadata = ExchangeValidationMetadata()
                 student_schedule_metadata = StudentScheduleMetadata()
 
-                # Prefetch important information from SIGARRA
                 ExchangeValidationController().fetch_conflicting_exchanges_metadata(int(exchange_info["exchange_id"]), metadata=exchange_validation_metadata)
                 for participant in all_participants:
                     StudentScheduleController.fetch_student_schedule_metadata(SigarraController(), student_schedule_metadata, participant.participant_nmec)
@@ -75,6 +76,10 @@ class ExchangeVerifyView(View):
                     if direct_exchange.marketplace_exchange:
                         marketplace_exchange = direct_exchange.marketplace_exchange
                         direct_exchange.marketplace_exchange = None
+
+                        # Remove references to exchange
+                        MarketplaceExchangeClass.objects.filter(marketplace_exchange=marketplace_exchange).delete()
+
                         direct_exchange.save()
                         marketplace_exchange.delete()
 
