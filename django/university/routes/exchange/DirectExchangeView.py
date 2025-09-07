@@ -200,10 +200,11 @@ class DirectExchangeView(View):
         exchange = DirectExchange.objects.get(id=id)
 
         # Update exchange accepted states
+        self.set_participant_acceptance(exchange, request.user.username, True)
+
         participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
         participant_nmecs = {participant.participant_nmec for participant in participants}
 
-        self.set_participant_acceptance(participants, request.user.username, True)
 
         # Do not do anything else if not everybody accepted
         if not all(participant.accepted for participant in participants):
@@ -248,14 +249,15 @@ class DirectExchangeView(View):
 
         except Exception as e:
             # Revert participant acceptance, to allow to retry in case of an error
-            participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-            self.set_participant_acceptance(participants, request.user.username, False)
+            self.set_participant_acceptance(exchange, request.user.username, False)
 
             print("ERROR: ", e)
             return JsonResponse({"success": False}, status=400, safe=False)
 
-    def set_participant_acceptance(self, participants, nmec: str, accepted: bool):
-        for participant in participants:
-            if participant.participant_nmec == nmec:
-                participant.accepted = accepted
-                participant.save()
+    def set_participant_acceptance(self, exchange, nmec: str, accepted: bool):
+        with transaction.atomic():
+            participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+            for participant in participants:
+                if participant.participant_nmec == nmec:
+                    participant.accepted = accepted
+                    participant.save()
