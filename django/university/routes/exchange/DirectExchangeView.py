@@ -240,7 +240,7 @@ class DirectExchangeView(View):
                     exchange.save()
                     marketplace_exchange.delete()
 
-                    ExchangeValidationController().cancel_conflicting_exchanges_prefetched(int(exchange.id), metadata=exchange_validation_metadata)
+                    ExchangeValidationController().cancel_conflicting_exchanges(int(exchange.id), metadata=exchange_validation_metadata)
 
             return JsonResponse({"success": True}, safe=False)
 

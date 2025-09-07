@@ -78,7 +78,7 @@ class ExchangeVerifyView(View):
                         direct_exchange.save()
                         marketplace_exchange.delete()
 
-                    ExchangeValidationController().cancel_conflicting_exchanges_prefetched(int(exchange_info["exchange_id"]), metadata=exchange_validation_metadata)
+                    ExchangeValidationController().cancel_conflicting_exchanges(int(exchange_info["exchange_id"]), metadata=exchange_validation_metadata)
 
                 if cache.get(token) is not None:
                     return JsonResponse({"verified": False}, safe=False, status=403)
