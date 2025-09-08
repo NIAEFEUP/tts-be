@@ -73,8 +73,10 @@ class ExchangeController:
     def getExchangeType(exchange) -> ExchangeType:
         if type(exchange) == MarketplaceExchange:
             return ExchangeType.MARKETPLACE_EXCHANGE
-
-        return ExchangeType.DIRECT_EXCHANGE
+        elif type(exchange) == DirectExchange:
+            return ExchangeType.DIRECT_EXCHANGE
+        elif type(exchange) == ExchangeUrgentRequests:
+            return ExchangeType.URGENT_EXCHANGE
 
     @staticmethod
     def getOptionsDependinOnExchangeType(exchange):
