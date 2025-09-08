@@ -208,11 +208,14 @@ class ExchangeController:
                 if ocurr_id == int(exchange.course_unit_id):
                     class_type = schedule["tipo"]
 
-                    res = SigarraController().get_class_schedule(int(exchange.course_unit_id), exchange.class_participant_goes_to)
-                    if res.status_code != 200:
-                        return (ExchangeStatus.FETCH_SCHEDULE_ERROR, None)
+                    if metadata is not None:
+                        res = metadata.class_schedule[(int(exchange.course_unit_id), exchange.class_participant_goes_to)]
+                    else:
+                        res = SigarraController().get_class_schedule(int(exchange.course_unit_id), exchange.class_participant_goes_to)
+                        if res.status_code != 200:
+                            return (ExchangeStatus.FETCH_SCHEDULE_ERROR, None)
+                        (tp_schedule, t_schedule) = res.data
 
-                    (tp_schedule, t_schedule) = res.data
                     tp_schedule.extend(t_schedule)
                     new_schedules = tp_schedule
 

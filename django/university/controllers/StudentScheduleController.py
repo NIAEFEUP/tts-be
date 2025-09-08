@@ -15,11 +15,11 @@ import hashlib
 
 @dataclass
 class StudentScheduleMetadata:
-    schedule_data: Dict[str, Any]
+    student_schedule: Dict[str, Any]
     class_schedule: Dict[Tuple[int, str], Any]
 
     def __init__(self):
-        self.schedule_data = {}
+        self.student_schedule = {}
         self.class_schedule = {}
 
 class StudentScheduleController:
@@ -34,12 +34,12 @@ class StudentScheduleController:
 
     @staticmethod
     def fetch_student_schedule_metadata(sigarra_controller: SigarraController, metadata: StudentScheduleMetadata, nmec: str):
-        if nmec not in metadata.schedule_data:
+        if nmec not in metadata.student_schedule:
             res = sigarra_controller.get_student_schedule(int(nmec))
             if res.status_code != 200:
                 return HttpResponse(status=res.status_code)
 
-            metadata.schedule_data[nmec] = res.data
+            metadata.student_schedule[nmec] = res.data
 
         exchanges = DirectExchangeParticipants.objects.filter(participant_nmec=nmec, accepted=True, direct_exchange__canceled=False)
         for exchange in exchanges:
@@ -52,9 +52,9 @@ class StudentScheduleController:
     @staticmethod
     def retrieve_course_unit_classes(sigarra_controller: SigarraController, username: str, metadata: StudentScheduleMetadata | None = None):
         if metadata is not None:
-            schedule_data = metadata.schedule_data[username]
+            schedule_data = metadata.student_schedule[username]
         else:
-            sigarra_res = sigarra_controller.get_student_schedule(int(username))
+            sigarra_res = sigarra_controller.get_student_schedule(username)
 
             if sigarra_res.status_code != 200:
                 return HttpResponse(status=sigarra_res.status_code)

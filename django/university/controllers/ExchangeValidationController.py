@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
+from copy import deepcopy
+
+from university.controllers.StudentScheduleController import StudentScheduleMetadata
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 
@@ -12,7 +15,7 @@ from django.db import transaction
 @dataclass
 class ExchangeValidationMetadata:
     student_schedules: Dict[str, Any]
-    target_class_schedules: Dict[Tuple[str, int], Any]
+    target_class_schedules: Dict[Tuple[int, str], Any]
 
     def __init__(self):
         self.student_schedules = {}
@@ -35,7 +38,7 @@ class ExchangeValidationController:
 
         All of the exchanges that include classes that were changed by the accepted exchange need to be revalidated or even canceled.
     """
-    def cancel_conflicting_exchanges(self, accepted_exchange_id: int, metadata: ExchangeValidationMetadata | None = None) -> None:
+    def cancel_conflicting_exchanges(self, accepted_exchange_id: int, metadata: StudentScheduleMetadata | None = None) -> None:
         if(DirectExchange.objects.filter(id=accepted_exchange_id).first().canceled):
             return
 
@@ -68,9 +71,13 @@ class ExchangeValidationController:
             for conflicting_exchange in conflicting_exchanges:
                 self.cancel_exchange(conflicting_exchange)
 
+    def cancel_exchange(self, exchange):
+        exchange.canceled = True
+        exchange.save()
+
     def fetch_conflicting_exchanges_metadata(
         self, accepted_exchange_id: int,
-        metadata: ExchangeValidationMetadata
+        metadata: StudentScheduleMetadata
     ) -> None:
         # Just like in the normal cancel_conflicting_exchanges, we do not need to fetch metadata if the exchange is canceled
         if (DirectExchange.objects.filter(id=accepted_exchange_id).first().canceled):
@@ -84,10 +91,6 @@ class ExchangeValidationController:
             for exchange in exchanges:
                 self.fetch_direct_exchange_metadata(exchange.id, metadata)
 
-    def cancel_exchange(self, exchange):
-        exchange.canceled = True
-        exchange.save()
-
     """
         This class will contain methods to validate the direct exchanges that are already inside
         of the database.
@@ -96,19 +99,20 @@ class ExchangeValidationController:
         a different logic of working because they cannot use what is inside of the database and
         will validate the request format.
     """
-    def validate_direct_exchange(self, exchange_id: int, metadata: ExchangeValidationMetadata | None = None) -> ExchangeValidationResponse:
+    def validate_direct_exchange(self, exchange_id: int, metadata: StudentScheduleMetadata | None = None) -> ExchangeValidationResponse:
         exchange_participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=exchange_id).all()
 
         # 1. Build new schedule of each student
-        if metadata is not None:
-            schedule = { participant.participant_nmec: metadata.student_schedules[participant.participant_nmec] for participant in exchange_participants }
-        else:
-            schedule = {}
-            for participant in exchange_participants:
-                if participant.participant_nmec not in schedule.keys():
+        schedule = {}
+        for participant in exchange_participants:
+            if participant.participant_nmec not in schedule.keys():
+                if metadata is not None:
+                    new_schedule = deepcopy(metadata.student_schedule[participant.participant_nmec])
+                else:
                     new_schedule = SigarraController().get_student_schedule(int(participant.participant_nmec)).data
-                    ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, new_schedule)
-                    schedule[participant.participant_nmec] = build_student_schedule_dict(new_schedule)
+
+                ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, new_schedule)
+                schedule[participant.participant_nmec] = build_student_schedule_dict(new_schedule)
 
         # 2. Check if users are inside classes they will exchange from with
         for username in schedule.keys():
@@ -120,7 +124,7 @@ class ExchangeValidationController:
 
                 # 3. Alter the schedule of the users according to the exchange metadata
                 if metadata is not None:
-                    class_schedule = metadata.target_class_schedules[(entry.class_participant_goes_to, int(entry.course_unit_id))]
+                    class_schedule = metadata.class_schedule[(int(entry.course_unit_id), entry.class_participant_goes_to)][0][0]
                 else:
                     class_schedule = SigarraController().get_class_schedule(int(entry.course_unit_id), entry.class_participant_goes_to).data[0][0] # For other courses we will need to have pratical class as a list in the dictionary
 
@@ -134,22 +138,24 @@ class ExchangeValidationController:
 
         return ExchangeValidationResponse(True, ExchangeStatus.SUCCESS)
 
-    def fetch_direct_exchange_metadata(self, exchange_id: int, metadata: ExchangeValidationMetadata) -> None:
+    def fetch_direct_exchange_metadata(self, exchange_id: int, metadata: StudentScheduleMetadata) -> None:
         exchange_participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=exchange_id).all()
 
-        student_schedules = metadata.student_schedules
+        student_schedules = metadata.student_schedule
         for participant in exchange_participants:
             if participant.participant_nmec not in student_schedules:
-                new_schedule = SigarraController().get_student_schedule(int(participant.participant_nmec)).data
-                ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, new_schedule)
-                student_schedules[participant.participant_nmec] = build_student_schedule_dict(new_schedule)
+                data = SigarraController().get_student_schedule(int(participant.participant_nmec)).data
+                student_schedules[participant.participant_nmec] = data
 
-        target_class_schedules = metadata.target_class_schedules
+        class_schedules = metadata.class_schedule
         for participant in exchange_participants:
             participant_nmec = participant.participant_nmec
             participant_entries = filter(lambda entry: entry.participant_nmec == participant_nmec, exchange_participants)
 
             for entry in participant_entries:
-                target_class_schedules[(entry.class_participant_goes_to, int(entry.course_unit_id))] = SigarraController().get_class_schedule(
-                    int(entry.course_unit_id), entry.class_participant_goes_to
-                ).data[0][0]
+                key = (int(entry.course_unit_id), entry.class_participant_goes_to)
+                if key not in class_schedules:
+                    data = SigarraController().get_class_schedule(
+                        int(entry.course_unit_id), entry.class_participant_goes_to
+                    ).data
+                    class_schedules[key] = data

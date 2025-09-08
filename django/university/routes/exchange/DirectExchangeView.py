@@ -212,10 +212,9 @@ class DirectExchangeView(View):
 
         try:
             # Prefetch information before entering the transaction
-            exchange_validation_metadata = ExchangeValidationMetadata()
             student_schedule_metadata = StudentScheduleMetadata()
 
-            ExchangeValidationController().fetch_conflicting_exchanges_metadata(id, metadata=exchange_validation_metadata)
+            ExchangeValidationController().fetch_conflicting_exchanges_metadata(int(exchange.id), student_schedule_metadata)
             for participant in participants:
                 StudentScheduleController.fetch_student_schedule_metadata(SigarraController(), student_schedule_metadata, participant.participant_nmec)
 
@@ -243,7 +242,7 @@ class DirectExchangeView(View):
                     exchange.save()
                     marketplace_exchange.delete()
 
-                ExchangeValidationController().cancel_conflicting_exchanges(int(exchange.id), metadata=exchange_validation_metadata)
+                ExchangeValidationController().cancel_conflicting_exchanges(int(exchange.id), metadata=student_schedule_metadata)
 
             return JsonResponse({"success": True}, safe=False)
 

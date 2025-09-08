@@ -49,10 +49,9 @@ class ExchangeVerifyView(View):
             all_participants_accepted = all(participant.accepted for participant in all_participants)
             if all_participants_accepted:
                 # Prefetch important information from SIGARRA
-                exchange_validation_metadata = ExchangeValidationMetadata()
                 student_schedule_metadata = StudentScheduleMetadata()
 
-                ExchangeValidationController().fetch_conflicting_exchanges_metadata(int(exchange_info["exchange_id"]), metadata=exchange_validation_metadata)
+                ExchangeValidationController().fetch_conflicting_exchanges_metadata(int(exchange_info["exchange_id"]), metadata=student_schedule_metadata)
                 for participant in all_participants:
                     StudentScheduleController.fetch_student_schedule_metadata(SigarraController(), student_schedule_metadata, participant.participant_nmec)
 
@@ -83,7 +82,7 @@ class ExchangeVerifyView(View):
                         direct_exchange.save()
                         marketplace_exchange.delete()
 
-                    ExchangeValidationController().cancel_conflicting_exchanges(int(exchange_info["exchange_id"]), metadata=exchange_validation_metadata)
+                    ExchangeValidationController().cancel_conflicting_exchanges(int(exchange_info["exchange_id"]), metadata=student_schedule_metadata)
 
                 if cache.get(token) is not None:
                     return JsonResponse({"verified": False}, safe=False, status=403)
