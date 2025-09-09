@@ -19,10 +19,19 @@ from university.routes.student.StudentPhotoView import StudentPhotoView
 from university.routes.exchange.card.metadata.ExchangeCardMetadataView import ExchangeCardMetadataView
 from university.routes.exchange.verify.ExchangeVerifyView import ExchangeVerifyView
 from university.routes.admin.AdminExchangeCoursesView import AdminExchangeCoursesView
+from university.routes.admin.AdminExchangeCourseUnitsView import AdminExchangeCourseUnitsView
 from university.routes.exchange.ExchangeUrgentView import ExchangeUrgentView
 from university.routes.exchange.RevalidateExchangeView import RevalidateExchangeView
 from university.routes.student.StudentCourseMetadataView import StudentCourseMetadataView
 from university.routes.exchange.AdminRequestAwaitingInformationView import AdminRequestAwaitingInformationView
+from university.routes.exchange.ExchangeCourseUnitPeriodView import ExchangeCourseUnitPeriodView
+from university.routes.exchange.ExchangeCoursePeriodView import ExchangeCoursePeriodView
+from university.routes.exchange.ExchangeCourseUnitPeriodDetailView import ExchangeCourseUnitPeriodDetailView
+from university.routes.exchange.ExchangeCoursePeriodDetailView import ExchangeCoursePeriodDetailView
+from university.routes.admin.AdminExchangeCourseUnitPeriodsView import AdminExchangeCourseUnitPeriodsView
+from university.routes.admin.AdminExchangeCoursePeriodsView import AdminExchangeCoursePeriodsView
+
+
 
 from university.middleware.exchange_admin import exchange_admin_required
 from university.routes.exchange.verify.DirectExchangeValidationView import DirectExchangeValidationView
@@ -31,6 +40,7 @@ from tts_be.settings import FEDERATED_AUTH
 
 from . import views
 from mozilla_django_oidc import views as oidc_views
+
 
 # URLConf
 urlpatterns = [
@@ -70,7 +80,14 @@ urlpatterns = [
     path('course_unit/enrollment/', CourseUnitEnrollmentView.as_view()), 
     path('oidc-auth/', include('mozilla_django_oidc.urls')),
     path('exchange/admin/courses/', exchange_admin_required(AdminExchangeCoursesView.as_view())),
+    path('exchange/admin/course_units/', AdminExchangeCourseUnitsView.as_view()),
     path('exchange/admin/marketplace', exchange_admin_required(AdminMarketplaceView.as_view())),
+    path('exchange/admin/course_unit/periods/', exchange_admin_required(AdminExchangeCourseUnitPeriodsView.as_view())),
+    path('exchange/admin/courses/periods/', exchange_admin_required(AdminExchangeCoursePeriodsView.as_view())),
+    path('exchange/admin/course_unit/<int:course_unit_id>/period/', exchange_admin_required(ExchangeCourseUnitPeriodView.as_view())),
+    path('exchange/admin/course/<int:course_id>/period/', exchange_admin_required(ExchangeCoursePeriodView.as_view())),
+    path('exchange/admin/course_unit/<int:course_unit_id>/period/<int:period_id>/', exchange_admin_required(ExchangeCourseUnitPeriodDetailView.as_view())),
+    path('exchange/admin/course/<int:course_id>/period/<int:period_id>/', exchange_admin_required(ExchangeCoursePeriodDetailView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/reject/', exchange_admin_required(AdminExchangeRequestRejectView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/accept/', exchange_admin_required(AdminExchangeRequestAcceptView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/awaiting-information/', exchange_admin_required(AdminRequestAwaitingInformationView.as_view())),
