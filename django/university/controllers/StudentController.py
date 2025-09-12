@@ -81,7 +81,7 @@ class StudentController:
                     
                     sigarra_class_in_accepted_exchange = False
                     for participant in direct_exchange_participant:
-                        if course_unit_class.acronym == participant.class_participant_goes_from:
+                        if course_unit_class.name == participant.class_participant_goes_from:
                             sigarra_class_in_accepted_exchange = True
                             break
                     
