@@ -2,7 +2,9 @@ from django.http import HttpResponse
 from django.views import View
 
 from university.controllers.AdminExchangeStateChangeController import AdminExchangeStateChangeController
-from university.models import DirectExchange, DirectExchangeParticipants, ExchangeUrgentRequests, CourseUnitEnrollments, Class, UserCourseUnits, ExchangeUrgentRequestOptions
+from university.models import Class
+
+from exchange.models import DirectExchange, DirectExchangeParticipants, ExchangeUrgentRequests, CourseUnitEnrollments, UserCourseUnits, ExchangeUrgentRequestOptions
 
 class AdminExchangeRequestAcceptView(View):
     def put(self, request, request_type, id):
@@ -22,7 +24,7 @@ class AdminExchangeRequestAcceptView(View):
 
             exchange_urgent_request_options = ExchangeUrgentRequestOptions.objects.filter(exchange_urgent_request__id=id)
             for option in exchange_urgent_request_options:
-                class_ = Class.objects.filter(name=option.class_user_goes_to, course_unit__id=option.course_unit.id).first()
+                class_ = Class.objects.filter(name=option.class_issuer_goes_to, course_unit__id=option.course_unit.id).first()
                 UserCourseUnits.objects.filter(user_nmec=exchange_urgent_request.user_nmec, course_unit__id=option.course_unit.id).update(class_field=class_)
 
         elif request_type == "enrollment":

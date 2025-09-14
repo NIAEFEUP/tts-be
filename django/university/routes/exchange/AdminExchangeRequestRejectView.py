@@ -2,7 +2,9 @@ from django.http import HttpResponse
 from django.views import View
 
 from university.controllers.AdminExchangeStateChangeController import AdminExchangeStateChangeController
-from university.models import DirectExchange, DirectExchangeParticipants, ExchangeUrgentRequests, CourseUnitEnrollments, UserCourseUnits, Class
+from university.models import Class
+
+from exchange.models import DirectExchange, DirectExchangeParticipants, ExchangeUrgentRequests, CourseUnitEnrollments, UserCourseUnits
 
 class AdminExchangeRequestRejectView(View):
     def put(self, request, request_type, id):

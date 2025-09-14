@@ -2,8 +2,13 @@ import json
 
 from university.controllers.SigarraController import SigarraController
 from university.controllers.StudentScheduleController import StudentScheduleController
+from university.controllers.ExchangeValidationController import ExchangeValidationController
 
-from university.models import UserCourseUnits, Class, StudentCourseMetadata, Course
+from exchange.models import DirectExchangeParticipants
+
+from university.models import Class, Course
+
+from exchange.models import UserCourseUnits, StudentCourseMetadata
 
 class StudentController:
     """
@@ -43,6 +48,46 @@ class StudentController:
                 class_field=corresponding_class
             )
             user_course_unit.save()
+
+    @staticmethod
+    def refresh_metadata(nmec):
+        StudentController.populate_course_metadata(nmec, True)
+
+        sigarra_course_units = StudentScheduleController.retrieveCourseUnitClasses(SigarraController(), nmec)
+        current_course_units = UserCourseUnits.objects.filter(user_nmec=nmec)
+
+        for item in sigarra_course_units:
+            (course_unit_id, class_acronym) = item
+
+            course_unit_class = Class.from_course_unit(course_unit_id, class_acronym)
+
+            if not current_course_units.filter(course_unit_id=item[0]).exists():
+                UserCourseUnits.objects.create(
+                    user_nmec=nmec,
+                    course_unit_id=item[0], 
+                    class_field=course_unit_class
+                )
+            else:
+                # We have to see if the sigarra class from this course unit is in the from field of any exchange.
+                # If not, dont update the class for this course unit
+                direct_exchange_participant = DirectExchangeParticipants.objects.filter(participant_nmec=nmec, course_unit_id=item[0], direct_exchange__accepted=True)
+
+                if not direct_exchange_participant.exists():
+                    current_course_units.filter(course_unit_id=item[0]).update(class_field=course_unit_class)
+                else:
+                    # We have to see if some of the exchange has the from class as the current sigarra class.
+                    # If not, we have to invalidate the exchange
+                    validation_controller = ExchangeValidationController()
+                    
+                    sigarra_class_in_accepted_exchange = False
+                    for participant in direct_exchange_participant:
+                        if course_unit_class.acronym == participant.class_participant_goes_from:
+                            sigarra_class_in_accepted_exchange = True
+                            break
+                    
+                    if not sigarra_class_in_accepted_exchange:
+                        validation_controller.cancel_exchange(participant.direct_exchange)
+                        current_course_units.filter(course_unit_id=item[0]).update(class_field=course_unit_class)
 
     @staticmethod
     def populate_course_metadata(nmec, erase_previous: bool = False):

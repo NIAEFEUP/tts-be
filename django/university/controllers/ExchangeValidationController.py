@@ -3,7 +3,7 @@ from university.controllers.SigarraController import SigarraController
 
 from university.exchange.utils import exchange_overlap, build_student_schedule_dict, ExchangeStatus, exchange_status_message
 
-from university.models import DirectExchangeParticipants, DirectExchange
+from exchange.models import DirectExchangeParticipants, DirectExchange
 
 from django.db import transaction
 

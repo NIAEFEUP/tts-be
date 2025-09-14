@@ -1,8 +1,10 @@
 from django.http.response import JsonResponse
 from rest_framework.views import APIView
 
-from university.models import StudentCourseMetadata, Course, CourseUnit
+from university.models import Course, CourseUnit
 from university.serializers.StudentCourseMetadataSerializer import StudentCourseMetadataSerializer
+
+from exchange.models import StudentCourseMetadata
 
 class StudentCourseMetadataView(APIView):
     def get(self, request, nmec, course_id):

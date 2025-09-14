@@ -3,7 +3,8 @@ from django.views import View
 
 from university.controllers.AdminExchangeStateChangeController import AdminExchangeStateChangeController
 from university.controllers.ExchangeValidationController import ExchangeValidationController
-from university.models import DirectExchange, MarketplaceExchange
+
+from exchange.models import DirectExchange, MarketplaceExchange
 
 class ExchangeCancelView(View):
     def put(self, request, request_type, id):

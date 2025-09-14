@@ -1,3 +1,5 @@
+from tts_be.settings import DEBUG
+
 import base64
 import json
 
@@ -5,21 +7,29 @@ from django.core.paginator import Paginator
 from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, check_class_mandatory, check_class_schedule_overlap, course_unit_by_id
-from university.models import DirectExchange, DirectExchangeParticipants, ExchangeExpirations, MarketplaceExchange
+from exchange.models import DirectExchange, DirectExchangeParticipants, ExchangeExpirations, ExchangeUrgentRequests, MarketplaceExchange, UserCourseUnits
 from django.utils import timezone
 from enum import Enum
 
-from university.models import UserCourseUnits, Class
+from university.models import Class
 
 from university.serializers.DirectExchangeParticipantsSerializer import DirectExchangeParticipantsSerializer
+from university.serializers.ExchangeUrgentRequestSerializer import ExchangeUrgentRequestOptionsSerializer
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class ExchangeType(Enum):
     MARKETPLACE_EXCHANGE = 1
     DIRECT_EXCHANGE = 2
+    URGENT_EXCHANGE = 3
 
     def toString(self):
-        return "marketplaceexchange" if self == ExchangeType.MARKETPLACE_EXCHANGE else "directexchange"
+        if self == ExchangeType.MARKETPLACE_EXCHANGE:
+            return "marketplaceexchange"
+        elif self == ExchangeType.DIRECT_EXCHANGE:
+            return "directexchange"
+        elif self == ExchangeType.URGENT_EXCHANGE:
+            return "urgentexchange"
+        return "unknownexchange"
 
 class DirectExchangePendingMotive(Enum):
     USER_DID_NOT_ACCEPT = 1
@@ -51,6 +61,9 @@ class ExchangeController:
     @staticmethod
     def eligible_course_units(nmec):
         course_units = UserCourseUnits.objects.filter(user_nmec=nmec).values_list("course_unit_id", flat=True)
+
+        if DEBUG:
+            return list(course_units)
         
         exchange_expirations = ExchangeExpirations.objects.filter(
             course_unit_id__in=course_units, 
@@ -64,8 +77,10 @@ class ExchangeController:
     def getExchangeType(exchange) -> ExchangeType:
         if type(exchange) == MarketplaceExchange:
             return ExchangeType.MARKETPLACE_EXCHANGE
-        
-        return ExchangeType.DIRECT_EXCHANGE
+        elif type(exchange) == DirectExchange:
+            return ExchangeType.DIRECT_EXCHANGE
+        elif type(exchange) == ExchangeUrgentRequests:
+            return ExchangeType.URGENT_EXCHANGE
 
     @staticmethod
     def getOptionsDependinOnExchangeType(exchange):
@@ -73,6 +88,8 @@ class ExchangeController:
             return [MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options]
         elif type(exchange) == DirectExchange:
             return [DirectExchangeParticipantsSerializer(participant).data for participant in exchange.options]
+        elif type(exchange) == ExchangeUrgentRequests:
+            return [ExchangeUrgentRequestOptionsSerializer(option).data for option in exchange.options]
 
     @staticmethod
     def getExchangeOptionClasses(options):

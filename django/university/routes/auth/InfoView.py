@@ -7,9 +7,12 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 import requests
 
+from tts_be.settings import DEBUG
+
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
-from university.models import ExchangeExpirations, ExchangeAdmin
+
+from exchange.models import ExchangeExpirations, ExchangeAdmin
 
 class InfoView(View):
     def get(self, request):
@@ -29,7 +32,7 @@ class InfoView(View):
                 "signed": True,
                 "username": request.user.username,
                 "name": f"{request.user.first_name} {request.user.last_name}",
-                "eligible_exchange": eligible_exchange,
+                "eligible_exchange": True if bool(DEBUG) else eligible_exchange,
                 "is_admin": is_admin,
             }, safe=False)
         else:

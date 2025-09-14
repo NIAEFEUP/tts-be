@@ -38,13 +38,17 @@ JWT_KEY= CONFIG['JWT_KEY']
 DEBUG = os.getenv('DEBUG')
 DEBUG = int(DEBUG) != 0 if DEBUG else False
 
+FEDERATED_AUTH = int(os.getenv('FEDERATED_AUTH'))
+
 DOMAIN = os.getenv('DOMAIN')
 DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
+
+EXCHANGE_SEMESTER = CONFIG["EXCHANGE_SEMESTER"]
 
 ALLOWED_HOSTS = ['tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
 
 if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', 'tts-dev.niaefeup.pt'])
+    ALLOWED_HOSTS.extend(['localhost', 'tts-dev.niaefeup.pt', 'http://localhost:3100'])
 
 if not DEBUG:
     LOGGING = {
@@ -84,6 +88,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mozilla_django_oidc',
     'university',
+    'exchange',
     # 'channels',
 ]
 
@@ -114,10 +119,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'university.auth_middleware.AuthMiddleware',
     'mozilla_django_oidc.middleware.SessionRefresh',
-    'django.middleware.csrf.CsrfViewMiddleware'
+    'django.middleware.csrf.CsrfViewMiddleware',
 ]
+
+if not DEBUG:
+    MIDDLEWARE.append('university.auth_middleware.AuthMiddleware')
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -161,6 +168,7 @@ OIDC_OP_TOKEN_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-c
 OIDC_OP_USER_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/userinfo"
 OIDC_OP_JWKS_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/certs"
 
+LOGOUT_REDIRECT_URL ="/"
 OIDC_OP_LOGOUT_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/logout"
 
 OIDC_RP_SCOPES = "openid email profile uporto_data"
@@ -172,17 +180,24 @@ OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 3600 * 60
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB'),
-        'USER': os.getenv('POSTGRES_USER'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('POSTGRES_HOST'),
-        'PORT': os.getenv('POSTGRES_PORT') ,
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(os.path.dirname(__file__), 'database.db'),
+        }
     }
-}
-
+else :
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB'),
+            'USER': os.getenv('POSTGRES_USER'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+            'HOST': os.getenv('POSTGRES_HOST'),
+            'PORT': os.getenv('POSTGRES_PORT') ,
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators

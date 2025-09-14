@@ -1,6 +1,7 @@
 from datetime import date
 from university.controllers.SigarraController import SigarraController
-from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, Professor, DirectExchange
+from university.models import CourseUnit, Professor
+from exchange.models import MarketplaceExchange, MarketplaceExchangeClass, DirectExchange
 from enum import Enum
 import requests
 import os

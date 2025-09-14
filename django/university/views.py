@@ -9,27 +9,47 @@ from university.models import SlotProfessor
 from university.models import CourseMetadata
 from university.models import Info
 from university.models import Info
+from university.models import CourseGroup
+from university.models import CourseUnitCourseGroup
 from university.controllers.ClassController import ClassController
 from university.response.errors import course_unit_not_found_error
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 import requests
 from rest_framework import status
-from django.core.mail import send_mail
 
 from django.utils import timezone
 from django.forms.models import model_to_dict
 
+from tts_be.settings import CONFIG, FEDERATED_AUTH
+
+from university.controllers.SigarraController import SigarraController
+
+from django.contrib.auth import get_user_model, login
 
 def get_field(value):
     return value.field
 
-@api_view(['GET'])
-def emailtest(request):
-    send_mail("subject", "message", "from_email", ["recipient_list"])
-    
-    return HttpResponse()
+if not FEDERATED_AUTH:
+    @api_view(['POST'])
+    def sigarra_login(request):
+        sigarra_controller = SigarraController()
+        sigarra_controller.login()
 
+        User = get_user_model()
+        
+        user = User.objects.get(username=CONFIG["SIGARRA_USERNAME"])
+
+        if not user:
+            user, created = User.objects.get_or_create(username=CONFIG["username"], defaults={
+                    "email": "",
+                    "first_name": "First",
+                    "last_name": "Last"
+                })
+
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+        return HttpResponse(status=200)
 
 @api_view(['GET'])
 def faculty(request):
@@ -47,6 +67,22 @@ def faculty(request):
 def course(request, year):
     json_data = list(Course.objects.filter(year=year).values())
     return JsonResponse(json_data, safe=False)
+
+@api_view(['GET'])
+def course_groups(request, course_id):
+    json_data=list(CourseGroup.objects.filter(course_id=course_id).values())
+    return JsonResponse(json_data, safe=False)
+
+@api_view(['GET'])
+def course_group_course_units(request, course_group_id):
+
+    course_unit_ids = CourseUnitCourseGroup.objects.filter(
+        course_group_id=course_group_id
+    ).values_list('course_unit_id', flat=True)
+    
+    course_units = CourseUnit.objects.filter(id__in=course_unit_ids).values()
+    
+    return JsonResponse(list(course_units), safe=False)
 
 
 @api_view(['GET'])

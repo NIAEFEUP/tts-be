@@ -3,6 +3,8 @@ import hashlib
 
 from django.utils import timezone
 
+from tts_be.settings import CONFIG
+
 from django.db.models import Q
 
 from rest_framework.views import APIView
@@ -17,7 +19,8 @@ from django.db import transaction
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, exchange_overlap, incorrect_class_error 
-from university.models import CourseUnit, MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, Class, ExchangeUrgentRequests, ExchangeUrgentRequestOptions
+from university.models import CourseUnit, Class
+from exchange.models import MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, ExchangeUrgentRequests, ExchangeUrgentRequestOptions
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 class MarketplaceExchangeView(APIView):
@@ -55,7 +58,8 @@ class MarketplaceExchangeView(APIView):
                 )
                 ).exclude(Q(issuer_nmec=request.user.username) | Q(canceled=True) | Q(accepted=True)).distinct())
 
-        marketplace_exchanges = self.remove_invalid_dest_class_exchanges(marketplace_exchanges, request.user.username)
+        if not bool(CONFIG["DEBUG"]):
+            marketplace_exchanges = self.remove_invalid_dest_class_exchanges(marketplace_exchanges, request.user.username)
 
         marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
 
@@ -162,7 +166,8 @@ class MarketplaceExchangeView(APIView):
         
         with transaction.atomic():
             urgent_request = ExchangeUrgentRequests.objects.create(
-                user_nmec=request.user.username,
+                issuer_name=request.user.first_name + " " + request.user.last_name,
+                issuer_nmec=request.user.username,
                 message=message,
                 accepted=False,
                 admin_state="untreated",
@@ -174,8 +179,8 @@ class MarketplaceExchangeView(APIView):
             for exchange in exchanges:
                 models_to_save.append(ExchangeUrgentRequestOptions(
                     course_unit_id=int(exchange["courseUnitId"]),
-                    class_user_goes_from=exchange["classNameRequesterGoesFrom"],
-                    class_user_goes_to=exchange["classNameRequesterGoesTo"],
+                    class_issuer_goes_from=exchange["classNameRequesterGoesFrom"],
+                    class_issuer_goes_to=exchange["classNameRequesterGoesTo"],
                     exchange_urgent_request=urgent_request,
                 ))
 

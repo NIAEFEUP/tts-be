@@ -1,4 +1,4 @@
-from university.models import DirectExchange, ExchangeUrgentRequests, CourseUnitEnrollments
+from exchange.models import DirectExchange, ExchangeUrgentRequests, CourseUnitEnrollments
 
 class AdminExchangeStateChangeController:
     def update_state_to(self, request_type, id, state):
