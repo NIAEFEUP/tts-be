@@ -30,6 +30,7 @@ from university.routes.exchange.ExchangeCourseUnitPeriodDetailView import Exchan
 from university.routes.exchange.ExchangeCoursePeriodDetailView import ExchangeCoursePeriodDetailView
 from university.routes.admin.AdminExchangeCourseUnitPeriodsView import AdminExchangeCourseUnitPeriodsView
 from university.routes.admin.AdminExchangeCoursePeriodsView import AdminExchangeCoursePeriodsView
+from university.routes.admin.AdminExchangeClassesView import AdminExchangeClassesView
 
 
 
@@ -81,6 +82,7 @@ urlpatterns = [
     path('oidc-auth/', include('mozilla_django_oidc.urls')),
     path('exchange/admin/courses/', exchange_admin_required(AdminExchangeCoursesView.as_view())),
     path('exchange/admin/course_units/', AdminExchangeCourseUnitsView.as_view()),
+    path('exchange/admin/classes/',  AdminExchangeClassesView.as_view()),
     path('exchange/admin/marketplace', exchange_admin_required(AdminMarketplaceView.as_view())),
     path('exchange/admin/course_unit/periods/', exchange_admin_required(AdminExchangeCourseUnitPeriodsView.as_view())),
     path('exchange/admin/courses/periods/', exchange_admin_required(AdminExchangeCoursePeriodsView.as_view())),

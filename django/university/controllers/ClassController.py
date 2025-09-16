@@ -42,6 +42,7 @@ class ClassController:
             result.append({
                 'id': class_obj.id,
                 'name': class_obj.name,
+                'vacancies': class_obj.vacancies,
                 'slots': slot_list
             })
 

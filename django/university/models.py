@@ -54,6 +54,7 @@ class CourseMetadata(models.Model):
 class Class(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=31, null=False)
+    vacancies = models.IntegerField(default=None)
     course_unit = models.ForeignKey('CourseUnit', models.DO_NOTHING)
     last_updated = models.DateTimeField()
 
