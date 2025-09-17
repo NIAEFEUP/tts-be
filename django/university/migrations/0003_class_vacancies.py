@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='class',
             name='vacancies',
-            field=models.IntegerField(default=None),
+            field=models.IntegerField(default=None, null=True, blank=True),
         ),
     ]
