@@ -91,6 +91,3 @@ class ExchangeUrgentView(View):
         urgent_request.save()
         return JsonResponse(ExchangeUrgentRequestSerializer(urgent_request).data, safe=False, status=200)
         
-        
-        
-    
