@@ -150,11 +150,11 @@ class MarketplaceExchangeView(APIView):
         exchange_data_str = json.dumps(exchanges, sort_keys=True)
         exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
 
-        # if MarketplaceExchange.objects.filter(hash=exchange_hash).exists():
-        #     return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        if MarketplaceExchange.objects.filter(hash=exchange_hash).exists():
+            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
-        # if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
-        #     return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
+            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         if urgentMessage:
             return self.add_urgent_exchange(request, exchanges, urgentMessage, exchange_hash)
@@ -163,6 +163,7 @@ class MarketplaceExchangeView(APIView):
 
 
     def add_urgent_exchange(self, request, exchanges, message: str, exchange_hash):
+
         with transaction.atomic():
             urgent_request = ExchangeUrgentRequests.objects.create(
                 issuer_name=request.user.first_name + " " + request.user.last_name,
@@ -188,6 +189,7 @@ class MarketplaceExchangeView(APIView):
 
     def add_normal_marketplace_exchange(self, request, exchanges, exchange_hash):
         self.insert_marketplace_exchange(exchanges, request.user, exchange_hash)
+
         return JsonResponse({"success": True}, safe=False)
 
     def insert_marketplace_exchange(self, exchanges, user, exchange_hash):

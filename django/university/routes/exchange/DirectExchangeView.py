@@ -127,8 +127,8 @@ class DirectExchangeView(View):
         exchange_data_str = json.dumps(exchanges, sort_keys=True)
         exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
 
-        # if DirectExchange.objects.filter(hash=exchange_hash).exists():
-        #     return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        if DirectExchange.objects.filter(hash=exchange_hash).exists():
+            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         with transaction.atomic():
             exchange_model = DirectExchange(
