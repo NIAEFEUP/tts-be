@@ -20,4 +20,5 @@ class ExchangeHasher:
             + '+' + exchange['courseUnitName']
             + '+' + exchange['classNameRequesterGoesFrom']
             + '+' + exchange['classNameRequesterGoesTo']
+            + '+' + (str(exchange['other_student']['mecNumber']) if exchange['other_student'] else '')
         )
