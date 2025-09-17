@@ -171,7 +171,8 @@ class MarketplaceExchangeView(APIView):
                 message=message,
                 accepted=False,
                 admin_state="untreated",
-                date=datetime.now()
+                date=datetime.now(),
+                hash=exchange_hash
             )
             urgent_request.save()
 
