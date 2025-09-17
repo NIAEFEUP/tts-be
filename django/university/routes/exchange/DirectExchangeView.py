@@ -25,6 +25,7 @@ from university.controllers.ExchangeValidationController import ExchangeValidati
 from university.controllers.StudentController import StudentController
 from university.controllers.StudentScheduleController import StudentScheduleController, StudentScheduleMetadata
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error
+from university.utils.ExchangeHasher import ExchangeHasher
 
 from exchange.models import DirectExchange, DirectExchangeParticipants, DirectExchangeParticipants, ExchangeAdmin, MarketplaceExchange, MarketplaceExchangeClass
 
@@ -124,8 +125,7 @@ class DirectExchangeView(View):
             student_schedules[student] = build_student_schedule_dict(student_schedule)
 
         # Restricts repeated exchange requests
-        exchange_data_str = json.dumps(exchanges, sort_keys=True)
-        exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
+        exchange_hash = ExchangeHasher.hash(exchanges, username)
 
         if DirectExchange.objects.filter(hash=exchange_hash).exists():
             return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)

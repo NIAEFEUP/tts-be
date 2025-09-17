@@ -20,6 +20,7 @@ from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, incorrect_class_error
 from university.models import CourseUnit, Class
+from university.utils.ExchangeHasher import ExchangeHasher
 from exchange.models import MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, ExchangeUrgentRequests, ExchangeUrgentRequestOptions
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
@@ -147,8 +148,7 @@ class MarketplaceExchangeView(APIView):
             if ExchangeController.exchange_overlap(student_schedules, curr_student):
                 return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
-        exchange_data_str = json.dumps(exchanges, sort_keys=True)
-        exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
+        exchange_hash = ExchangeHasher.hash(exchanges, username=curr_student)
 
         if MarketplaceExchange.objects.filter(hash=exchange_hash).exists():
             return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
