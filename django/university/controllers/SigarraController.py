@@ -33,7 +33,7 @@ class SigarraController:
                 year = year - 1
 
             semana_ini = year + "1001"
-            semana_fim = (year + 1) + "0131"
+            semana_fim = f"{int(year) + 1}0131"
         else:
             semana_ini = year + "0210"
             semana_fim = year + "0601"
