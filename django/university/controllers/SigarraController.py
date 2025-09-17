@@ -33,7 +33,7 @@ class SigarraController:
             semana_fim = "20250131"
         if first_semester:
             if currdate.month == 1:
-                year = year - 1
+                year = str(int(year) - 1)
 
             semana_ini = year + "1001"
             semana_fim = f"{int(year) + 1}0131"
