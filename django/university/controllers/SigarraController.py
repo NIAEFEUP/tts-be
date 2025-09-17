@@ -8,7 +8,7 @@ class SigarraResponse:
     def __init__(self, data, status_code):
         self.data = data
         self.status_code = status_code
-    
+
 class SigarraController:
     """
         This class will contain methods to manipulate student data that is inside sigarra.
@@ -20,7 +20,7 @@ class SigarraController:
         self.cookies = None
 
         self.login()
-    
+
     def get_student_photo_url(self, nmec) -> str:
         return f"https://sigarra.up.pt/feup/pt/fotografias_service.foto?pct_cod={nmec}"
 
@@ -28,9 +28,12 @@ class SigarraController:
         currdate = date.today()
         year = str(currdate.year)
         first_semester = int(CONFIG["EXCHANGE_SEMESTER"]) == 1 if CONFIG["EXCHANGE_SEMESTER"] else currdate.month >= 10 or currdate.month <= 1
-        if first_semester: 
+        if first_semester:
+            semana_ini = "20241001"
+            semana_fim = "20250131"
+        if first_semester:
             if currdate.month == 1:
-                year = year - 1
+                year = str(int(year) - 1)
 
             semana_ini = year + "1001"
             semana_fim = f"{int(year) + 1}0131"
@@ -42,13 +45,13 @@ class SigarraController:
 
     def student_profile_url(self, nmec):
         return f"https://sigarra.up.pt/feup/pt/mob_fest_geral.perfil?pv_codigo={nmec}"
-    
+
     def student_schedule_url(self, nmec, semana_ini, semana_fim) -> str:
-        return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={nmec}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
+        return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={nmec}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
 
     def course_unit_schedule_url(self, ocorrencia_id, semana_ini, semana_fim):
         return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
-    
+
     def retrieve_student_photo(self, nmec):
         response = requests.get(self.get_student_photo_url(nmec), cookies=self.cookies)
 
@@ -85,7 +88,7 @@ class SigarraController:
     def login(self):
         try:
             response = requests.post("https://sigarra.up.pt/feup/pt/mob_val_geral.autentica/", data={
-                "pv_login": self.username,  
+                "pv_login": self.username,
                 "pv_password": self.password
             })
 
@@ -112,7 +115,7 @@ class SigarraController:
 
         if schedule.status_code != 200:
             return SigarraResponse(None, schedule.status_code)
-        
+
         course_units = set()
         for scheduleItem in schedule.data:
             course_units.add(scheduleItem["ocorrencia_id"])
@@ -135,8 +138,8 @@ class SigarraController:
         (semana_ini, semana_fim) = self.semester_weeks()
 
         response = requests.get(self.course_unit_schedule_url(
-            course_unit_id, 
-            semana_ini, 
+            course_unit_id,
+            semana_ini,
             semana_fim
         ), cookies=self.cookies)
 
@@ -146,7 +149,7 @@ class SigarraController:
         classes = json.loads(response.content)["horario"]
         class_schedule = list(filter(lambda c: any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
         theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
-        
+
         return SigarraResponse((class_schedule, theoretical_schedule), 200)
- 
+
 
