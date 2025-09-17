@@ -82,7 +82,7 @@ class ExchangeUrgentView(View):
         if not urgent_request_id:
             return HttpResponse(status=400)
         urgent_request = ExchangeUrgentRequests.objects.filter(id=urgent_request_id).first()
-        if not(urgent_request):
+        if not urgent_request:
             return HttpResponse(status=404)
         user_nmec = urgent_request.issuer_nmec
         if user_nmec != current_user:
