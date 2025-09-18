@@ -6,7 +6,7 @@ class ExchangeHasher:
     def hash(exchanges: Iterable[Any], username: str) -> str:
         serialized_request = '|'.join(map(
             lambda exchange: ExchangeHasher.serialize_exchange(exchange, username),
-            sorted(exchanges)  # sorted to ensure order between requests
+            sorted(exchanges, key=lambda x: x['courseUnitId'])  # sorted to ensure order between requests
         ))
 
         return hashlib.sha256(serialized_request.encode('utf8')).hexdigest()
