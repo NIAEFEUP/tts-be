@@ -2,7 +2,6 @@ import json
 import base64
 import jwt
 import datetime
-import hashlib
 import os
 
 from django.core.paginator import Paginator
@@ -127,7 +126,7 @@ class DirectExchangeView(View):
         # Restricts repeated exchange requests
         exchange_hash = ExchangeHasher.hash(exchanges, username)
 
-        if DirectExchange.objects.filter(hash=exchange_hash).exists():
+        if DirectExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
             return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         with transaction.atomic():

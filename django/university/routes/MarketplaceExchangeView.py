@@ -1,5 +1,4 @@
 import json
-import hashlib
 
 from django.utils import timezone
 
@@ -150,7 +149,7 @@ class MarketplaceExchangeView(APIView):
 
         exchange_hash = ExchangeHasher.hash(exchanges, username=curr_student)
 
-        if MarketplaceExchange.objects.filter(hash=exchange_hash).exists():
+        if MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
             return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
