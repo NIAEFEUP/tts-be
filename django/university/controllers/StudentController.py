@@ -1,7 +1,7 @@
 import json
 
 from university.controllers.SigarraController import SigarraController
-from university.controllers.StudentScheduleController import StudentScheduleController
+from university.controllers.StudentScheduleController import StudentScheduleController, StudentScheduleMetadata
 from university.controllers.ExchangeValidationController import ExchangeValidationController
 
 from exchange.models import DirectExchangeParticipants
@@ -28,12 +28,12 @@ class StudentController:
             return None
 
     @staticmethod
-    def populate_user_course_unit_data(nmec: int, erase_previous: bool = False):
+    def populate_user_course_unit_data(nmec: int, erase_previous: bool = False, metadata: StudentScheduleMetadata | None = None):
         if(erase_previous):
             UserCourseUnits.objects.filter(user_nmec=nmec).delete()
 
-        course_units = StudentScheduleController.retrieveCourseUnitClasses(SigarraController(), nmec)
-        
+        course_units = StudentScheduleController.retrieve_course_unit_classes(SigarraController(), str(nmec), metadata=metadata)
+
         for item in course_units:
             (course_unit_id, class_acronym) = item
 
@@ -41,10 +41,10 @@ class StudentController:
 
             if not corresponding_class:
                 continue
-            
+
             user_course_unit = UserCourseUnits(
                 user_nmec=nmec,
-                course_unit_id=course_unit_id, 
+                course_unit_id=course_unit_id,
                 class_field=corresponding_class
             )
             user_course_unit.save()
@@ -53,7 +53,7 @@ class StudentController:
     def refresh_metadata(nmec):
         StudentController.populate_course_metadata(nmec, True)
 
-        sigarra_course_units = StudentScheduleController.retrieveCourseUnitClasses(SigarraController(), nmec)
+        sigarra_course_units = StudentScheduleController.retrieve_course_unit_classes(SigarraController(), nmec)
         current_course_units = UserCourseUnits.objects.filter(user_nmec=nmec)
 
         for item in sigarra_course_units:
@@ -64,7 +64,7 @@ class StudentController:
             if not current_course_units.filter(course_unit_id=item[0]).exists():
                 UserCourseUnits.objects.create(
                     user_nmec=nmec,
-                    course_unit_id=item[0], 
+                    course_unit_id=item[0],
                     class_field=course_unit_class
                 )
             else:
@@ -78,13 +78,13 @@ class StudentController:
                     # We have to see if some of the exchange has the from class as the current sigarra class.
                     # If not, we have to invalidate the exchange
                     validation_controller = ExchangeValidationController()
-                    
+
                     sigarra_class_in_accepted_exchange = False
                     for participant in direct_exchange_participant:
-                        if course_unit_class.acronym == participant.class_participant_goes_from:
+                        if course_unit_class.name == participant.class_participant_goes_from:
                             sigarra_class_in_accepted_exchange = True
                             break
-                    
+
                     if not sigarra_class_in_accepted_exchange:
                         validation_controller.cancel_exchange(participant.direct_exchange)
                         current_course_units.filter(course_unit_id=item[0]).update(class_field=course_unit_class)
@@ -109,7 +109,7 @@ class StudentController:
 
                 if len(course) == 0:
                     continue
-                    
+
                 models_to_save.append(
                     StudentCourseMetadata(
                         nmec = nmec,
