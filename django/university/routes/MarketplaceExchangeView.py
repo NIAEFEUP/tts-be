@@ -1,5 +1,4 @@
 import json
-import hashlib
 
 from django.utils import timezone
 
@@ -20,6 +19,7 @@ from university.controllers.ExchangeController import ExchangeController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, build_marketplace_submission_schedule, build_student_schedule_dict, incorrect_class_error
 from university.models import CourseUnit, Class
+from university.utils.ExchangeHasher import ExchangeHasher
 from exchange.models import MarketplaceExchange, MarketplaceExchangeClass, UserCourseUnits, ExchangeUrgentRequests, ExchangeUrgentRequestOptions
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
@@ -147,14 +147,13 @@ class MarketplaceExchangeView(APIView):
             if ExchangeController.exchange_overlap(student_schedules, curr_student):
                 return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
-        exchange_data_str = json.dumps(exchanges, sort_keys=True)
-        exchange_hash = hashlib.sha256(exchange_data_str.encode('utf-8')).hexdigest()
+        exchange_hash = ExchangeHasher.hash(exchanges, username=curr_student)
 
-        # if MarketplaceExchange.objects.filter(hash=exchange_hash).exists():
-        #     return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        if MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
+            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
-        # if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
-        #     return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
+            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         if urgentMessage:
             return self.add_urgent_exchange(request, exchanges, urgentMessage, exchange_hash)
@@ -163,6 +162,7 @@ class MarketplaceExchangeView(APIView):
 
 
     def add_urgent_exchange(self, request, exchanges, message: str, exchange_hash):
+
         with transaction.atomic():
             urgent_request = ExchangeUrgentRequests.objects.create(
                 issuer_name=request.user.first_name + " " + request.user.last_name,
@@ -170,7 +170,8 @@ class MarketplaceExchangeView(APIView):
                 message=message,
                 accepted=False,
                 admin_state="untreated",
-                date=datetime.now()
+                date=datetime.now(),
+                hash=exchange_hash
             )
             urgent_request.save()
 
@@ -188,6 +189,7 @@ class MarketplaceExchangeView(APIView):
 
     def add_normal_marketplace_exchange(self, request, exchanges, exchange_hash):
         self.insert_marketplace_exchange(exchanges, request.user, exchange_hash)
+
         return JsonResponse({"success": True}, safe=False)
 
     def insert_marketplace_exchange(self, exchanges, user, exchange_hash):
