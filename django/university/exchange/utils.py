@@ -33,14 +33,14 @@ def get_student_data(username, cookies):
     return response
 
 def get_student_schedule_url(username, semana_ini, semana_fim):
-    return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}" 
+    return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
 
 def create_marketplace_exchange_on_db(exchanges, curr_student):
     marketplace_exchange = MarketplaceExchange.objects.create(issuer=curr_student, accepted=False)
     for exchange in exchanges:
         course_unit = course_unit_by_id(exchange["course_unit_id"])
         MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_acronym=course_unit.acronym, course_unit_id=exchange["course_unit_id"], course_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
-   
+
 
 def build_marketplace_submission_schedule(schedule, submission, auth_student):
     for exchange in submission:
@@ -52,17 +52,21 @@ def build_marketplace_submission_schedule(schedule, submission, auth_student):
         if not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
 
-        schedule[auth_student][(class_auth_student_goes_to, course_unit)] = SigarraController().get_class_schedule(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to).data[0][0]# get class schedule
-        del schedule[auth_student][(class_auth_student_goes_from, course_unit)] # remove old class of other student
+        class_schedule = SigarraController().get_class_schedule(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to).data
+        class_schedule = list(filter(lambda x: x["tipo"] == "TP" or x["tipo"] == "PL" , class_schedule[0]))
 
-    return (ExchangeStatus.SUCCESS, None) 
+        if len(class_schedule) > 0:
+            schedule[auth_student][(class_auth_student_goes_to, course_unit)] = class_schedule[0]
+            del schedule[auth_student][(class_auth_student_goes_from, course_unit)]
+
+    return (ExchangeStatus.SUCCESS, None)
 
 def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
     return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
 
 """
-    Generates the new schedules the students will have after the exchange 
-    This is useful in order to apply the overlap validation logic in it and not in the current 
+    Generates the new schedules the students will have after the exchange
+    This is useful in order to apply the overlap validation logic in it and not in the current
     sigarra schedule of the users
 """
 def build_new_schedules(student_schedules, exchanges, auth_username):
@@ -76,7 +80,7 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
         # If participant is neither enrolled in that course unit or in that class
         other_student_valid = (class_auth_student_goes_to, course_unit) in student_schedules[other_student]
         auth_user_valid = (class_other_student_goes_to, course_unit) in student_schedules[auth_username]
-        
+
         if not(other_student_valid) or not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
 
@@ -91,7 +95,7 @@ def build_new_schedules(student_schedules, exchanges, auth_username):
         # Remove class the auth student is going from and will not be in anymore
         del student_schedules[auth_username][other_user_uc]
 
-    return (ExchangeStatus.SUCCESS, None) 
+    return (ExchangeStatus.SUCCESS, None)
 
 def build_student_schedule_dicts(student_schedules, exchanges):
     for curr_exchange in exchanges:
@@ -151,7 +155,7 @@ def curr_semester_weeks():
     currdate = date.today()
     year = str(currdate.year)
     primeiro_semestre = currdate.month >= 9 and currdate.month <= 12
-    if primeiro_semestre: 
+    if primeiro_semestre:
         semana_ini = "1001"
         semana_fim = "1201"
     else:
@@ -160,18 +164,18 @@ def curr_semester_weeks():
     return (year+semana_ini, year+semana_fim)
 
 def incorrect_class_error() -> str:
-    return "students-with-incorrect-classes"    
+    return "students-with-incorrect-classes"
 
 def append_tts_info_to_sigarra_schedule(schedule):
     course_unit = CourseUnit.objects.filter(id=schedule['ocorrencia_id'])[0]
-            
+
     schedule['url'] = course_unit.url
     # The sigarra api does not return the course with the full name, just the acronym
     schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
 
 def convert_sigarra_schedule(schedule_data):
     new_schedule_data = []
-        
+
     for schedule in schedule_data:
         course_unit = CourseUnit.objects.filter(id=schedule['ocorrencia_id'])[0]
         professors = []

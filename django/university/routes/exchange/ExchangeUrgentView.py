@@ -74,4 +74,20 @@ class ExchangeUrgentView(View):
             "exchanges": exchanges,
             "total_pages": paginator.num_pages
         }, safe=False)
-    
+        
+    def put(self, request):
+        current_user = request.user.username
+        request_data = json.loads(request.body)
+        urgent_request_id = request_data.get("urgent_request_id", None)
+        if not urgent_request_id:
+            return HttpResponse(status=400)
+        urgent_request = ExchangeUrgentRequests.objects.filter(id=urgent_request_id).first()
+        if not urgent_request:
+            return HttpResponse(status=404)
+        user_nmec = urgent_request.issuer_nmec
+        if user_nmec != current_user:
+            return HttpResponse(status=403)
+        urgent_request.message = request_data.get("message", urgent_request.message)
+        urgent_request.save()
+        return JsonResponse(ExchangeUrgentRequestSerializer(urgent_request).data, safe=False, status=200)
+        

@@ -14,7 +14,8 @@ class DirectExchangeSerializer(serializers.Serializer):
     issuer_nmec = serializers.CharField(max_length=32)
     accepted = serializers.BooleanField()
     admin_state = serializers.CharField(max_length=32)
-    date = serializers.DateTimeField()
+    date = serializers.DateTimeField()    
+    last_validated = serializers.DateTimeField(allow_null=True)
     options = serializers.SerializerMethodField()
 
     def get_options(self, obj):

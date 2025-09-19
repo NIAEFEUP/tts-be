@@ -35,7 +35,7 @@ class DirectExchangePendingMotive(Enum):
     USER_DID_NOT_ACCEPT = 1
     OTHERS_DID_NOT_ACCEPT = 2
     NOT_PENDING = 3
-    
+
     @staticmethod
     def get_pending_motive(curr_user_nmec: str, direct_exchange: DirectExchange):
         participants = list(DirectExchangeParticipants.objects.filter(
@@ -50,12 +50,11 @@ class DirectExchangePendingMotive(Enum):
         if not direct_exchange.accepted:
             return DirectExchangePendingMotive.OTHERS_DID_NOT_ACCEPT
 
-        return DirectExchangePendingMotive.NOT_PENDING 
-    
+        return DirectExchangePendingMotive.NOT_PENDING
+
     @staticmethod
     def get_value(pending_motive):
         return pending_motive.value
-
 
 class ExchangeController:
     @staticmethod
@@ -64,9 +63,9 @@ class ExchangeController:
 
         if DEBUG:
             return list(course_units)
-        
+
         exchange_expirations = ExchangeExpirations.objects.filter(
-            course_unit_id__in=course_units, 
+            course_unit_id__in=course_units,
             active_date__lte=timezone.now(),
             end_date__gte=timezone.now(),
         ).values_list("course_unit_id", flat=True)
@@ -161,7 +160,7 @@ class ExchangeController:
     """
     @staticmethod
     def exchange_overlap(student_schedules, username) -> bool:
-        
+
         for (key, class_schedule) in student_schedules[username].items():
             for (other_key, other_class_schedule) in student_schedules[username].items():
                 if key == other_key:
@@ -178,14 +177,13 @@ class ExchangeController:
                 if original_class is not None:
                     original_class = original_class.class_field.id
                     new_class_id = Class.objects.filter(name=class_schedule["turma_sigla"].split("+")[0], course_unit_id=int(class_schedule["ocorrencia_id"])).first().id
-                    class_changed = new_class_id != original_class    
+                    class_changed = new_class_id != original_class
 
                 original_other_class = UserCourseUnits.objects.filter(user_nmec=username, course_unit__id=int(other_class_schedule["ocorrencia_id"])).first()
-                if original_other_class is not None:   
+                if original_other_class is not None:
                     original_other_class = original_other_class.class_field.id
-                    # Need to check if the classes are the same as the previous ]ones or not 
+                    # Need to check if the classes are the same as the previous ]ones or not
                     new_other_class_id = Class.objects.filter(name=other_class_schedule["turma_sigla"].split("+")[0], course_unit_id=int(other_class_schedule["ocorrencia_id"])).first().id
-
                     other_class_changed = new_other_class_id != original_other_class
 
                 if (check_class_mandatory(class_schedule_type) and check_class_mandatory(overlap_param_type)
@@ -196,16 +194,16 @@ class ExchangeController:
         return False
 
     @staticmethod
-    def update_schedule_accepted_exchanges(student, schedule):
+    def update_schedule_accepted_exchanges(student, schedule, metadata: 'StudentScheduleMetadata | None' = None):
         accepted_options = DirectExchangeParticipants.objects.filter(participant_nmec=student, accepted=True, direct_exchange__canceled=False, direct_exchange__accepted=True)
-        (status, trailing) = ExchangeController.update_schedule(schedule, accepted_options) 
+        (status, trailing) = ExchangeController.update_schedule(schedule, accepted_options)
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)
 
         return (ExchangeStatus.SUCCESS, None)
 
-    def update_schedule(student_schedule, exchanges):
-
+    @staticmethod
+    def update_schedule(student_schedule, exchanges, metadata: 'StudentScheduleMetadata | None' = None):
         for exchange in exchanges:
             for i, schedule in enumerate(student_schedule):
                 ocurr_id = int(schedule["ocorrencia_id"])
@@ -213,11 +211,14 @@ class ExchangeController:
                 if ocurr_id == int(exchange.course_unit_id):
                     class_type = schedule["tipo"]
 
-                    res = SigarraController().get_class_schedule(int(exchange.course_unit_id), exchange.class_participant_goes_to)
-                    if res.status_code != 200: 
-                        return (ExchangeStatus.FETCH_SCHEDULE_ERROR, None)
+                    if metadata is not None:
+                        res = metadata.class_schedule[(int(exchange.course_unit_id), exchange.class_participant_goes_to)]
+                    else:
+                        res = SigarraController().get_class_schedule(int(exchange.course_unit_id), exchange.class_participant_goes_to)
+                        if res.status_code != 200:
+                            return (ExchangeStatus.FETCH_SCHEDULE_ERROR, None)
+                        (tp_schedule, t_schedule) = res.data
 
-                    (tp_schedule, t_schedule) = res.data
                     tp_schedule.extend(t_schedule)
                     new_schedules = tp_schedule
 
@@ -225,5 +226,5 @@ class ExchangeController:
                         for turma in new_schedule["turmas"]:
                             if turma["turma_sigla"] == exchange.class_participant_goes_to and new_schedule["tipo"] == class_type:
                                 student_schedule[i] = new_schedule
-        
+
         return (ExchangeStatus.SUCCESS, None)
