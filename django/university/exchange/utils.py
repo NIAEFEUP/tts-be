@@ -52,8 +52,12 @@ def build_marketplace_submission_schedule(schedule, submission, auth_student):
         if not(auth_user_valid):
             return (ExchangeStatus.STUDENTS_NOT_ENROLLED, None)
 
-        schedule[auth_student][(class_auth_student_goes_to, course_unit)] = SigarraController().get_class_schedule(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to).data[0][0]# get class schedule
-        del schedule[auth_student][(class_auth_student_goes_from, course_unit)] # remove old class of other student
+        class_schedule = SigarraController().get_class_schedule(schedule[auth_student][(class_auth_student_goes_from, course_unit)]["ocorrencia_id"], class_auth_student_goes_to).data
+        class_schedule = list(filter(lambda x: x["tipo"] == "TP" or x["tipo"] == "PL" , class_schedule[0]))
+
+        if len(class_schedule) > 0:
+            schedule[auth_student][(class_auth_student_goes_to, course_unit)] = class_schedule[0]
+            del schedule[auth_student][(class_auth_student_goes_from, course_unit)]
 
     return (ExchangeStatus.SUCCESS, None)
 
