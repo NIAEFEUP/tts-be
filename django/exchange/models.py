@@ -34,6 +34,7 @@ class DirectExchange(models.Model):
     admin_state = models.CharField(max_length=32, default='untreated')
     marketplace_exchange = models.ForeignKey('MarketplaceExchange', models.DO_NOTHING, db_column='marketplace_exchange', blank=True, null=True)
     hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
+    has_conflict = models.BooleanField(default=False)
 
     class Meta:
         managed = True
@@ -110,6 +111,7 @@ class ExchangeUrgentRequests(models.Model):
     date = models.DateTimeField(blank=True, null=True, default=timezone.now)
     hash = models.CharField(max_length=64, blank=True, null=True)
     admin_state = models.CharField(max_length=32, default='untreated')
+    has_conflict = models.BooleanField(default=False)
 
     class Meta:
         managed = True
@@ -123,6 +125,7 @@ class MarketplaceExchange(models.Model):
     date = models.DateTimeField(blank=True, null=True, default=timezone.now)
     hash = models.CharField(max_length=64, blank=True, null=True)
     admin_state = models.CharField(max_length=32, default='untreated')
+    has_conflict = models.BooleanField(default=False)
 
     class Meta:
         managed = True

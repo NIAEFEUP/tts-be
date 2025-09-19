@@ -112,11 +112,16 @@ class DirectExchangeView(View):
         exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
 
         marketplace_id = exchanges[0].get("marketplace_id", None)
+    
+        # Adicionar esta linha para receber o hasConflict
+        has_conflict_str = request.POST.get('hasConflict', 'false')
+        has_conflict = json.loads(has_conflict_str) if has_conflict_str else False
 
         # Add the other students schedule to the dictionary
         (status, trailing) = build_student_schedule_dicts(student_schedules, exchanges)
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return HttpResponse(status=trailing)
+    
         # Update student schedule with exchange updates that are not in sigarra currently
         for student in student_schedules.keys():
             student_schedule = list(student_schedules[student].values())
@@ -138,6 +143,7 @@ class DirectExchangeView(View):
                 admin_state="untreated",
                 canceled=False,
                 hash=exchange_hash,
+                has_conflict=has_conflict,  # Adicionar esta linha
                 marketplace_exchange=None if not marketplace_id else MarketplaceExchange.objects.get(id=marketplace_id)
             )
 
@@ -163,32 +169,32 @@ class DirectExchangeView(View):
             for inserted_exchange in inserted_exchanges:
                 inserted_exchange.save()
 
-        for inserted_exchange in inserted_exchanges:
-            participant = inserted_exchange.participant_nmec
+            for inserted_exchange in inserted_exchanges:
+                participant = inserted_exchange.participant_nmec
 
-            # A participant may appear multiple times since there is one line in the table for each course unit inside of the exhange
-            if participant not in tokens_to_generate.keys():
-                token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
-                tokens_to_generate[participant] = token
-        participants = set([(inserted_exchange.participant_nmec, inserted_exchange.participant_name) for inserted_exchange in inserted_exchanges ])
+                # A participant may appear multiple times since there is one line in the table for each course unit inside of the exhange
+                if participant not in tokens_to_generate.keys():
+                    token = jwt.encode({"username": participant, "exchange_id": exchange_model.id, "exp": (datetime.datetime.now() + datetime.timedelta(seconds=VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS)).timestamp()}, JWT_KEY, algorithm="HS256")
+                    tokens_to_generate[participant] = token
+            participants = set([(inserted_exchange.participant_nmec, inserted_exchange.participant_name) for inserted_exchange in inserted_exchanges ])
 
-        for (participant_num,participant_name) in participants:
+            for (participant_num,participant_name) in participants:
 
-            filtered_exchanges = [inserted_exchange for inserted_exchange in inserted_exchanges if inserted_exchange.participant_nmec == participant_num]
+                filtered_exchanges = [inserted_exchange for inserted_exchange in inserted_exchanges if inserted_exchange.participant_nmec == participant_num]
 
-            base64_token = base64.b64encode(tokens_to_generate[participant_num].encode('utf-8')).decode('utf-8')
-            html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}/exchange/verify/{base64_token}", 'exchanges': filtered_exchanges})
-            try:
-                send_mail(
-                    'Confirmação de troca',
-                    strip_tags(html_message),
-                    os.getenv('SENDER_EMAIL_ADDRESS'),
-                    [f'up{participant_num}@up.pt']
-                )
-            except Exception as e:
-                print("Error: ", e)
+                base64_token = base64.b64encode(tokens_to_generate[participant_num].encode('utf-8')).decode('utf-8')
+                html_message = render_to_string('confirm_exchange.html', {'confirm_link': f"{DOMAIN}/exchange/verify/{base64_token}", 'exchanges': filtered_exchanges})
+                try:
+                    send_mail(
+                        'Confirmação de troca',
+                        strip_tags(html_message),
+                        os.getenv('SENDER_EMAIL_ADDRESS'),
+                        [f'up{participant_num}@up.pt']
+                    )
+                except Exception as e:
+                    print("Error: ", e)
 
-        return JsonResponse({"success": True}, safe=False)
+            return JsonResponse({"success": True}, safe=False)
 
     def put(self, request, id):
         # Validate if exchange is still valid

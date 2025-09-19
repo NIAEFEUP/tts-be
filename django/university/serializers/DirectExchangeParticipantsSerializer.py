@@ -16,6 +16,7 @@ class DirectExchangeSerializer(serializers.Serializer):
     admin_state = serializers.CharField(max_length=32)
     date = serializers.DateTimeField()
     options = serializers.SerializerMethodField()
+    has_conflict = serializers.BooleanField()
 
     def get_options(self, obj):
         participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=obj.id)
