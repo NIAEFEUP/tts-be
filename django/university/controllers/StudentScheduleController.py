@@ -1,4 +1,6 @@
-from django.http.response import HttpResponse 
+from dataclasses import dataclass
+from typing import Any, Dict, Tuple
+from django.http.response import HttpResponse
 
 from university.controllers.ExchangeController import ExchangeController
 from university.controllers.ClassController import ClassController
@@ -11,6 +13,15 @@ from exchange.models import UserCourseUnits, DirectExchangeParticipants
 import json
 import hashlib
 
+@dataclass
+class StudentScheduleMetadata:
+    student_schedule: Dict[str, Any]
+    class_schedule: Dict[Tuple[int, str], Any]
+
+    def __init__(self):
+        self.student_schedule = {}
+        self.class_schedule = {}
+
 class StudentScheduleController:
     @staticmethod
     def get_user_schedule(nmec, fetch_from_sigarra=False):
@@ -22,15 +33,35 @@ class StudentScheduleController:
             return StudentScheduleController.fetch_from_db(nmec)
 
     @staticmethod
-    def retrieveCourseUnitClasses(sigarra_controller, username):
-        sigarra_res = sigarra_controller.get_student_schedule(username)
-            
-        if sigarra_res.status_code != 200:
-            return HttpResponse(status=sigarra_res.status_code)
+    def fetch_student_schedule_metadata(sigarra_controller: SigarraController, metadata: StudentScheduleMetadata, nmec: str):
+        if nmec not in metadata.student_schedule:
+            res = sigarra_controller.get_student_schedule(int(nmec))
+            if res.status_code != 200:
+                return HttpResponse(status=res.status_code)
 
-        schedule_data = sigarra_res.data
+            metadata.student_schedule[nmec] = res.data
 
-        ExchangeController.update_schedule_accepted_exchanges(username, schedule_data)
+        exchanges = DirectExchangeParticipants.objects.filter(participant_nmec=nmec, accepted=True, direct_exchange__canceled=False)
+        for exchange in exchanges:
+            res = sigarra_controller.get_class_schedule(int(exchange.course_unit_id), exchange.class_participant_goes_to)
+            if res.status_code != 200:
+                return HttpResponse(status=res.status_code)
+
+            metadata.class_schedule[(int(exchange.course_unit_id), exchange.class_participant_goes_to)] = res.data
+
+    @staticmethod
+    def retrieve_course_unit_classes(sigarra_controller: SigarraController, username: str, metadata: StudentScheduleMetadata | None = None):
+        if metadata is not None:
+            schedule_data = metadata.student_schedule[username]
+        else:
+            sigarra_res = sigarra_controller.get_student_schedule(username)
+
+            if sigarra_res.status_code != 200:
+                return HttpResponse(status=sigarra_res.status_code)
+
+            schedule_data = sigarra_res.data
+
+        ExchangeController.update_schedule_accepted_exchanges(username, schedule_data, metadata=metadata)
 
         ids = set()
         course_unit_classes = set()
@@ -41,7 +72,7 @@ class StudentScheduleController:
                 else:
                     course_unit_classes.add((scheduleItem["ocorrencia_id"], scheduleItem["turma_sigla"]))
                     ids.add(int(scheduleItem["ocorrencia_id"]))
-        
+
         return course_unit_classes
 
     @staticmethod
@@ -85,7 +116,7 @@ class StudentScheduleController:
     @staticmethod
     def fetch_from_sigarra(username):
         sigarra_res = SigarraController().get_student_schedule(username)
-            
+
         if sigarra_res.status_code != 200:
             return HttpResponse(status=sigarra_res.status_code)
 

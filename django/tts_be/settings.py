@@ -168,6 +168,7 @@ OIDC_OP_TOKEN_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-c
 OIDC_OP_USER_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/userinfo"
 OIDC_OP_JWKS_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/certs"
 
+LOGOUT_REDIRECT_URL ="/"
 OIDC_OP_LOGOUT_ENDPOINT = "https://open-id.up.pt/realms/sigarra/protocol/openid-connect/logout"
 
 OIDC_RP_SCOPES = "openid email profile uporto_data"

@@ -34,7 +34,7 @@ class DirectExchange(models.Model):
     last_validated = models.DateTimeField(blank=True, null=True)
     admin_state = models.CharField(max_length=32, default='untreated')
     marketplace_exchange = models.ForeignKey('MarketplaceExchange', models.DO_NOTHING, db_column='marketplace_exchange', blank=True, null=True)
-    hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
+    hash = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
         managed = True
@@ -85,7 +85,7 @@ class ExchangeExpirations(models.Model):
     course_unit = models.ForeignKey(CourseUnit, models.DO_NOTHING)
     active_date = models.DateTimeField()
     end_date = models.DateTimeField()
-
+    is_course_expiration = models.BooleanField(default=False)
     class Meta:
         managed = True
         db_table = 'exchange_expirations'
@@ -109,7 +109,7 @@ class ExchangeUrgentRequests(models.Model):
     accepted = models.BooleanField(blank=True, null=True, default=False)
     message = models.CharField(max_length=2048)
     date = models.DateTimeField(blank=True, null=True, default=timezone.now)
-    hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
+    hash = models.CharField(max_length=64, blank=True, null=True)
     admin_state = models.CharField(max_length=32, default='untreated')
 
     class Meta:
@@ -122,7 +122,7 @@ class MarketplaceExchange(models.Model):
     accepted = models.BooleanField()
     canceled = models.BooleanField(blank=True, null=True, default=False)
     date = models.DateTimeField(blank=True, null=True, default=timezone.now)
-    hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
+    hash = models.CharField(max_length=64, blank=True, null=True)
     admin_state = models.CharField(max_length=32, default='untreated')
 
     class Meta:
