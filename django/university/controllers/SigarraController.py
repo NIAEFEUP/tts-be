@@ -29,9 +29,6 @@ class SigarraController:
         year = str(currdate.year)
         first_semester = int(CONFIG["EXCHANGE_SEMESTER"]) == 1 if CONFIG["EXCHANGE_SEMESTER"] else currdate.month >= 10 or currdate.month <= 1
         if first_semester:
-            semana_ini = "20241001"
-            semana_fim = "20250131"
-        if first_semester:
             if currdate.month == 1:
                 year = str(int(year) - 1)
 
