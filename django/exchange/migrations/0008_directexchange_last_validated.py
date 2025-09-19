@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('exchange', '0004_rename_class_user_goes_from_exchangeurgentrequestoptions_class_issuer_goes_from_and_more'),
+        ('exchange', '0007_alter_directexchange_hash'),
     ]
 
     operations = [
