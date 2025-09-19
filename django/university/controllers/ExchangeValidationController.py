@@ -11,6 +11,7 @@ from university.exchange.utils import build_student_schedule_dict, ExchangeStatu
 from exchange.models import DirectExchangeParticipants, DirectExchange
 
 from django.db import transaction
+from django.utils import timezone  # Parece faltar esta importação
 
 @dataclass
 class ExchangeValidationMetadata:
@@ -135,6 +136,10 @@ class ExchangeValidationController:
         for username in schedule.keys():
             if ExchangeController.exchange_overlap(schedule, username):
                 return ExchangeValidationResponse(False, ExchangeStatus.CLASSES_OVERLAP)
+            
+        exchange = DirectExchange.objects.get(id=exchange_id)
+        exchange.last_validated = timezone.now()
+        exchange.save()
 
         return ExchangeValidationResponse(True, ExchangeStatus.SUCCESS)
 

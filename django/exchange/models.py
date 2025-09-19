@@ -31,6 +31,7 @@ class DirectExchange(models.Model):
     accepted = models.BooleanField()
     canceled = models.BooleanField(blank=True, null=True, default=False)
     date = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    last_validated = models.DateTimeField(blank=True, null=True)
     admin_state = models.CharField(max_length=32, default='untreated')
     marketplace_exchange = models.ForeignKey('MarketplaceExchange', models.DO_NOTHING, db_column='marketplace_exchange', blank=True, null=True)
     hash = models.CharField(max_length=64, blank=True, null=True)
