@@ -32,7 +32,7 @@ class StudentController:
         if(erase_previous):
             UserCourseUnits.objects.filter(user_nmec=nmec).delete()
 
-        course_units = StudentScheduleController.retrieve_course_unit_classes(SigarraController(), str(nmec), metadata=metadata)
+        course_units = StudentScheduleController.retrieve_course_unit_classes(SigarraController(), str(nmec), metadata=metadata, update_exchanges=True)
 
         for item in course_units:
             (course_unit_id, class_acronym) = item

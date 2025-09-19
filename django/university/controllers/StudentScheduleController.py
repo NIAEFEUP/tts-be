@@ -50,7 +50,7 @@ class StudentScheduleController:
             metadata.class_schedule[(int(exchange.course_unit_id), exchange.class_participant_goes_to)] = res.data
 
     @staticmethod
-    def retrieve_course_unit_classes(sigarra_controller: SigarraController, username: str, metadata: StudentScheduleMetadata | None = None):
+    def retrieve_course_unit_classes(sigarra_controller: SigarraController, username: str, metadata: StudentScheduleMetadata | None = None, update_exchanges: bool = False):
         if metadata is not None:
             schedule_data = metadata.student_schedule[username]
         else:
@@ -61,7 +61,8 @@ class StudentScheduleController:
 
             schedule_data = sigarra_res.data
 
-        ExchangeController.update_schedule_accepted_exchanges(username, schedule_data, metadata=metadata)
+        if update_exchanges:
+            ExchangeController.update_schedule_accepted_exchanges(username, schedule_data, metadata=metadata)
 
         ids = set()
         course_unit_classes = set()
