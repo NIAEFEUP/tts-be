@@ -33,7 +33,7 @@ class DirectExchange(models.Model):
     date = models.DateTimeField(blank=True, null=True, default=timezone.now)
     admin_state = models.CharField(max_length=32, default='untreated')
     marketplace_exchange = models.ForeignKey('MarketplaceExchange', models.DO_NOTHING, db_column='marketplace_exchange', blank=True, null=True)
-    hash = models.CharField(unique=True, max_length=64, blank=True, null=True)
+    hash = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
         managed = True
