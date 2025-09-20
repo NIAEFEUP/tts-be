@@ -28,7 +28,7 @@ class ClassController:
         }
 
     @staticmethod
-    def get_classes(course_unit_id: int):
+    def get_classes(course_unit_id: int, fetch_professors: bool = True):
         classes = Class.objects.filter(
             course_unit=course_unit_id
         ).select_related(
@@ -40,7 +40,23 @@ class ClassController:
         result = []
 
         for class_obj in classes:
-            slot_list = [ClassController.get_professors(sc.slot) for sc in class_obj.slotclass_set.all()]
+            slot_list = []
+
+            if fetch_professors:
+                slot_list = [ClassController.get_professors(sc.slot) for sc in class_obj.slotclass_set.all()]
+            else: 
+                slot_list = [
+                    {
+                        'id': sc.slot.id,
+                        'lesson_type': sc.slot.lesson_type,
+                        'day': sc.slot.day,
+                        'start_time': float(sc.slot.start_time),
+                        'duration': float(sc.slot.duration),
+                        'location': sc.slot.location,
+                        'is_composed': sc.slot.is_composed,
+                        'professors': []
+                    } for sc in class_obj.slotclass_set.all()
+                ]
 
             result.append({
                 "id": class_obj.id,
