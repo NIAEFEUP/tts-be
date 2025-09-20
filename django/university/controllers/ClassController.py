@@ -6,7 +6,6 @@ from django.db.models import Prefetch
 class ClassController:
     @staticmethod
     def get_professors(slot):
-        return {}
         slot_professors = SlotProfessor.objects.filter(slot_id=slot.id).select_related("professor")
 
         professors = [
@@ -35,15 +34,13 @@ class ClassController:
         ).select_related(
             'course_unit'
         ).prefetch_related(
-            Prefetch('slotclass_set', queryset=SlotClass.objects.select_related('slot'), to_attr='slot')
+            Prefetch('slotclass_set', queryset=SlotClass.objects.select_related('slot'))
         ).order_by("name")
 
         result = []
 
-
-
         for class_obj in classes:
-            slot_list = [ClassController.get_professors(sc.slot) for sc in class_obj.slot]
+            slot_list = [ClassController.get_professors(sc.slot) for sc in class_obj.slotclass_set.all()]
 
             result.append({
                 "id": class_obj.id,
