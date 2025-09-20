@@ -85,9 +85,8 @@ class DirectExchangeView(View):
         paginator = Paginator(direct_exchanges, 10)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number if page_number != None else 1)
-        direct_exchanges = [x for x in page_obj]
 
-        direct_exchanges = DirectExchangeSerializer(direct_exchanges, many=True).data
+        direct_exchanges = DirectExchangeSerializer(page_obj, many=True).data
 
         return JsonResponse({
             "exchanges": direct_exchanges,
