@@ -40,13 +40,15 @@ class ExchangeVerifyView(View):
 
 
             # Update participant acceptance
-            participant = DirectExchangeParticipants.objects.filter(participant_nmec=request.user.username)
-            participant.update(accepted=True)
+            with transaction.atomic():
+                participant = DirectExchangeParticipants.objects.filter(participant_nmec=request.user.username)
+                participant.update(accepted=True)
 
-            all_participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=exchange_info["exchange_id"])
-            participant_nmecs = {participant.participant_nmec for participant in all_participants}
+                all_participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=exchange_info["exchange_id"])
+                participant_nmecs = {participant.participant_nmec for participant in all_participants}
 
-            all_participants_accepted = all(participant.accepted for participant in all_participants)
+                all_participants_accepted = all(participant.accepted for participant in all_participants)
+                
             if all_participants_accepted:
                 # Prefetch important information from SIGARRA
                 student_schedule_metadata = StudentScheduleMetadata()
