@@ -81,9 +81,14 @@ class CourseUnitEnrollmentView(APIView):
 
         student_course_units = list(UserCourseUnits.objects.filter(user_nmec=request.user.username).all())
 
+        username = request.user.username  
+
+        if len(username) > 9:
+            username = request.user.email[2:11]
+
         with transaction.atomic():
             course_unit_enrollment = CourseUnitEnrollments(
-                user_nmec=request.user.username,
+                user_nmec=username,
                 accepted=False,
                 admin_state="untreated",
                 date=timezone.now()
