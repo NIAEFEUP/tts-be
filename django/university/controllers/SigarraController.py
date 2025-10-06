@@ -84,9 +84,9 @@ class SigarraController:
 
     def login(self):
         try:
-            response = requests.post("https://sigarra.up.pt/feup/pt/mob_val_geral.autentica/", data={
-                "pv_login": self.username,
-                "pv_password": self.password
+            response = requests.post("https://sigarra.up.pt/feup/pt/vld_validacao.validacao", data={
+                "p_user": self.username,
+                "p_pass": self.password
             })
 
             self.cookies = response.cookies
