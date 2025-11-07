@@ -63,8 +63,15 @@ class ExchangeUrgentView(View):
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
                 exchanges = self.filter_actions[filter](exchanges, request.GET.get(filter))
+        page_size_param = request.GET.get("page_size")  
 
-        paginator = Paginator(exchanges, 10)
+        try:
+            page_size = int(page_size_param) if page_size_param is not None else 10
+        except ValueError:
+            page_size = 10
+
+        paginator = Paginator(exchanges, page_size)
+        
         page_number = request.GET.get("page")
         exchanges = [x for x in paginator.get_page(page_number if page_number != None else 1)]
 

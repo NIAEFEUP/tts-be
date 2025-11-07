@@ -62,7 +62,14 @@ class CourseUnitEnrollmentView(APIView):
             if request.GET.get(filter):
                 enrollments = self.filter_actions[filter](enrollments, request.GET.get(filter))
 
-        paginator = Paginator(enrollments, 10)
+        page_size_param = request.GET.get("page_size")  
+
+        try:
+            page_size = int(page_size_param) if page_size_param is not None else 10
+        except ValueError:
+            page_size = 10
+
+        paginator = Paginator(enrollments, page_size)
         page_number = request.GET.get("page")
         enrollments = [x for x in paginator.get_page(page_number if page_number != None else 1)]
 

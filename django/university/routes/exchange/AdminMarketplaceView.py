@@ -59,7 +59,14 @@ class AdminMarketplaceView(View):
                     to_attr='options'
                 )).all()
 
-        paginator = Paginator(exchanges, 10)
+        page_size_param = request.GET.get("page_size")  
+        
+        try:
+            page_size = int(page_size_param) if page_size_param is not None else 10
+        except ValueError:
+            page_size = 10
+
+        paginator = Paginator(exchanges, page_size)
         page = request.GET.get('page')
         page_obj = paginator.get_page(page)
 

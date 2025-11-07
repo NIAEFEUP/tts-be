@@ -81,8 +81,15 @@ class DirectExchangeView(View):
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
                 direct_exchanges = self.filter_actions[filter](direct_exchanges, request.GET.get(filter))
+        
+        page_size_param = request.GET.get("page_size")  
+        
+        try:
+            page_size = int(page_size_param) if page_size_param is not None else 10
+        except ValueError:
+            page_size = 10
 
-        paginator = Paginator(direct_exchanges, 10)
+        paginator = Paginator(direct_exchanges, page_size)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number if page_number != None else 1)
         direct_exchanges = [x for x in page_obj]
