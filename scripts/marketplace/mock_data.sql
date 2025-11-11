@@ -21,7 +21,7 @@ DELETE FROM marketplace_exchange;
 -- 202307321 -> Inês Gomes (3LEIC13)
 -- 202304594 -> João Marques (3LEIC14)
 
--- Available course units
+-- Available course units (third year)
 -- 560106 - Fundamentos de Segurança Informática (FSI)
 -- 560107 - Interação Pessoa Computador (IPC)
 -- 560108 - Laboratório de Bases de Dados e Aplicações Web (LBAW)
@@ -54,7 +54,7 @@ INSERT INTO marketplace_exchange(id, issuer_name, issuer_nmec, accepted, hash, a
 INSERT INTO marketplace_exchange_class(marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES
     (1, 'Redes de Computadores', 'RC', 560110, '3LEIC05', '3LEIC07'),
     (2, 'Programação Funcional e em Lógica', 'PFL', 560109, '3LEIC05', '3LEIC06'),
-    (3, 'Redes de Computadores', 'RC', 560110, '3LEIC11', '3LEIC013'),
+    (3, 'Redes de Computadores', 'RC', 560110, '3LEIC11', '3LEIC13'),
     (4, 'Fundamentos de Segurança Informática', 'FSI', 560106, '3LEIC02', '3LEIC04'),
     (4, 'Interação Pessoa Computador', 'IPC', 560107, '3LEIC02', '3LEIC01'),
     (5, 'Redes de Computadores', 'RC', 560110, '3LEIC12', '3LEIC13'),
@@ -84,7 +84,7 @@ INSERT INTO marketplace_exchange_class(marketplace_exchange, course_unit_name, c
     (20, 'Fundamentos de Segurança Informática', 'FSI', 560106, '3LEIC14', '3LEIC12');
 
 -- Mock data for direct_exchange
-INSERT INTO direct_exchange(id, issuer_name, issuer_nmec, accepted, admin_state, direct_exchange) VALUES
+INSERT INTO direct_exchange(id, issuer_name, issuer_nmec, accepted, admin_state, marketplace_exchange) VALUES
     (1, 'Daniel Costa', '202304064', false, 'untreated', 2),
     (2, 'Gabriela Lima', '202306618', false, 'untreated', 3),
     (3, 'Hugo Fernandes', '202306498', false, 'untreated', 5),
