@@ -13,3 +13,6 @@ class AdminExchangeCourseUnitsView(APIView):
         course_units = list(CourseUnit.objects.filter(id__in=admin_exchange_course_units.values_list("course_unit_id", flat=True)).values())
 
         return JsonResponse(course_units, safe=False)
+
+
+
