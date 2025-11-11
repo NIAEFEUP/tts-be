@@ -1,5 +1,7 @@
 #!/usr/bin/env pwsh
 
+# WARNING: Untested script. Fill free to improve it.
+
 if ($args.Count -ne 1) {
     Write-Host "Usage: $PSCommandPath <username>"
     Write-Host "  - username: your mechanographic number (to be set as admin)"
