@@ -45,6 +45,8 @@ DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
 
 EXCHANGE_SEMESTER = CONFIG["EXCHANGE_SEMESTER"]
 
+EXCHANGE_COURSES_LIST = CONFIG.get("EXCHANGE_COURSES_LIST", "22862,22841")
+
 ALLOWED_HOSTS = ['tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
 
 if DEBUG:

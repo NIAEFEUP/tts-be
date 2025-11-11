@@ -2,9 +2,10 @@ from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-
 from exchange.models import ExchangeAdmin
-
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+from exchange.models import ExchangeAdmin
 
 class AdminExchangeAdminsView(APIView):
     """Return user info for current exchange admins.
@@ -17,23 +18,30 @@ class AdminExchangeAdminsView(APIView):
 
     def get(self, request):
         UserModel = get_user_model()
-
-        # Get all admin usernames
         admin_usernames = list(ExchangeAdmin.objects.values_list("username", flat=True))
-
-        # Query user rows matching those usernames
+        
         users_qs = UserModel.objects.filter(username__in=admin_usernames).values(
             "id", "username", "first_name", "last_name", "email", "is_active", "date_joined"
-        )
+        ).order_by('username')
 
-        # Minimal serialization: convert date_joined to a string using str()
+        # Pagination
+        page = int(request.GET.get('page', 1))
+        page_size = int(request.GET.get('page_size', 10))
+        paginator = Paginator(users_qs, page_size)
+        page_obj = paginator.get_page(page)
+
         admins = []
-        for u in users_qs:
+        for u in page_obj.object_list:
             u = dict(u)
             u["date_joined"] = str(u.get("date_joined")) if u.get("date_joined") else None
             admins.append(u)
 
-        return JsonResponse({"admins": admins}, safe=False)
+        return JsonResponse({
+            "admins": admins,
+            "total_pages": paginator.num_pages,
+            "current_page": page_obj.number,
+            "total_count": paginator.count
+        }, safe=False)
 
     def post(self, request):
         username = request.data.get('username')
@@ -42,7 +50,7 @@ class AdminExchangeAdminsView(APIView):
 
         UserModel = get_user_model()
         try:
-            user = UserModel.objects.get(username=username)
+            UserModel.objects.get(username=username)
         except UserModel.DoesNotExist:
             return JsonResponse({'error': 'User not found'}, status=404)
 
