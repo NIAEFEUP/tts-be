@@ -30,7 +30,7 @@ DELETE FROM marketplace_exchange;
 
 -- Mock data for marketplace_exchange
 INSERT INTO marketplace_exchange(id, issuer_name, issuer_nmec, accepted, hash, admin_state) VALUES
-    (1, 'Daniel Costa', '202304064', false, 'f33883613aabc7420183017e4370b1340286a652804453876c13a289037393de', 'untreated'),
+    (1, 'Carla Mendes', '202204914', false, '71776572747975696f706173646667686a6b6c7a786376626e6d313233343536', 'untreated'),
     (2, 'Daniel Costa', '202304064', false, '3383583123884d91e241645651425d13a481203882984e31d7b27fc23b46294c', 'untreated'),
     (3, 'Gabriela Lima', '202306618', false, 'ab259b33a5d2545f7b4785a5434c23a13a802315b1391fb70a5a3089529f520f', 'untreated'),
     (4, 'Bruno Silva', '202303872', false, 'b4429334f952e88a2b9d0572b5a65a335173313819f4a4a6b8923035f2b852a2', 'untreated'),
@@ -45,14 +45,15 @@ INSERT INTO marketplace_exchange(id, issuer_name, issuer_nmec, accepted, hash, a
     (13, 'Alice Oliveira', '202307365', false, '3132333435363738393031323334353637383930313233343536373839303132', 'untreated'),
     (14, 'Eva Ferreira', '202305033', false, '6162636465666768696a6b6c6d6e6f707172737475767778797a313233343536', 'untreated'),
     (15, 'Filipe Rocha', '202307295', false, '313233343536373839306162636465666768696a6b6c6d6e6f70717273747576', 'untreated'),
-    (16, 'Carla Mendes', '202204914', false, '71776572747975696f706173646667686a6b6c7a786376626e6d313233343536', 'untreated'),
+    (16, 'Daniel Costa', '202304064', false, 'f33883613aabc7420183017e4370b1340286a652804453876c13a289037393de', 'untreated'),
     (17, 'Gabriela Lima', '202306618', false, '393837363534333231307a797877767574737271706f6e6d6c6b6a6968676665', 'untreated'),
     (18, 'Hugo Fernandes', '202306498', false, '6664736161736466666473616173646666647361617364666664736161736466', 'untreated'),
     (19, 'Inês Gomes', '202307321', false, '6c6b6a6867666473616c6b6a6867666473616c6b6a6867666473616c6b6a6867', 'untreated'),
     (20, 'João Marques', '202304594', false, '3131323233333434353536363737383839393030313132323333343435353636', 'untreated');
 
 INSERT INTO marketplace_exchange_class(marketplace_exchange, course_unit_name, course_unit_acronym, course_unit_id, class_issuer_goes_from, class_issuer_goes_to) VALUES
-    (1, 'Redes de Computadores', 'RC', 560110, '3LEIC05', '3LEIC07'),
+    (1, 'Laboratório de Bases de Dados e Aplicações Web', 'LBAW', 560108, '3LEIC03', '3LEIC08'),
+    (1, 'Programação Funcional e em Lógica', 'PFL', 560109, '3LEIC03', '3LEIC09'),
     (2, 'Programação Funcional e em Lógica', 'PFL', 560109, '3LEIC05', '3LEIC06'),
     (3, 'Redes de Computadores', 'RC', 560110, '3LEIC11', '3LEIC13'),
     (4, 'Fundamentos de Segurança Informática', 'FSI', 560106, '3LEIC02', '3LEIC04'),
@@ -74,8 +75,7 @@ INSERT INTO marketplace_exchange_class(marketplace_exchange, course_unit_name, c
     (14, 'Fundamentos de Segurança Informática', 'FSI', 560106, '3LEIC06', '3LEIC03'),
     (15, 'Interação Pessoa Computador', 'IPC', 560107, '3LEIC10', '3LEIC11'),
     (15, 'Laboratório de Bases de Dados e Aplicações Web', 'LBAW', 560108, '3LEIC10', '3LEIC12'),
-    (16, 'Laboratório de Bases de Dados e Aplicações Web', 'LBAW', 560108, '3LEIC03', '3LEIC09'),
-    (16, 'Programação Funcional e em Lógica', 'PFL', 560109, '3LEIC03', '3LEIC08'),
+    (16, 'Redes de Computadores', 'RC', 560110, '3LEIC05', '3LEIC07'),
     (17, 'Fundamentos de Segurança Informática', 'FSI', 560106, '3LEIC11', '3LEIC12'),
     (18, 'Interação Pessoa Computador', 'IPC', 560107, '3LEIC12', '3LEIC17'),
     (18, 'Redes de Computadores', 'RC', 560110, '3LEIC12', '3LEIC10'),
