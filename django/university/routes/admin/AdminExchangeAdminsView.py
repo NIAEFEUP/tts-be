@@ -59,3 +59,30 @@ class AdminExchangeAdminsView(APIView):
             "current_page": page_obj.number,
             "total_count": paginator.count
         })
+
+    def post(self, request):
+        username = request.data.get('username')
+        if not username:
+            return JsonResponse({'error': 'Username required'}, status=400)
+
+        UserModel = get_user_model()
+        try:
+            UserModel.objects.get(username=username)
+        except UserModel.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+
+        if ExchangeAdmin.objects.filter(username=username).exists():
+            return JsonResponse({'error': 'User is already an admin'}, status=400)
+
+        ExchangeAdmin.objects.create(username=username)
+        return JsonResponse({'message': 'Admin added successfully'})
+
+    def delete(self, request, username):
+        if not username:
+            return JsonResponse({'error': 'Username required'}, status=400)
+
+        deleted, _ = ExchangeAdmin.objects.filter(username=username).delete()
+        if deleted == 0:
+            return JsonResponse({'error': 'Admin not found'}, status=404)
+
+        return JsonResponse({'message': 'Admin removed successfully'})
