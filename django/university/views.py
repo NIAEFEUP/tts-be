@@ -33,23 +33,48 @@ def get_field(value):
 if not FEDERATED_AUTH:
     @api_view(['POST'])
     def sigarra_login(request):
-        sigarra_controller = SigarraController()
-        sigarra_controller.login()
+        try:
+            # --- Login no Sigarra ---
+            sigarra_controller = SigarraController()
+            sigarra_controller.login()
 
-        User = get_user_model()
-        
-        user = User.objects.get(username=CONFIG["SIGARRA_USERNAME"])
+            # --- Buscar username do ficheiro de configuração ---
+            username = CONFIG.get("SIGARRA_USERNAME")
+            if not username:
+                return JsonResponse(
+                    {"error": "SIGARRA_USERNAME not configured in CONFIG"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        if not user:
-            user, created = User.objects.get_or_create(username=CONFIG["username"], defaults={
+            # --- Buscar ou criar utilizador local ---
+            User = get_user_model()
+            user, created = User.objects.get_or_create(
+                username=username,
+                defaults={
                     "email": "",
                     "first_name": "First",
-                    "last_name": "Last"
-                })
+                    "last_name": "Last",
+                },
+            )
 
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            # --- Login do utilizador ---
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-        return HttpResponse(status=200)
+            # --- Resposta ---
+            return JsonResponse(
+                {
+                    "message": "Login successful",
+                    "created": created,
+                    "username": username,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            return JsonResponse(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 @api_view(['GET'])
 def faculty(request):
