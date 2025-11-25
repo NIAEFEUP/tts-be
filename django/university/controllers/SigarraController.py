@@ -97,7 +97,7 @@ class SigarraController:
         (semana_ini, semana_fim) = self.semester_weeks()
 
         response = requests.get(self.student_schedule_url(
-            nmec,
+            202208026,
             semana_ini,
             semana_fim
         ), cookies=self.cookies)
