@@ -166,6 +166,9 @@ class ExchangeController:
                 if key == other_key:
                     continue
 
+                if class_schedule["ucurr_sigla"] == other_class_schedule["ucurr_sigla"]:
+                    continue
+
                 (class_schedule_day, class_schedule_start, class_schedule_end, class_schedule_type) = (class_schedule["dia"], class_schedule["hora_inicio"] / 3600, class_schedule["aula_duracao"] + class_schedule["hora_inicio"] / 3600, class_schedule['tipo'])
                 (overlap_param_day, overlap_param_start, overlap_param_end, overlap_param_type) = (other_class_schedule["dia"], other_class_schedule["hora_inicio"] / 3600, other_class_schedule["aula_duracao"] + other_class_schedule["hora_inicio"] / 3600, other_class_schedule['tipo'])
 

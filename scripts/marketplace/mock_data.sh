@@ -1,5 +1,16 @@
-#!/usr/bin/env
+#!/bin/sh
 
-# It is fine to use the password like this because this is only intended to use
-# in development environments and it will only be available so
-PGPASSWORD='root' psql -h localhost -p 5432 -U root -d tts -f mock_data.sql
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 <username>"
+  echo "  - username: your mechanographic number (to be set as admin)"
+  exit 1
+fi
+
+ROOT="$(dirname "$(dirname "$(dirname "$(realpath "$0")")")")"
+cd "$ROOT/django/tts_be" || { echo "Failed to change directory to $ROOT/django/tts_be"; exit 1; }
+
+USERNAME=$1
+
+sed "s/<username>/$USERNAME/g" $ROOT/scripts/marketplace/mock_data.sql > /tmp/mock_data.sql
+sqlite3 $ROOT/django/tts_be/database.db < /tmp/mock_data.sql
+rm /tmp/mock_data.sql

@@ -1,20 +1,20 @@
-from university.models import Class, Professor, Slot, SlotProfessor
+from university.models import Class, Professor, Slot, SlotProfessor, SlotClass
+from django.forms.models import model_to_dict
 
+from django.db.models import Prefetch
 
 class ClassController:
     @staticmethod
     def get_professors(slot):
-        slot_professors = SlotProfessor.objects.filter(slot_id=slot.id).values()
-        
-        professors = []
-        
-        for slot_professor in slot_professors:
-            professor = Professor.objects.get(id=slot_professor['professor_id'])
-            professors.append({
-                'id': professor.id,
-                'acronym': professor.professor_acronym,
-                'name': professor.professor_name
-            })
+        slot_professors = SlotProfessor.objects.filter(slot_id=slot.id).select_related("professor")
+
+        professors = [
+            {
+                'id': slot_professor.professor.id,
+                'acronym': slot_professor.professor.professor_acronym,
+                'name': slot_professor.professor.professor_name
+            } for slot_professor in slot_professors
+        ]
 
         return {
             'id': slot.id,
@@ -28,22 +28,41 @@ class ClassController:
         }
 
     @staticmethod
-    def get_classes(course_unit_id: int):
-        classes = Class.objects.filter(course_unit=course_unit_id).select_related(
-            'course_unit').prefetch_related('slotclass_set__slot').order_by("name")
+    def get_classes(course_unit_id: int, fetch_professors: bool = True):
+        classes = Class.objects.filter(
+            course_unit=course_unit_id
+        ).select_related(
+            'course_unit'
+        ).prefetch_related(
+            Prefetch('slotclass_set', queryset=SlotClass.objects.select_related('slot'))
+        ).order_by("name")
 
         result = []
-        for class_obj in classes:
-            slot_ids = [sc.slot_id for sc in class_obj.slotclass_set.all()]
-            slots = Slot.objects.filter(id__in=slot_ids)
 
-            slot_list = list(map(ClassController.get_professors, slots))
+        for class_obj in classes:
+            slot_list = []
+
+            if fetch_professors:
+                slot_list = [ClassController.get_professors(sc.slot) for sc in class_obj.slotclass_set.all()]
+            else: 
+                slot_list = [
+                    {
+                        'id': sc.slot.id,
+                        'lesson_type': sc.slot.lesson_type,
+                        'day': sc.slot.day,
+                        'start_time': float(sc.slot.start_time),
+                        'duration': float(sc.slot.duration),
+                        'location': sc.slot.location,
+                        'is_composed': sc.slot.is_composed,
+                        'professors': []
+                    } for sc in class_obj.slotclass_set.all()
+                ]
 
             result.append({
-                'id': class_obj.id,
-                'name': class_obj.name,
-                'vacancies': class_obj.vacancies,
-                'slots': slot_list
+                "id": class_obj.id,
+                "name": class_obj.name,
+                "vacancies": class_obj.vacancies,
+                "slots": slot_list
             })
 
         return result

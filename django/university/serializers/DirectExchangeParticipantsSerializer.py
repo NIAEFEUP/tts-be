@@ -45,7 +45,7 @@ class DirectExchangeParticipantsSerializer(serializers.Serializer):
 
     def get_class_participant_goes_from(self, obj):
         class_issuer_id = obj.class_participant_goes_from
-        classes = ClassController.get_classes(obj.course_unit_id)
+        classes = ClassController.get_classes(obj.course_unit_id, fetch_professors=False)
         filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
 
         try:
@@ -55,7 +55,7 @@ class DirectExchangeParticipantsSerializer(serializers.Serializer):
 
     def get_class_participant_goes_to(self, obj):
         class_issuer_id = obj.class_participant_goes_to
-        classes = ClassController.get_classes(obj.course_unit_id)
+        classes = ClassController.get_classes(obj.course_unit_id, fetch_professors=False)
         filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
 
         try:
