@@ -8,6 +8,8 @@ DELETE FROM direct_exchange_participants;
 DELETE FROM direct_exchange;
 DELETE FROM marketplace_exchange_class;
 DELETE FROM marketplace_exchange;
+DELETE FROM course_unit_enrollments;
+DELETE FROM  course_unit_enrollment_option
 
 -- Students
 -- 202307365 -> Alice Oliveira (3LEIC01)
@@ -104,6 +106,17 @@ INSERT INTO direct_exchange_participants(direct_exchange, participant_name, part
     (4, 'Filipe Rocha', '202307295', '3LEIC06', '3LEIC03', 'PFL', 560109, false),
     (5, 'João Marques', '202304594', '3LEIC14', '3LEIC11', 'LBAW', 560108, false),
     (5, 'Gabriela Lima', '202306618', '3LEIC11', '3LEIC14', 'LBAW', 560108, false);
+
+INSERT INTO course_unit_enrollments (id, user_nmec, accepted, admin_state, date) VALUES
+(389, '202105327', FALSE, 'untreated', '2025-11-27 22:59:32.924732');
+
+INSERT INTO course_unit_enrollment_options (id, course_unit_id, enrolling, course_unit_enrollment_id, date) VALUES
+(1287, 560099, TRUE, 389, '2025-11-27 22:59:32.926747'),
+(1288, 560096, TRUE, 389, '2025-11-27 22:59:32.927713'),
+(1289, 560100, TRUE, 389, '2025-11-27 22:59:32.928713'),
+(1290, 560097, TRUE, 389, '2025-11-27 22:59:32.929737'),
+(1291, 560098, TRUE, 389, '2025-11-27 22:59:32.930762'),
+(1292, 564470, TRUE, 389, '2025-11-27 22:59:32.931717');
 
 -- Admin mock data
 INSERT INTO exchange_admin (id, username) VALUES
