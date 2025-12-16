@@ -4,6 +4,8 @@ from university.controllers.ScheduleController import ScheduleController
 from django.forms.models import model_to_dict
 from django.core.cache import cache
 
+import hashlib
+
 from django.utils import timezone
 
 from django.db.models import Prefetch
@@ -11,8 +13,22 @@ from django.db.models import Prefetch
 class ClassController:
     @staticmethod
     def parse_classes_from_response(response_data: list):
+        fetched_classes = set()
+
         for entry in response_data:
             course_unit_id = int(entry.get('ocorrencia_id'))
+            start_time = float(entry.get('hora_inicio', 0)) / 3600.0
+            duration = float(entry.get('aula_duracao', 0))
+            location = entry.get('sala_sigla')
+            lesson_type = entry.get('tipo')
+            day = ScheduleController.from_sigarra_day(entry.get('dia'))
+
+            hash = hashlib.sha256(f"{course_unit_id}{day}{start_time}{duration}{location}{lesson_type}".encode('utf-8')).hexdigest()
+
+            if hash in fetched_classes:
+                continue
+
+            fetched_classes.add(hash)
 
             slot = Slot(
                 id=entry.get('aula_id'),
@@ -37,11 +53,10 @@ class ClassController:
                     }
                 )
 
-                slot_class = SlotClass(
+                slot_class, created = SlotClass.objects.get_or_create(
                     slot=slot,
-                    class_field=new_class
+                    class_field=new_class,
                 )
-                slot_class.save()
 
             for docente in entry.get('docentes', []):
                 professor, created = Professor.objects.get_or_create(
@@ -85,8 +100,8 @@ class ClassController:
     def get_classes(course_unit_id: int, fetch_professors: bool = True):
         sigarra_controller = SigarraController(login = False)
         (semana_ini, semana_fim) = sigarra_controller.semester_weeks()
+
         if not cache.get(f"schedule-{course_unit_id}"):
-            print("Not in cache")
             schedule = SigarraController().get_course_schedule(course_unit_id).data
 
             ClassController.parse_classes_from_response(schedule)
@@ -100,8 +115,6 @@ class ClassController:
         ).prefetch_related(
             Prefetch('slotclass_set', queryset=SlotClass.objects.select_related('slot'))
         ).order_by("name")
-
-        print("CLASS: ", classes)
 
         result = []
 
