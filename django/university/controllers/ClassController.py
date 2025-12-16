@@ -47,7 +47,7 @@ class ClassController:
                 professor, created = Professor.objects.get_or_create(
                     id=docente.get('doc_codigo'),
                     defaults={
-                        'professor_acronym': docente.get('doc_sigla'),
+                        'professor_acronym': entry.get('doc_sigla'),
                         'professor_name': docente.get('doc_nome')
                     }
                 )
