@@ -14,12 +14,13 @@ class SigarraController:
         This class will contain methods to manipulate student data that is inside sigarra.
     """
 
-    def __init__(self):
+    def __init__(self, login = True):
         self.username = CONFIG["SIGARRA_USERNAME"]
         self.password = CONFIG["SIGARRA_PASSWORD"]
         self.cookies = None
 
-        self.login()
+        if login:
+            self.login()
 
     def get_student_photo_url(self, nmec) -> str:
         return f"https://sigarra.up.pt/feup/pt/fotografias_service.foto?pct_cod={nmec}"
@@ -127,6 +128,20 @@ class SigarraController:
             return SigarraResponse(None, response.status_code)
 
         return SigarraResponse(response.json(), 200)
+
+    def get_course_schedule(self, course_unit_id: int) -> SigarraResponse:
+        (semana_ini, semana_fim) = self.semester_weeks()
+
+        response = requests.get(self.course_unit_schedule_url(
+            course_unit_id,
+            semana_ini,
+            semana_fim
+        ), cookies=self.cookies)
+
+        if(response.status_code != 200):
+            return SigarraResponse(None, response.status_code)
+
+        return SigarraResponse(response.json()['horario'], response.status_code)
 
     """
         Returns a tuple with (pratical class, theoretical class)
