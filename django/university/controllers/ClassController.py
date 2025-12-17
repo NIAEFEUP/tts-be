@@ -1,4 +1,5 @@
 from university.models import Class, Professor, Slot, SlotProfessor, SlotClass, CourseUnit
+from django.db import transaction
 from university.controllers.SigarraController import SigarraController
 from university.controllers.ScheduleController import ScheduleController
 from django.forms.models import model_to_dict
@@ -11,6 +12,21 @@ from django.utils import timezone
 from django.db.models import Prefetch
 
 class ClassController:
+    @staticmethod
+    def delete_cached_classes(course_unit_id: int):
+        for class_obj in Class.objects.filter(course_unit=course_unit_id):
+            for slot_class_obj in SlotClass.objects.filter(class_field__id=class_obj.id):
+                for slot_obj in slot_class_obj.slot.all():
+                    for slot_professor_obj in SlotProfessor.objects.filter(slot=slot_obj):
+                        slot_professor_obj.slot.professor.delete()
+                        slot_professor_obj.delete()
+
+                    slot_obj.delete()
+
+                slot_class_obj.delete()
+
+            class_obj.delete()
+
     @staticmethod
     def parse_classes_from_response(response_data: list):
         fetched_classes = set()
@@ -102,11 +118,13 @@ class ClassController:
         (semana_ini, semana_fim) = sigarra_controller.semester_weeks()
 
         if not cache.get(f"schedule-{course_unit_id}"):
-            schedule = SigarraController().get_course_schedule(course_unit_id).data
+            with transaction.atomic():
+                ClassController.delete_cached_classes(course_unit_id)
+                schedule = SigarraController().get_course_schedule(course_unit_id).data
 
-            ClassController.parse_classes_from_response(schedule)
+                ClassController.parse_classes_from_response(schedule)
 
-            cache.set(f"schedule-{course_unit_id}", True, 60 * 60 * 24)
+                cache.set(f"schedule-{course_unit_id}", True, 60 * 60 * 24)
         
         classes = Class.objects.filter(
             course_unit=course_unit_id
