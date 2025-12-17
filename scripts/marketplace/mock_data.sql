@@ -111,12 +111,12 @@ INSERT INTO course_unit_enrollments (id, user_nmec, user_name, accepted, admin_s
     (389, '202105327', 'Diogo Martins', FALSE, 'untreated', '2025-11-27 22:59:32.924732');
 
 INSERT INTO course_unit_enrollment_options (id, course_unit_id, enrolling, course_unit_enrollment_id, date) VALUES
-    (1287, 560099, TRUE, 389, '2025-11-27 22:59:32.926747'),
-    (1288, 560096, TRUE, 389, '2025-11-27 22:59:32.927713'),
-    (1289, 560100, TRUE, 389, '2025-11-27 22:59:32.928713'),
-    (1290, 560097, TRUE, 389, '2025-11-27 22:59:32.929737'),
-    (1291, 560098, TRUE, 389, '2025-11-27 22:59:32.930762'),
-    (1292, 564470, TRUE, 389, '2025-11-27 22:59:32.931717');
+    (1287, 560099, TRUE, 389, '2025-11-27 22:59:32.926747'), --ldts
+    (1288, 560096, TRUE, 389, '2025-11-27 22:59:32.927713'), --aed
+    (1289, 560100, TRUE, 389, '2025-11-27 22:59:32.928713'), --so
+    (1290, 560097, TRUE, 389, '2025-11-27 22:59:32.929737'), --bd
+    (1291, 560098, TRUE, 389, '2025-11-27 22:59:32.930762'), --fisica
+    (1292, 564470, TRUE, 389, '2025-11-27 22:59:32.931717'); --lgp
 
 -- Admin mock data
 INSERT INTO exchange_admin (id, username) VALUES
