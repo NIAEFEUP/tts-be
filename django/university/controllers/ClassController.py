@@ -14,18 +14,20 @@ from django.db.models import Prefetch
 class ClassController:
     @staticmethod
     def delete_cached_classes(course_unit_id: int):
-        for class_obj in Class.objects.filter(course_unit=course_unit_id):
-            for slot_class_obj in SlotClass.objects.filter(class_field__id=class_obj.id):
-                for slot_obj in slot_class_obj.slot.all():
-                    for slot_professor_obj in SlotProfessor.objects.filter(slot=slot_obj):
-                        slot_professor_obj.slot.professor.delete()
-                        slot_professor_obj.delete()
+        classes = Class.objects.filter(course_unit_id=course_unit_id)
+        
+        slot_ids = SlotClass.objects.filter(class_field__in=classes).values_list('slot_id', flat=True)
+        slots = Slot.objects.filter(id__in=slot_ids)
 
-                    slot_obj.delete()
+        professor_ids = SlotProfessor.objects.filter(slot__in=slots).values_list('professor_id', flat=True)
+        
+        SlotClass.objects.filter(class_field__in=classes).delete()
+        SlotProfessor.objects.filter(slot__in=slots).delete()
 
-                slot_class_obj.delete()
+        slots.delete()
+        classes.delete()
 
-            class_obj.delete()
+        Professor.objects.filter(id__in=professor_ids).delete()
 
     @staticmethod
     def parse_classes_from_response(response_data: list):
@@ -39,7 +41,7 @@ class ClassController:
             lesson_type = entry.get('tipo')
             day = ScheduleController.from_sigarra_day(entry.get('dia'))
 
-            hash = hashlib.sha256(f"{course_unit_id}{day}{start_time}{duration}{location}{lesson_type}".encode('utf-8')).hexdigest()
+            hash = hashlib.sha256(f"{course_unit_id}{day}{start_time}{duration}{lesson_type}".encode('utf-8')).hexdigest()
 
             if hash in fetched_classes:
                 continue
