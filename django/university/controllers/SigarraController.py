@@ -149,8 +149,6 @@ class SigarraController:
         if(response.status_code != 200):
             return SigarraResponse(None, response.status_code)
 
-        print(response.json())
-
         return SigarraResponse(response.json()['horario' if not new_schedule_api else 'data'], response.status_code)
 
     """

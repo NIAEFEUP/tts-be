@@ -5,6 +5,8 @@ from university.controllers.ScheduleController import ScheduleController
 from django.forms.models import model_to_dict
 from django.core.cache import cache
 
+from tts_be.settings import CLASS_SCHEDULE_CACHE_TTL
+
 import hashlib
 
 from django.utils import timezone
@@ -196,7 +198,7 @@ class ClassController:
                 else:
                     ClassController.parse_classes_from_response_old_api(schedule)
 
-                cache.set(f"schedule-{course_unit_id}", True, 60 * 60 * 24)
+                cache.set(f"schedule-{course_unit_id}", True, CLASS_SCHEDULE_CACHE_TTL)
         
         classes = Class.objects.filter(
             course_unit=course_unit_id
