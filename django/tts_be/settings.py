@@ -45,6 +45,8 @@ DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
 
 EXCHANGE_SEMESTER = CONFIG["EXCHANGE_SEMESTER"]
 
+CLASS_SCHEDULE_CACHE_TTL = int(CONFIG.get("CLASS_SCHEDULE_CACHE_TTL", 60 * 60 * 6))
+
 ALLOWED_HOSTS = ['tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
 
 if DEBUG:

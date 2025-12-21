@@ -34,8 +34,8 @@ python manage.py migrate sessions
 python manage.py migrate contenttypes
 
 # Initialize redis worker for celery and celery's beat scheduler in the background
-celery -A tasks worker --loglevel=INFO &
-celery -A tasks beat &
+#celery -A tasks worker --loglevel=INFO &
+#celery -A tasks beat &
 
 # Initializes the API.
 exec $cmd
