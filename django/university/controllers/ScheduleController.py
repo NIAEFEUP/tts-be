@@ -1,3 +1,6 @@
+from tts_be.settings import CONFIG
+from datetime import date
+
 class ScheduleController:
     def __init__(self):
         self.weekday_to_day = {
@@ -10,6 +13,15 @@ class ScheduleController:
             "Domingo": 6
         }
 
+    def get_period(self):
+        if int(CONFIG["EXCHANGE_SEMESTER"]) != None:
+            return f"{int(CONFIG['EXCHANGE_SEMESTER']) + 1}"
+        else:
+            currdate = date.today()
+            year = str(currdate.year)
+
+            return "2" if currdate.month >= 10 or currdate.month <= 1 else "3"
+
     def from_sigarra_day(self, day: int):
         return day - 1
 
@@ -17,4 +29,4 @@ class ScheduleController:
         return self.weekday_to_day[day]
 
     def calendarios_api(self, faculty: str, course_unit_id: int, year: int, semester: int):
-        return f"https://sigarra.up.pt/calendarios-api/api/v1/events/{faculty}/uc/{course_unit_id}/?academic_year={year}&period={semester}"
+        return f"https://sigarra.up.pt/calendarios-api/api/v1/events/{faculty}/uc/{course_unit_id}/?academic_year={year}&period={self.get_period()}"
