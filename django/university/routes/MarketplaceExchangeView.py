@@ -122,9 +122,10 @@ class MarketplaceExchangeView(APIView):
         exchanges = request.POST.getlist('exchangeChoices[]')
         exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
 
-        # If user sent a message explaining why their request should be directly handled by the comission instead of having to be
+        # If user sent a message explaining why their request should be directly handled by the commission instead of having to be
         # accepted by students in the marketplace
-        urgentMessage = request.POST.get('urgentMessage')
+        urgent_message = request.POST.get('urgentMessage')
+        is_urgent = urgent_message is not None and urgent_message != ""
 
         curr_student = request.user.username
         sigarra_res = SigarraController().get_student_schedule(curr_student)
@@ -143,7 +144,7 @@ class MarketplaceExchangeView(APIView):
         if status == ExchangeStatus.STUDENTS_NOT_ENROLLED:
             return JsonResponse({"error": incorrect_class_error()}, status=400, safe=False)
 
-        if not urgentMessage or urgentMessage == "":
+        if not is_urgent:
             if ExchangeController.exchange_overlap(student_schedules, curr_student):
                 return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
@@ -152,14 +153,14 @@ class MarketplaceExchangeView(APIView):
 
         # Unless replace=true, we want to avoid creating duplicate requests
         if not replace:
-            if MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
+            if not is_urgent and MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
                 return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
-            if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
+            if is_urgent and ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
                 return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
-        if urgentMessage:
-            return self.add_urgent_exchange(request, exchanges, urgentMessage, exchange_hash, replace)
+        if is_urgent:
+            return self.add_urgent_exchange(request, exchanges, urgent_message, exchange_hash, replace)
         else:
             return self.add_normal_marketplace_exchange(request, exchanges, exchange_hash, replace)
 
@@ -191,7 +192,7 @@ class MarketplaceExchangeView(APIView):
 
         return JsonResponse({"success": True}, safe=False)
 
-    def reject_old_urgent_requestss(self, user, exchange_hash):
+    def reject_old_urgent_requests(self, user, exchange_hash):
         with transaction.atomic():
             old_requests = ExchangeUrgentRequests.objects.filter(
                 issuer_nmec=user.username,
