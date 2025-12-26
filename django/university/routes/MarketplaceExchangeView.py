@@ -147,23 +147,32 @@ class MarketplaceExchangeView(APIView):
             if ExchangeController.exchange_overlap(student_schedules, curr_student):
                 return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
-        exchange_hash = ExchangeHasher.hash(exchanges, username=curr_student)
+        # By specifying replace=true, the user can replace a request with the same hash with a new one
+        replace = request.POST.get('replace', 'false') == 'true'
+        if not replace:
+            exchange_hash = ExchangeHasher.hash(exchanges, username=curr_student)
 
-        if MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
-            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+            if MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
+                return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
-        if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
-            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+            if ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
+                return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         if urgentMessage:
-            return self.add_urgent_exchange(request, exchanges, urgentMessage, exchange_hash)
+            return self.add_urgent_exchange(request, exchanges, urgentMessage, exchange_hash, replace)
         else:
             return self.add_normal_marketplace_exchange(request, exchanges, exchange_hash)
 
 
-    def add_urgent_exchange(self, request, exchanges, message: str, exchange_hash):
-
+    def add_urgent_exchange(self, request, exchanges, message: str, exchange_hash, replace_existing=False):
         with transaction.atomic():
+            if replace_existing:
+                ExchangeUrgentRequests.objects.filter(
+                    issuer_nmec=request.user.username,
+                    hash=exchange_hash,
+                    admin_state="untreated"
+                ).delete()
+
             urgent_request = ExchangeUrgentRequests.objects.create(
                 issuer_name=request.user.first_name + " " + request.user.last_name,
                 issuer_nmec=request.user.username,
@@ -192,25 +201,33 @@ class MarketplaceExchangeView(APIView):
 
         return JsonResponse({"success": True}, safe=False)
 
-    def insert_marketplace_exchange(self, exchanges, user, exchange_hash):
+    def insert_marketplace_exchange(self, exchanges, user, exchange_hash, replace_existing=False):
         issuer_name = f"{user.first_name} {user.last_name.split(' ')[-1]}"
 
-        marketplace_exchange = MarketplaceExchange.objects.create(
-            issuer_name=issuer_name,
-            issuer_nmec=user.username,
-            accepted=False,
-            hash=exchange_hash,
-            canceled=False,
-            date=timezone.now()
-        )
-        for exchange in exchanges:
-            course_unit_id = int(exchange["courseUnitId"])
-            course_unit = CourseUnit.objects.get(pk=course_unit_id)
-            MarketplaceExchangeClass.objects.create(
-                marketplace_exchange=marketplace_exchange,
-                course_unit_acronym=course_unit.acronym,
-                course_unit_id=course_unit_id,
-                course_unit_name=course_unit.name,
-                class_issuer_goes_from=exchange["classNameRequesterGoesFrom"],
-                class_issuer_goes_to=exchange["classNameRequesterGoesTo"]
+        with transaction.atomic():
+            if replace_existing:
+                MarketplaceExchange.objects.filter(
+                    issuer_nmec=user.username,
+                    hash=exchange_hash,
+                    canceled=False
+                ).delete()
+
+            marketplace_exchange = MarketplaceExchange.objects.create(
+                issuer_name=issuer_name,
+                issuer_nmec=user.username,
+                accepted=False,
+                hash=exchange_hash,
+                canceled=False,
+                date=timezone.now()
             )
+            for exchange in exchanges:
+                course_unit_id = int(exchange["courseUnitId"])
+                course_unit = CourseUnit.objects.get(pk=course_unit_id)
+                MarketplaceExchangeClass.objects.create(
+                    marketplace_exchange=marketplace_exchange,
+                    course_unit_acronym=course_unit.acronym,
+                    course_unit_id=course_unit_id,
+                    course_unit_name=course_unit.name,
+                    class_issuer_goes_from=exchange["classNameRequesterGoesFrom"],
+                    class_issuer_goes_to=exchange["classNameRequesterGoesTo"]
+                )
