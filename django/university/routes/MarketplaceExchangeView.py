@@ -161,17 +161,12 @@ class MarketplaceExchangeView(APIView):
         if urgentMessage:
             return self.add_urgent_exchange(request, exchanges, urgentMessage, exchange_hash, replace)
         else:
-            return self.add_normal_marketplace_exchange(request, exchanges, exchange_hash)
-
+            return self.add_normal_marketplace_exchange(request, exchanges, exchange_hash, replace)
 
     def add_urgent_exchange(self, request, exchanges, message: str, exchange_hash, replace_existing=False):
         with transaction.atomic():
             if replace_existing:
-                ExchangeUrgentRequests.objects.filter(
-                    issuer_nmec=request.user.username,
-                    hash=exchange_hash,
-                    admin_state="untreated"
-                ).delete()
+                self.reject_old_urgent_requests(request.user, exchange_hash)
 
             urgent_request = ExchangeUrgentRequests.objects.create(
                 issuer_name=request.user.first_name + " " + request.user.last_name,
@@ -196,8 +191,19 @@ class MarketplaceExchangeView(APIView):
 
         return JsonResponse({"success": True}, safe=False)
 
-    def add_normal_marketplace_exchange(self, request, exchanges, exchange_hash):
-        self.insert_marketplace_exchange(exchanges, request.user, exchange_hash)
+    def reject_old_urgent_requestss(self, user, exchange_hash):
+        with transaction.atomic():
+            old_requests = ExchangeUrgentRequests.objects.filter(
+                issuer_nmec=user.username,
+                hash=exchange_hash,
+                admin_state="untreated"
+            )
+            for old_request in old_requests:
+                old_request.admin_state = "rejected"
+                old_request.save()
+
+    def add_normal_marketplace_exchange(self, request, exchanges, exchange_hash, replace_existing=False):
+        self.insert_marketplace_exchange(exchanges, request.user, exchange_hash, replace_existing)
 
         return JsonResponse({"success": True}, safe=False)
 
@@ -206,11 +212,7 @@ class MarketplaceExchangeView(APIView):
 
         with transaction.atomic():
             if replace_existing:
-                MarketplaceExchange.objects.filter(
-                    issuer_nmec=user.username,
-                    hash=exchange_hash,
-                    canceled=False
-                ).delete()
+                self.cancel_old_marketplace_exchanges(user, exchange_hash)
 
             marketplace_exchange = MarketplaceExchange.objects.create(
                 issuer_name=issuer_name,
@@ -231,3 +233,14 @@ class MarketplaceExchangeView(APIView):
                     class_issuer_goes_from=exchange["classNameRequesterGoesFrom"],
                     class_issuer_goes_to=exchange["classNameRequesterGoesTo"]
                 )
+
+    def cancel_old_marketplace_exchanges(self, user, exchange_hash):
+        with transaction.atomic():
+            old_exchanges = MarketplaceExchange.objects.filter(
+                issuer_nmec=user.username,
+                hash=exchange_hash,
+                canceled=False
+            )
+            for old_exchange in old_exchanges:
+                old_exchange.canceled = True
+                old_exchange.save()
