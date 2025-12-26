@@ -147,11 +147,11 @@ class MarketplaceExchangeView(APIView):
             if ExchangeController.exchange_overlap(student_schedules, curr_student):
                 return JsonResponse({"error": "classes-overlap"}, status=400, safe=False)
 
-        # By specifying replace=true, the user can replace a request with the same hash with a new one
         replace = request.POST.get('replace', 'false') == 'true'
-        if not replace:
-            exchange_hash = ExchangeHasher.hash(exchanges, username=curr_student)
+        exchange_hash = ExchangeHasher.hash(exchanges, username=curr_student)
 
+        # Unless replace=true, we want to avoid creating duplicate requests
+        if not replace:
             if MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
                 return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
