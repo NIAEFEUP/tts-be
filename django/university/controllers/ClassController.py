@@ -87,7 +87,9 @@ class ClassController:
                         'last_updated': timezone.now()
                     },
                 )
-
+            
+            if not slot:
+                continue
            
             for turma in entry.get('classes', []):
                 new_class, _ = Class.objects.update_or_create(
@@ -101,13 +103,20 @@ class ClassController:
                 SlotClass.objects.update_or_create(slot=slot, class_field=new_class)
 
             for person in entry.get('persons', []):
+                sigarra_id = person.get('sigarra_id')
+                person_id = person.get('id')
+
                 professor, _ = Professor.objects.update_or_create(
-                    id=person.get('sigarra_id'),
+                    id=sigarra_id if sigarra_id else person_id,
                     defaults={
                         'professor_acronym': person.get('acronym'),
                         'professor_name': person.get('name')
                     }
                 )
+
+                if professor == None:
+                    continue
+                
                 SlotProfessor.objects.update_or_create(slot=slot, professor=professor)
 
             processed_slot_ids.add(lesson_id) 
