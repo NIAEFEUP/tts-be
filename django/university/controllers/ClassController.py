@@ -69,11 +69,11 @@ class ClassController:
                     'location': entry.get('rooms', [{}])[0].get('acronym'),
                     'is_composed': len(entry.get('classes', [])) > 1,
                     'last_updated': timezone.now()
-                }
+                },
             )
 
             for turma in entry.get('classes', []):
-                new_class, _ = Class.objects.get_or_create(
+                new_class, _ = Class.objects.update_or_create(
                     name=turma.get('acronym'),
                     course_unit_id=primary_uc_sigarra_id,
                     defaults={
@@ -81,17 +81,17 @@ class ClassController:
                         'last_updated': timezone.now()
                     }
                 )
-                SlotClass.objects.get_or_create(slot=slot, class_field=new_class)
+                SlotClass.objects.update_or_create(slot=slot, class_field=new_class)
 
             for person in entry.get('persons', []):
-                professor, _ = Professor.objects.get_or_create(
+                professor, _ = Professor.objects.update_or_create(
                     id=person.get('sigarra_id'),
                     defaults={
                         'professor_acronym': person.get('acronym'),
                         'professor_name': person.get('name')
                     }
                 )
-                SlotProfessor.objects.get_or_create(slot=slot, professor=professor)
+                SlotProfessor.objects.update_or_create(slot=slot, professor=professor)
 
             processed_slot_ids.add(lesson_id) 
 

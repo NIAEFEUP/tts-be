@@ -13,6 +13,11 @@ class ScheduleController:
             "Domingo": 6
         }
 
+    def get_academic_year(self):
+        currdate = date.today()
+
+        return currdate.year -  1 if currdate.month < 8 else currdate.year
+
     def get_period(self):
         if int(CONFIG["EXCHANGE_SEMESTER"]) != None:
             return f"{int(CONFIG['EXCHANGE_SEMESTER']) + 1}"

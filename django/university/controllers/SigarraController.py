@@ -133,6 +133,7 @@ class SigarraController:
 
     def get_course_schedule(self, course_unit_id: int, new_schedule_api: bool = False, faculty: str = "feup") -> SigarraResponse:
         (semana_ini, semana_fim) = self.semester_weeks()
+        schedule_controller = ScheduleController()
 
         response = requests.get(self.course_unit_schedule_url(
             course_unit_id,
@@ -142,8 +143,8 @@ class SigarraController:
         ) if not new_schedule_api else ScheduleController().calendarios_api(
             faculty,
             course_unit_id,
-            2025,
-            2
+            schedule_controller.get_academic_year(),
+            schedule_controller.get_period()
         ), cookies=self.cookies)
 
         if(response.status_code != 200):
