@@ -229,6 +229,8 @@ class MarketplaceExchangeView(APIView):
                     class_issuer_goes_to=exchange["classNameRequesterGoesTo"]
                 )
 
+        return JsonResponse({"success": True}, safe=False)
+
     def cancel_old_marketplace_exchanges(self, user, exchange_hash):
         with transaction.atomic():
             old_exchanges = MarketplaceExchange.objects.filter(
