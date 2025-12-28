@@ -156,7 +156,7 @@ class MarketplaceExchangeView(APIView):
             if not is_urgent and MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
                 return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
-            if is_urgent and ExchangeUrgentRequests.objects.filter(hash=exchange_hash).exists():
+            if is_urgent and ExchangeUrgentRequests.objects.filter(hash=exchange_hash, admin_state="untreated").exists():
                 return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         if is_urgent:
