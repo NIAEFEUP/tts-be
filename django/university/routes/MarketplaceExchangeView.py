@@ -151,14 +151,6 @@ class MarketplaceExchangeView(APIView):
         replace = request.POST.get('replace', 'false') == 'true'
         exchange_hash = ExchangeHasher.hash(exchanges, username=curr_student)
 
-        # Unless replace=true, we want to avoid creating duplicate requests
-        if not replace:
-            if not is_urgent and MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
-                return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
-
-            if is_urgent and ExchangeUrgentRequests.objects.filter(hash=exchange_hash, admin_state="untreated").exists():
-                return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
-
         if is_urgent:
             return self.add_urgent_exchange(request, exchanges, urgent_message, exchange_hash, replace)
         else:
@@ -168,6 +160,9 @@ class MarketplaceExchangeView(APIView):
         with transaction.atomic():
             if replace_existing:
                 self.reject_old_urgent_requests(request.user, exchange_hash)
+            elif ExchangeUrgentRequests.objects.filter(hash=exchange_hash, admin_state="untreated").exists():
+                # Replace not set to true and an untreated exchange with the same hash already exists => return error
+                return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
             urgent_request = ExchangeUrgentRequests.objects.create(
                 issuer_name=request.user.first_name + " " + request.user.last_name,
@@ -214,6 +209,9 @@ class MarketplaceExchangeView(APIView):
         with transaction.atomic():
             if replace_existing:
                 self.cancel_old_marketplace_exchanges(user, exchange_hash)
+            elif MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
+                # Replace not set to true and a non-canceled exchange with the same hash already exists => return error
+                return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
             marketplace_exchange = MarketplaceExchange.objects.create(
                 issuer_name=issuer_name,

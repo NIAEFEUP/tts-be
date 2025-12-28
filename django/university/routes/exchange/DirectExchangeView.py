@@ -127,16 +127,16 @@ class DirectExchangeView(View):
         # Allow exchange overwrite with replace=true
         replace = request.POST.get('replace', 'false') == 'true'
 
-        if not replace:
-            if DirectExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
-                return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
-
         with transaction.atomic():
             if replace:
                 # Cancel previous exchanges with same hash
                 previous_exchanges = DirectExchange.objects.filter(hash=exchange_hash, canceled=False)
                 for previous_exchange in previous_exchanges:
                     ExchangeValidationController().cancel_exchange(previous_exchange)
+
+            elif DirectExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
+                # Replace not set to true and a non-canceled exchange with the same hash already exists => return error
+                return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
             exchange_model = DirectExchange(
                 accepted=False,
