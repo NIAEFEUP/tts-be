@@ -199,11 +199,7 @@ class MarketplaceExchangeView(APIView):
                 old_request.save()
 
     def add_normal_marketplace_exchange(self, request, exchanges, exchange_hash, replace_existing=False):
-        self.insert_marketplace_exchange(exchanges, request.user, exchange_hash, replace_existing)
-
-        return JsonResponse({"success": True}, safe=False)
-
-    def insert_marketplace_exchange(self, exchanges, user, exchange_hash, replace_existing=False):
+        user = request.user
         issuer_name = f"{user.first_name} {user.last_name.split(' ')[-1]}"
 
         with transaction.atomic():
