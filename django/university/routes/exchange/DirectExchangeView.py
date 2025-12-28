@@ -124,11 +124,20 @@ class DirectExchangeView(View):
 
         # Restricts repeated exchange requests
         exchange_hash = ExchangeHasher.hash(exchanges, username)
+        # Allow exchange overwrite with replace=true
+        replace = request.POST.get('replace', 'false') == 'true'
 
-        if DirectExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
-            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        if not replace:
+            if DirectExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
+                return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
         with transaction.atomic():
+            if replace:
+                # Cancel previous exchanges with same hash
+                previous_exchanges = DirectExchange.objects.filter(hash=exchange_hash, accepted=False, canceled=False)
+                for previous_exchange in previous_exchanges:
+                    ExchangeValidationController().cancel_exchange(previous_exchange)
+
             exchange_model = DirectExchange(
                 accepted=False,
                 issuer_name=f"{request.user.first_name} {request.user.last_name}",
