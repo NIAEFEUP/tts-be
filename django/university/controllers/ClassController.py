@@ -59,19 +59,36 @@ class ClassController:
             typology = entry.get('typology', {})
             lesson_type = typology.get('acronym')
 
-            slot, created = Slot.objects.update_or_create(
-                id=lesson_id,
-                defaults={
-                    'lesson_type': lesson_type,
-                    'day': day,
-                    'start_time': start_time_decimal,
-                    'duration': duration,
-                    'location': entry.get('rooms', [{}])[0].get('acronym'),
-                    'is_composed': len(entry.get('classes', [])) > 1,
-                    'last_updated': timezone.now()
-                },
-            )
+            existing_updated_slot = SlotClass.objects.filter(
+                class_field__course_unit_id=primary_uc_sigarra_id, 
+                slot__lesson_type=lesson_type, 
+                slot__day=day, 
+                slot__start_time=start_time_decimal, 
+                slot__duration=duration, 
+            ).exclude(slot__location=entry.get('rooms', [{}])[0].get('acronym')).first()
 
+            slot = None
+            if existing_updated_slot:
+                existing_updated_slot.slot.location = entry.get('rooms', [{}])[0].get('acronym')
+                existing_updated_slot.slot.last_updated = timezone.now()
+                existing_updated_slot.save()
+
+                slot = existing_updated_slot.slot
+            else:
+                slot, created = Slot.objects.update_or_create(
+                    id=lesson_id,
+                    defaults={
+                        'lesson_type': lesson_type,
+                        'day': day,
+                        'start_time': start_time_decimal,
+                        'duration': duration,
+                        'location': entry.get('rooms', [{}])[0].get('acronym'),
+                        'is_composed': len(entry.get('classes', [])) > 1,
+                        'last_updated': timezone.now()
+                    },
+                )
+
+           
             for turma in entry.get('classes', []):
                 new_class, _ = Class.objects.update_or_create(
                     name=turma.get('acronym'),
