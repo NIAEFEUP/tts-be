@@ -134,7 +134,7 @@ class DirectExchangeView(View):
         with transaction.atomic():
             if replace:
                 # Cancel previous exchanges with same hash
-                previous_exchanges = DirectExchange.objects.filter(hash=exchange_hash, accepted=False, canceled=False)
+                previous_exchanges = DirectExchange.objects.filter(hash=exchange_hash, canceled=False)
                 for previous_exchange in previous_exchanges:
                     ExchangeValidationController().cancel_exchange(previous_exchange)
 
