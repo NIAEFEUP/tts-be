@@ -34,6 +34,7 @@ class InfoView(View):
                 "name": f"{request.user.first_name} {request.user.last_name}",
                 "eligible_exchange": True if bool(DEBUG) else eligible_exchange,
                 "is_admin": is_admin,
+                "is_superuser": request.user.is_superuser
             }, safe=False)
         else:
             return JsonResponse({
