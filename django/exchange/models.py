@@ -63,9 +63,10 @@ class ExchangeAdmin(models.Model):
         managed = True
         db_table = 'exchange_admin'
 
+
 class ExchangeAdminCourseUnits(models.Model):
-    exchange_admin = models.ForeignKey(ExchangeAdmin, models.DO_NOTHING)
-    course_unit = models.ForeignKey(CourseUnit, models.DO_NOTHING)
+    exchange_admin = models.ForeignKey(ExchangeAdmin, on_delete=models.CASCADE)
+    course_unit = models.ForeignKey(CourseUnit, on_delete=models.DO_NOTHING)
 
     class Meta:
         managed = True
@@ -73,12 +74,13 @@ class ExchangeAdminCourseUnits(models.Model):
 
 
 class ExchangeAdminCourses(models.Model):
-    exchange_admin = models.ForeignKey(ExchangeAdmin, models.DO_NOTHING)
-    course = models.ForeignKey(Course, models.DO_NOTHING)
+    exchange_admin = models.ForeignKey(ExchangeAdmin, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.DO_NOTHING)
 
     class Meta:
         managed = True
         db_table = 'exchange_admin_courses'
+
 
 
 class ExchangeExpirations(models.Model):
