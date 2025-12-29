@@ -38,6 +38,7 @@ from university.routes.admin.AdminExchangeCandidatesView import AdminExchangeCan
 from university.routes.admin.AdminExchangeAdminsView import AdminExchangeAdminsView
 
 from university.middleware.exchange_admin import exchange_admin_required
+from university.middleware.is_superuser import superuser_required
 from university.routes.exchange.verify.DirectExchangeValidationView import DirectExchangeValidationView
 
 from tts_be.settings import FEDERATED_AUTH
@@ -93,9 +94,9 @@ urlpatterns = [
     path('exchange/admin/marketplace', exchange_admin_required(AdminMarketplaceView.as_view())),
     path('exchange/admin/courses/search/', exchange_admin_required(AdminExchangeCoursesSearchView.as_view())),
     path('exchange/admin/course_units/search/', exchange_admin_required(AdminExchangeCourseUnitsSearchView.as_view())),
-    path('exchange/admin/candidates/', exchange_admin_required(AdminExchangeCandidatesView.as_view())),
-    path('exchange/admin/admins/', exchange_admin_required(AdminExchangeAdminsView.as_view())),
-    path('exchange/admin/admins/<str:username>/', exchange_admin_required(AdminExchangeAdminsView.as_view())),
+    path('exchange/admin/candidates/', superuser_required(exchange_admin_required(AdminExchangeCandidatesView.as_view()))),
+    path('exchange/admin/admins/', superuser_required(exchange_admin_required(AdminExchangeAdminsView.as_view()))),
+    path('exchange/admin/admins/<str:username>/', superuser_required(exchange_admin_required(AdminExchangeAdminsView.as_view()))),
     path('exchange/admin/course_unit/periods/', exchange_admin_required(AdminExchangeCourseUnitPeriodsView.as_view())),
     path('exchange/admin/courses/periods/', exchange_admin_required(AdminExchangeCoursePeriodsView.as_view())),
     path('exchange/admin/course_unit/<int:course_unit_id>/period/', exchange_admin_required(ExchangeCourseUnitPeriodView.as_view())),
