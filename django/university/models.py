@@ -110,7 +110,7 @@ class Slot(models.Model):
 
 
 class SlotClass(models.Model):
-    id = models.BigAutoField(primary_key=True)
+    id = models.BigAutoField(primary_key=True, auto_created=True)
     slot = models.ForeignKey(Slot, models.DO_NOTHING)
     class_field = models.ForeignKey(Class, models.DO_NOTHING, db_column='class_id')  # Field renamed because it was a Python reserved word.
 

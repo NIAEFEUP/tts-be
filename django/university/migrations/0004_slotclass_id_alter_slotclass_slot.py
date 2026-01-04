@@ -11,15 +11,19 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='slotclass',
-            name='id',
-            field=models.BigAutoField(primary_key=True, serialize=False),
-            preserve_default=False
-        ),
         migrations.AlterField(
             model_name='slotclass',
             name='slot',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='university.slot'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='university.slot', unique=False),
+        ),
+        migrations.AddField(
+            model_name='slotclass',
+            name='id',
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False),
+            preserve_default=False
+        ),
+        migrations.AlterUniqueTogether(
+            name='slotclass',
+            unique_together={('slot', 'class_field')},
         ),
     ]
