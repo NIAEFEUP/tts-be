@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='slotclass',
             name='id',
-            field=models.BigAutoField(default=0, primary_key=True, serialize=False),
+            field=models.BigAutoField(primary_key=True, serialize=False),
             preserve_default=False
         ),
         migrations.AlterField(
