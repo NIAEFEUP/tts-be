@@ -92,9 +92,8 @@ class DirectExchangeView(View):
         paginator = Paginator(direct_exchanges, page_size)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number if page_number != None else 1)
-        direct_exchanges = [x for x in page_obj]
 
-        direct_exchanges = DirectExchangeSerializer(direct_exchanges, many=True).data
+        direct_exchanges = DirectExchangeSerializer(page_obj, many=True).data
 
         return JsonResponse({
             "exchanges": direct_exchanges,
@@ -205,18 +204,20 @@ class DirectExchangeView(View):
 
         exchange = DirectExchange.objects.get(id=id)
 
-        # Update exchange accepted states
-        self.set_participant_acceptance(exchange, request.user.username, True)
-
-        participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-        participant_nmecs = {participant.participant_nmec for participant in participants}
-
-
-        # Do not do anything else if not everybody accepted
-        if not all(participant.accepted for participant in participants):
-            return JsonResponse({"success": True}, safe=False)
-
         try:
+            with transaction.atomic():
+                # Update exchange accepted states
+                self.set_participant_acceptance(exchange, request.user.username, True)
+
+                participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
+                participant_nmecs = {participant.participant_nmec for participant in participants}
+
+                all_accepted = all(participant.accepted for participant in participants)
+
+            # Do not do anything else if not everybody accepted
+            if not all_accepted:
+                return JsonResponse({"success": True}, safe=False)
+
             # Prefetch information before entering the transaction
             student_schedule_metadata = StudentScheduleMetadata()
 
@@ -228,8 +229,11 @@ class DirectExchangeView(View):
                 # Ensure fetched participants are consistent with current view
                 new_participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
                 new_participant_nmecs = {participant.participant_nmec for participant in new_participants}
+
                 if participant_nmecs != new_participant_nmecs:
-                    return JsonResponse({"success": False}, safe=False, status=409)  # New participant added/removed, need to reverify acceptances
+                    # New participant added/removed, must revert operation and need to reverify acceptances
+                    self.set_participant_acceptance(exchange, request.user.username, False)
+                    return JsonResponse({"success": False}, safe=False, status=409)
 
                 exchange.accepted = True
                 exchange.save()

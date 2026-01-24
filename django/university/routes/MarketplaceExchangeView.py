@@ -2,7 +2,7 @@ import json
 
 from django.utils import timezone
 
-from tts_be.settings import CONFIG
+from tts_be.settings import CONFIG, DEBUG
 
 from django.db.models import Q
 
@@ -58,7 +58,7 @@ class MarketplaceExchangeView(APIView):
                 )
                 ).exclude(Q(issuer_nmec=request.user.username) | Q(canceled=True) | Q(accepted=True)).distinct())
 
-        if not bool(CONFIG["DEBUG"]):
+        if not DEBUG:
             marketplace_exchanges = self.remove_invalid_dest_class_exchanges(marketplace_exchanges, request.user.username)
 
         marketplace_exchanges = self.advanced_classes_filter(marketplace_exchanges, classes_filter)
