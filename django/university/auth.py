@@ -1,8 +1,15 @@
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
+from django.contrib.auth import get_user_model
 
 class CustomOIDCAuthentationBackend(OIDCAuthenticationBackend):
 
     def create_user(self, claims):
+        User = get_user_model()
+        
+        if User.objects.filter(username=claims.get('nmec', '')).exists():
+            user = User.objects.get(username=claims.get('nmec', ''))
+            return self.update_user(user, claims)
+
         user = super(CustomOIDCAuthentationBackend, self).create_user(claims)
 
         user.first_name = claims.get('given_name', '')
