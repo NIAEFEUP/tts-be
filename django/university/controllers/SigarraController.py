@@ -29,8 +29,9 @@ class SigarraController:
 
     def semester_weeks(self):
         currdate = date.today()
-        year = str(currdate.year)
+        year = str(currdate.year) if not CONFIG["EXCHANGE_YEAR"] else CONFIG["EXCHANGE_YEAR"] 
         first_semester = int(CONFIG["EXCHANGE_SEMESTER"]) == 1 if CONFIG["EXCHANGE_SEMESTER"] else currdate.month >= 10 or currdate.month <= 1
+        print(f" first semester is {first_semester}")
         if first_semester:
             if currdate.month == 1:
                 year = str(int(year) - 1)
@@ -98,7 +99,7 @@ class SigarraController:
 
     def get_student_schedule(self, nmec: int) -> SigarraResponse:
         (semana_ini, semana_fim) = self.semester_weeks()
-
+        print(f"url is {self.student_schedule_url(nmec,semana_ini,semana_fim)}")
         response = requests.get(self.student_schedule_url(
             nmec,
             semana_ini,
