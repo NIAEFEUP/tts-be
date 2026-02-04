@@ -12,6 +12,9 @@ DELETE FROM course_unit_enrollment_options;
 DELETE FROM course_unit_enrollments;
 DELETE FROM exchange_urgent_request_options;
 DELETE FROM exchange_urgent_requests;
+DELETE FROM exchange_admin_course_units;
+DELETE FROM exchange_admin_courses;
+DELETE FROM exchange_admin;
 
 -- Students
 -- 202307365 -> Alice Oliveira (3LEIC01)
@@ -136,14 +139,31 @@ INSERT INTO exchange_urgent_request_options(id, class_issuer_goes_from, class_is
     (5, '3LEIC10', '3LEIC13', 560110, 4, '2026-02-03 22:20:10.438953'),
     (6, '3LEIC06', '3LEIC04', 560108, 5, '2026-02-03 22:22:27.576261');
 
+-- Auth users
+-- Insert users only if they don't exist
+INSERT INTO auth_user (password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined)
+SELECT '', NULL, 0, '210963', 'João', 'Cansssss', '210963@up.pt', 0, 1, '2026-02-03 22:00:00.000000'
+WHERE NOT EXISTS (SELECT 1 FROM auth_user WHERE username = '210963');
+
+INSERT INTO auth_user (password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined)
+SELECT '', NULL, 0, '424415', 'Augusto', 'Gama', '424415@up.pt', 0, 1, '2026-02-03 22:01:00.000000'
+WHERE NOT EXISTS (SELECT 1 FROM auth_user WHERE username = '424415');
+
 -- Admin mock data
 INSERT INTO exchange_admin (id, username) VALUES
-    (2, '<username>');
+    (2, '<username>'),
+    (3, '210963'),
+    (4, '424415');
 
 INSERT INTO exchange_admin_courses (exchange_admin_id, course_id) VALUES
     (2, 22841),
     (2, 22862);
 
+
+INSERT INTO exchange_admin_course_units (exchange_admin_id, course_unit_id) VALUES
+    (4, 560109);
+
+    
 -- INSERT INTO exchange_expirations(course_unit_id, active_date, end_date, is_course_expiration) VALUES
 --     -- First year
 --     (541865, '2025-09-01', '2026-08-31', 1),
