@@ -35,6 +35,9 @@ COPY manage.py tasks.py ./
 COPY ./entrypoint.sh ./entrypoint.sh  
 ENTRYPOINT ["/usr/src/django/entrypoint.sh"]
 
+# Copy the mock data file into the Django app directory
+COPY mock-data.json .
+
 # prod
 FROM deps AS prod
 
