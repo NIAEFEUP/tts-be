@@ -162,7 +162,6 @@ def main() -> None:
     with MOCK_DATA_PATH.open("w", encoding="utf-8") as handle:
         json.dump(store, handle, indent=4, sort_keys=True, ensure_ascii=False)
 
-    print(f"Stored {sum(len(v) for v in store.values())} mock responses in {MOCK_DATA_PATH}")
 
 
 if __name__ == "__main__":

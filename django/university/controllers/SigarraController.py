@@ -31,13 +31,11 @@ class SigarraController:
             self.login()
 
     def make_get_request(self, url):
-        print(f"made GET request to {url}")
         if self.mock:
             return sigarra_mock.get(url)
         return requests.get(url, cookies=self.cookies)
         
     def make_post_request(self, url, data = None):
-        print(f"made POST request to {url}")
         if self.mock:
             return sigarra_mock.post(url, data)
         return requests.post(url, data)
@@ -75,7 +73,6 @@ class SigarraController:
 
         if response.status_code != 200:
             return SigarraResponse(None, response.status_code)
-        print(response.content)
 
         return SigarraResponse(response.content, 200)
 
@@ -117,7 +114,6 @@ class SigarraController:
 
     def get_student_schedule(self, nmec: int) -> SigarraResponse:
         (semana_ini, semana_fim) = self.semester_weeks()
-        print(f"url is {self.student_schedule_url(nmec,semana_ini,semana_fim)}")
         response = self.make_get_request(self.student_schedule_url(
             nmec,
             semana_ini,
