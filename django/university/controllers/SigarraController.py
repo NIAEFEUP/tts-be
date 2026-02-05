@@ -1,6 +1,8 @@
 import requests
 import json
 
+from university.controllers.ScheduleController import ScheduleController
+
 from datetime import date
 from tts_be.settings import CONFIG
 
@@ -14,12 +16,13 @@ class SigarraController:
         This class will contain methods to manipulate student data that is inside sigarra.
     """
 
-    def __init__(self):
+    def __init__(self, login = True):
         self.username = CONFIG["SIGARRA_USERNAME"]
         self.password = CONFIG["SIGARRA_PASSWORD"]
         self.cookies = None
 
-        self.login()
+        if login:
+            self.login()
 
     def get_student_photo_url(self, nmec) -> str:
         return f"https://sigarra.up.pt/feup/pt/fotografias_service.foto?pct_cod={nmec}"
@@ -46,8 +49,8 @@ class SigarraController:
     def student_schedule_url(self, nmec, semana_ini, semana_fim) -> str:
         return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={nmec}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
 
-    def course_unit_schedule_url(self, ocorrencia_id, semana_ini, semana_fim):
-        return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
+    def course_unit_schedule_url(self, ocorrencia_id, semana_ini, semana_fim, faculty: str = "feup"):
+        return f"https://sigarra.up.pt/{faculty}/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
 
     def retrieve_student_photo(self, nmec):
         response = requests.get(self.get_student_photo_url(nmec), cookies=self.cookies)
@@ -127,6 +130,27 @@ class SigarraController:
             return SigarraResponse(None, response.status_code)
 
         return SigarraResponse(response.json(), 200)
+
+    def get_course_schedule(self, course_unit_id: int, new_schedule_api: bool = False, faculty: str = "feup") -> SigarraResponse:
+        (semana_ini, semana_fim) = self.semester_weeks()
+        schedule_controller = ScheduleController()
+
+        response = requests.get(self.course_unit_schedule_url(
+            course_unit_id,
+            semana_ini,
+            semana_fim,
+            faculty
+        ) if not new_schedule_api else ScheduleController().calendarios_api(
+            faculty,
+            course_unit_id,
+            schedule_controller.get_academic_year(),
+            schedule_controller.get_period()
+        ), cookies=self.cookies)
+
+        if(response.status_code != 200):
+            return SigarraResponse(None, response.status_code)
+
+        return SigarraResponse(response.json()['horario' if not new_schedule_api else 'data'], response.status_code)
 
     """
         Returns a tuple with (pratical class, theoretical class)

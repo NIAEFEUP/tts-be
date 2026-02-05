@@ -149,7 +149,7 @@ def course_units(request, course_id, year, semester):
 """
 @ api_view(['GET'])
 def classes(request, course_unit_id):
-    return JsonResponse(ClassController.get_classes(course_unit_id), safe=False)
+    return JsonResponse(ClassController.get_classes(course_unit_id, new_schedule_api=True), safe=False)
 
 """
     Returns all the professors of a class of the class id
