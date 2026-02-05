@@ -97,7 +97,7 @@ class ClassController:
                 if professor == None:
                     continue
 
-                SlotProfessor.objects.create(slot=slot, professor=professor)
+                SlotProfessor.objects.update_or_create(slot=slot, professor=professor)
 
             processed_slot_ids.add(lesson_id) 
 
