@@ -110,13 +110,14 @@ class Slot(models.Model):
 
 
 class SlotClass(models.Model):
-    slot = models.OneToOneField(Slot, models.DO_NOTHING, primary_key=True)  # The composite primary key (slot_id, class_id) found, that is not supported. The first column is selected.
+    id = models.BigAutoField(primary_key=True, auto_created=True)
+    slot = models.ForeignKey(Slot, models.DO_NOTHING)
     class_field = models.ForeignKey(Class, models.DO_NOTHING, db_column='class_id')  # Field renamed because it was a Python reserved word.
 
     class Meta:
         managed = True
         db_table = 'slot_class'
-        unique_together = (('slot', 'class_field'), ('slot', 'class_field'),)
+        unique_together = (('slot', 'class_field'))
 
 
 class SlotProfessor(models.Model):

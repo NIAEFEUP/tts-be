@@ -36,6 +36,7 @@ from university.routes.admin.AdminExchangeCoursesSearchView import AdminExchange
 from university.routes.admin.AdminExchangeCourseUnitsSearchView import AdminExchangeCourseUnitsSearchView
 from university.routes.admin.AdminExchangeCandidatesView import AdminExchangeCandidatesView
 from university.routes.admin.AdminExchangeAdminsView import AdminExchangeAdminsView
+from university.routes.admin.AdminExchangeStatisticsView import AdminExchangeStatisticsView
 
 from university.middleware.exchange_admin import exchange_admin_required
 from university.middleware.is_superuser import superuser_required
@@ -91,6 +92,7 @@ urlpatterns = [
     path('exchange/admin/course_units/', AdminExchangeCourseUnitsView.as_view()),
     path('exchange/admin/course_units/<int:course_unit_id>/', AdminExchangeCourseUnitsView.as_view()),
     path('exchange/admin/classes/',  AdminExchangeClassesView.as_view()),
+    path('exchange/admin/statistics/',AdminExchangeStatisticsView.as_view()),
     path('exchange/admin/marketplace', exchange_admin_required(AdminMarketplaceView.as_view())),
     path('exchange/admin/courses/search/', exchange_admin_required(AdminExchangeCoursesSearchView.as_view())),
     path('exchange/admin/course_units/search/', exchange_admin_required(AdminExchangeCourseUnitsSearchView.as_view())),
@@ -107,6 +109,7 @@ urlpatterns = [
     path('exchange/admin/request/<str:request_type>/<int:id>/accept/', exchange_admin_required(AdminExchangeRequestAcceptView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/awaiting-information/', exchange_admin_required(AdminRequestAwaitingInformationView.as_view())),
     path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback")
+
 ]
 
 if FEDERATED_AUTH == 0:
