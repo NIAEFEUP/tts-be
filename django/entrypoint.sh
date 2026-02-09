@@ -26,14 +26,11 @@ fi
 python manage.py makemigrations # default django migrations
 python manage.py makemigrations university
 python manage.py makemigrations exchange
-python manage.py migrate university 0001_initial --fake-initial
-python manage.py migrate university 0002 --fake
-python manage.py migrate university 0003 --fake
-python manage.py migrate university 0004 --fake
+python manage.py migrate university --fake-initial
 python manage.py migrate exchange
-python manage.py migrate admin 
-python manage.py migrate auth 
-python manage.py migrate sessions 
+python manage.py migrate admin
+python manage.py migrate auth
+python manage.py migrate sessions
 python manage.py migrate contenttypes
 
 # Initialize redis worker for celery and celery's beat scheduler in the background
