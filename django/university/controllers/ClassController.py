@@ -189,14 +189,10 @@ class ClassController:
 
     @staticmethod
     def get_classes(course_unit_id: int, fetch_professors: bool = True, new_schedule_api: bool = False):
-        sigarra_controller = SigarraController(login = False)
-        (semana_ini, semana_fim) = sigarra_controller.semester_weeks()
-
         course_unit = CourseUnit.objects.get(id=course_unit_id)
 
         if not cache.get(f"schedule-{course_unit_id}"):
             with transaction.atomic():
-                ClassController.delete_cached_classes(course_unit_id)
                 schedule = SigarraController().get_course_schedule(course_unit_id, new_schedule_api=new_schedule_api, faculty=course_unit.course.faculty.acronym).data
                 
                 if new_schedule_api:
