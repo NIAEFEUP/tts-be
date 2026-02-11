@@ -8,6 +8,13 @@ DELETE FROM direct_exchange_participants;
 DELETE FROM direct_exchange;
 DELETE FROM marketplace_exchange_class;
 DELETE FROM marketplace_exchange;
+DELETE FROM course_unit_enrollment_options;
+DELETE FROM course_unit_enrollments;
+DELETE FROM exchange_urgent_request_options;
+DELETE FROM exchange_urgent_requests;
+DELETE FROM exchange_admin_course_units;
+DELETE FROM exchange_admin_courses;
+DELETE FROM exchange_admin;
 
 -- Students
 -- 202307365 -> Alice Oliveira (3LEIC01)
@@ -83,6 +90,17 @@ INSERT INTO marketplace_exchange_class(marketplace_exchange, course_unit_name, c
     (20, 'Interação Pessoa Computador', 'IPC', 560107, '3LEIC13', '3LEIC11'),
     (20, 'Fundamentos de Segurança Informática', 'FSI', 560106, '3LEIC14', '3LEIC12');
 
+-- Mock data for course_unit_enrollments
+INSERT INTO course_unit_enrollments(id, user_nmec, accepted, admin_state, date) VALUES
+    (1, '202307321', 0, 'untreated', '2026-02-03 22:12:01.598239'),
+    (2, '202304594', 0, 'untreated', '2026-02-03 22:12:54.939139'),
+    (3, '202305033', 0, 'untreated', '2026-02-03 22:22:34.893334');
+
+INSERT INTO course_unit_enrollment_options(id, date, course_unit_id, course_unit_enrollment_id, enrolling) VALUES
+    (1, '2026-02-03 22:12:01.598778', 560109, 1, 0),
+    (2, '2026-02-03 22:12:54.939542', 560108, 2, 0),
+    (3, '2026-02-03 22:22:34.893775', 560110, 3, 0);
+
 -- Mock data for direct_exchange
 INSERT INTO direct_exchange(id, issuer_name, issuer_nmec, accepted, admin_state, marketplace_exchange) VALUES
     (1, 'Daniel Costa', '202304064', false, 'untreated', 2),
@@ -105,14 +123,47 @@ INSERT INTO direct_exchange_participants(direct_exchange, participant_name, part
     (5, 'João Marques', '202304594', '3LEIC14', '3LEIC11', 'LBAW', 560108, false),
     (5, 'Gabriela Lima', '202306618', '3LEIC11', '3LEIC14', 'LBAW', 560108, false);
 
+-- Mock data for exchange_urgent_requests
+INSERT INTO exchange_urgent_requests(id, message, accepted, admin_state, date, issuer_nmec, issuer_name, hash) VALUES
+    (1, 'Se não aceitarem o pedido a Doutora Brinquedos disse que não ia sobreviver', 0, 'untreated', '2026-02-03 22:00:17.072886', '202307365', 'Alice Oliveira', '173358602536def6c094a99f26c462ab72ee7fe03eb5aa0b6dd8dd24d6a02221'),
+    (2, 'se recusares este pedido és cringe e ser cringe é mau, por isso n recuses porque se recusares és muito cringe e isso é bué cringado', 0, 'untreated', '2026-02-03 22:03:50.065315', '202303872', 'Bruno Silva', 'fd5d4df7b91953c4acb02bc257e46085b9679ab82efb258aba7a0bf6f5d56def'),
+    (3, 'A minha irmã é medica e deu atestado por isso posso fazer o que quiser e tens de aceitar ', 0, 'untreated', '2026-02-03 22:08:56.235490', '202307321', 'Inês Gomes', 'e23e454f1bf57f3d2056408e8f09f46b62cb64997d86dbd92ad8a9da32fe87cf'),
+    (4, 'eu posso porque o meu pai e diretor do curso e se n aceitarem ficam sem emprego', 0, 'untreated', '2026-02-03 22:20:10.437968', '202307295', 'Filipe Rocha', '3f0d3f97c8fd0f38e109e958151bf1e96134dabfc5dc2250d2818f61fe193675'),
+    (5, 'Aceita pls pls pls pls pls pls pls pls', 0, 'untreated', '2026-02-03 22:22:27.575354', '202305033', 'Eva Ferreira', '62255b24f720b9a420ba876546f39411c5b126a1713e149e4966dfda0e5fa838');
+
+INSERT INTO exchange_urgent_request_options(id, class_issuer_goes_from, class_issuer_goes_to, course_unit_id, exchange_urgent_request_id, date) VALUES
+    (1, '3LEIC01', '3LEIC12', 560107, 1, '2026-02-03 22:00:17.074477'),
+    (2, '3LEIC02', '3LEIC07', 560108, 2, '2026-02-03 22:03:50.066350'),
+    (3, '3LEIC13', '3LEIC17', 560109, 3, '2026-02-03 22:08:56.236400'),
+    (4, '3LEIC10', '3LEIC03', 560108, 4, '2026-02-03 22:20:10.438934'),
+    (5, '3LEIC10', '3LEIC13', 560110, 4, '2026-02-03 22:20:10.438953'),
+    (6, '3LEIC06', '3LEIC04', 560108, 5, '2026-02-03 22:22:27.576261');
+
+-- Auth users
+-- Insert users only if they don't exist
+INSERT INTO auth_user (password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined)
+SELECT '', NULL, 0, '210963', 'João', 'Cansssss', '210963@up.pt', 0, 1, '2026-02-03 22:00:00.000000'
+WHERE NOT EXISTS (SELECT 1 FROM auth_user WHERE username = '210963');
+
+INSERT INTO auth_user (password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined)
+SELECT '', NULL, 0, '424415', 'Augusto', 'Gama', '424415@up.pt', 0, 1, '2026-02-03 22:01:00.000000'
+WHERE NOT EXISTS (SELECT 1 FROM auth_user WHERE username = '424415');
+
 -- Admin mock data
 INSERT INTO exchange_admin (id, username) VALUES
-    (2, '<username>');
+    (2, '<username>'),
+    (3, '210963'),
+    (4, '424415');
 
 INSERT INTO exchange_admin_courses (exchange_admin_id, course_id) VALUES
     (2, 22841),
     (2, 22862);
 
+
+INSERT INTO exchange_admin_course_units (exchange_admin_id, course_unit_id) VALUES
+    (4, 560109);
+
+    
 -- INSERT INTO exchange_expirations(course_unit_id, active_date, end_date, is_course_expiration) VALUES
 --     -- First year
 --     (541865, '2025-09-01', '2026-08-31', 1),
@@ -139,3 +190,13 @@ INSERT INTO exchange_admin_courses (exchange_admin_id, course_id) VALUES
 --     (560267, '2025-09-01', '2026-08-31', 1),
 --     (560268, '2025-09-01', '2026-08-31', 1),
 --     (560269, '2025-09-01', '2026-08-31', 1);
+
+
+
+-- Exchange Admins
+-- These are just regular exchange admins (mostly professors)
+
+
+
+-- Admins (Super Users)
+-- This is reserved for TTS administrators , they can manage exchange admins

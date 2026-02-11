@@ -48,12 +48,13 @@ if not FEDERATED_AUTH:
 
             # --- Buscar ou criar utilizador local ---
             User = get_user_model()
+            email = f"{username}@up.pt"
             user, created = User.objects.get_or_create(
                 username=username,
                 defaults={
-                    "email": "",
-                    "first_name": "First",
-                    "last_name": "Last",
+                    "email": email,
+                    "first_name": "John",
+                    "last_name": "Doe",
                 },
             )
 

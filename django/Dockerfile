@@ -35,6 +35,13 @@ COPY manage.py tasks.py ./
 COPY ./entrypoint.sh ./entrypoint.sh  
 ENTRYPOINT ["/usr/src/django/entrypoint.sh"]
 
+# Copy the mock data file into the Django app directory
+RUN if [ -f "mock-data.json" ]; then \
+        cp mock-data.json mock-data.json; \
+    else \
+        echo "{}" > mock-data.json; \
+    fi
+
 # prod
 FROM deps AS prod
 

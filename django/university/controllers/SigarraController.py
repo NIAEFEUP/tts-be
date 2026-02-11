@@ -1,7 +1,12 @@
-import requests
+import base64
 import json
+from pathlib import Path
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+
+import requests
 
 from university.controllers.ScheduleController import ScheduleController
+from university.utils import sigarra_mock
 
 from datetime import date
 from tts_be.settings import CONFIG
@@ -20,19 +25,30 @@ class SigarraController:
         self.username = CONFIG["SIGARRA_USERNAME"]
         self.password = CONFIG["SIGARRA_PASSWORD"]
         self.cookies = None
+        self.mock = CONFIG["MOCK_SIGARRA"] if "MOCK_SIGARRA" in CONFIG else 0
 
-        if login:
+        if login and not self.mock:
             self.login()
+
+    def make_get_request(self, url):
+        if self.mock:
+            return sigarra_mock.get(url)
+        return requests.get(url, cookies=self.cookies)
+        
+    def make_post_request(self, url, data = None):
+        if self.mock:
+            return sigarra_mock.post(url, data)
+        return requests.post(url, data)
 
     def get_student_photo_url(self, nmec) -> str:
         return f"https://sigarra.up.pt/feup/pt/fotografias_service.foto?pct_cod={nmec}"
 
     def semester_weeks(self):
         currdate = date.today()
-        year = str(currdate.year)
+        year = str(currdate.year) if not CONFIG["EXCHANGE_YEAR"] else CONFIG["EXCHANGE_YEAR"] 
         first_semester = int(CONFIG["EXCHANGE_SEMESTER"]) == 1 if CONFIG["EXCHANGE_SEMESTER"] else currdate.month >= 10 or currdate.month <= 1
         if first_semester:
-            if currdate.month <= 2:
+            if currdate.month <= 2 and not CONFIG["EXCHANGE_YEAR"]:
                 year = str(int(year) - 1)
 
             semana_ini = year + "1001"
@@ -53,7 +69,7 @@ class SigarraController:
         return f"https://sigarra.up.pt/{faculty}/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
 
     def retrieve_student_photo(self, nmec):
-        response = requests.get(self.get_student_photo_url(nmec), cookies=self.cookies)
+        response = self.make_get_request(self.get_student_photo_url(nmec))
 
         if response.status_code != 200:
             return SigarraResponse(None, response.status_code)
@@ -61,7 +77,7 @@ class SigarraController:
         return SigarraResponse(response.content, 200)
 
     def get_student_profile(self, nmec):
-        response = requests.get(self.student_profile_url(nmec), cookies=self.cookies)
+        response = self.make_get_request(self.student_profile_url(nmec))
 
         if response.status_code != 200:
             return SigarraResponse(None, response.status_code)
@@ -87,7 +103,7 @@ class SigarraController:
 
     def login(self):
         try:
-            response = requests.post("https://sigarra.up.pt/feup/pt/vld_validacao.validacao", data={
+            response = self.make_post_request("https://sigarra.up.pt/feup/pt/vld_validacao.validacao", data={
                 "p_user": self.username,
                 "p_pass": self.password
             })
@@ -98,12 +114,11 @@ class SigarraController:
 
     def get_student_schedule(self, nmec: int) -> SigarraResponse:
         (semana_ini, semana_fim) = self.semester_weeks()
-
-        response = requests.get(self.student_schedule_url(
+        response = self.make_get_request(self.student_schedule_url(
             nmec,
             semana_ini,
             semana_fim
-        ), cookies=self.cookies)
+        ))
 
         if(response.status_code != 200):
             return SigarraResponse(None, response.status_code)
@@ -124,7 +139,7 @@ class SigarraController:
 
     def get_course_unit_classes(self, course_unit_id: int) -> SigarraResponse:
         url = f"https://sigarra.up.pt/feup/pt/mob_ucurr_geral.uc_inscritos?pv_ocorrencia_id={course_unit_id}"
-        response = requests.get(url, cookies=self.cookies)
+        response = self.make_get_request(url)
 
         if response.status_code != 200:
             return SigarraResponse(None, response.status_code)
@@ -135,7 +150,7 @@ class SigarraController:
         (semana_ini, semana_fim) = self.semester_weeks()
         schedule_controller = ScheduleController()
 
-        response = requests.get(self.course_unit_schedule_url(
+        response = self.make_get_request(self.course_unit_schedule_url(
             course_unit_id,
             semana_ini,
             semana_fim,
@@ -145,7 +160,7 @@ class SigarraController:
             course_unit_id,
             schedule_controller.get_academic_year(),
             schedule_controller.get_period()
-        ), cookies=self.cookies)
+        ))
 
         if(response.status_code != 200):
             return SigarraResponse(None, response.status_code)
@@ -158,11 +173,11 @@ class SigarraController:
     def get_class_schedule(self, course_unit_id: int, class_name: str) -> SigarraResponse:
         (semana_ini, semana_fim) = self.semester_weeks()
 
-        response = requests.get(self.course_unit_schedule_url(
+        response = self.make_get_request(self.course_unit_schedule_url(
             course_unit_id,
             semana_ini,
             semana_fim
-        ), cookies=self.cookies)
+        ))
 
         if(response.status_code != 200):
             return SigarraResponse(None, response.status_code)
