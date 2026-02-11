@@ -253,7 +253,6 @@ class DirectExchangeView(View):
             # Revert participant acceptance, to allow to retry in case of an error
             self.set_participant_acceptance(exchange, request.user.username, False)
 
-            print("ERROR: ", e)
             return JsonResponse({"success": False}, status=400, safe=False)
 
     def set_participant_acceptance(self, exchange, nmec: str, accepted: bool):
