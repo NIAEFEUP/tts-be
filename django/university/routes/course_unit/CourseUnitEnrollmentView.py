@@ -75,6 +75,7 @@ class CourseUnitEnrollmentView(APIView):
 
     def post(self, request):
         enrollments = request.POST.getlist("enrollCourses[]")
+        user_name = request.POST.get("user_name", "")
 
         if(len(enrollments) == 0):
             return JsonResponse({"error": "Pedido vazio"}, status=400)
@@ -89,6 +90,7 @@ class CourseUnitEnrollmentView(APIView):
         with transaction.atomic():
             course_unit_enrollment = CourseUnitEnrollments(
                 user_nmec=username,
+                user_name=user_name,
                 accepted=False,
                 admin_state="untreated",
                 date=timezone.now()

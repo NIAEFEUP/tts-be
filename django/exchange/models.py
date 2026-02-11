@@ -15,6 +15,7 @@ class CourseUnitEnrollmentOptions(models.Model):
 
 
 class CourseUnitEnrollments(models.Model):
+    user_name = models.CharField(max_length=255, default="")
     user_nmec = models.CharField(max_length=32)
     accepted = models.BooleanField(blank=True, null=True, default=False)
     admin_state = models.CharField(max_length=32, default='untreated')
