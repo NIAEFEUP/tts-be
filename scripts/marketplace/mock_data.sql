@@ -91,12 +91,12 @@ INSERT INTO marketplace_exchange_class(marketplace_exchange, course_unit_name, c
     (20, 'Fundamentos de Segurança Informática', 'FSI', 560106, '3LEIC14', '3LEIC12');
 
 -- Mock data for course_unit_enrollments
-INSERT INTO course_unit_enrollments(id, student_nmec, accepted, admin_state, created_at) VALUES
+INSERT INTO course_unit_enrollments(id, user_nmec, accepted, admin_state, date) VALUES
     (1, '202307321', 0, 'untreated', '2026-02-03 22:12:01.598239'),
     (2, '202304594', 0, 'untreated', '2026-02-03 22:12:54.939139'),
     (3, '202305033', 0, 'untreated', '2026-02-03 22:22:34.893334');
 
-INSERT INTO course_unit_enrollment_options(id, created_at, course_unit_id, course_unit_enrollment_id, accepted) VALUES
+INSERT INTO course_unit_enrollment_options(id, date, course_unit_id, course_unit_enrollment_id, enrolling) VALUES
     (1, '2026-02-03 22:12:01.598778', 560109, 1, 0),
     (2, '2026-02-03 22:12:54.939542', 560108, 2, 0),
     (3, '2026-02-03 22:22:34.893775', 560110, 3, 0);
@@ -124,14 +124,14 @@ INSERT INTO direct_exchange_participants(direct_exchange, participant_name, part
     (5, 'Gabriela Lima', '202306618', '3LEIC11', '3LEIC14', 'LBAW', 560108, false);
 
 -- Mock data for exchange_urgent_requests
-INSERT INTO exchange_urgent_requests(id, message, accepted, admin_state, created_at, issuer_nmec, issuer_name, hash) VALUES
+INSERT INTO exchange_urgent_requests(id, message, accepted, admin_state, date, issuer_nmec, issuer_name, hash) VALUES
     (1, 'Se não aceitarem o pedido a Doutora Brinquedos disse que não ia sobreviver', 0, 'untreated', '2026-02-03 22:00:17.072886', '202307365', 'Alice Oliveira', '173358602536def6c094a99f26c462ab72ee7fe03eb5aa0b6dd8dd24d6a02221'),
     (2, 'se recusares este pedido és cringe e ser cringe é mau, por isso n recuses porque se recusares és muito cringe e isso é bué cringado', 0, 'untreated', '2026-02-03 22:03:50.065315', '202303872', 'Bruno Silva', 'fd5d4df7b91953c4acb02bc257e46085b9679ab82efb258aba7a0bf6f5d56def'),
     (3, 'A minha irmã é medica e deu atestado por isso posso fazer o que quiser e tens de aceitar ', 0, 'untreated', '2026-02-03 22:08:56.235490', '202307321', 'Inês Gomes', 'e23e454f1bf57f3d2056408e8f09f46b62cb64997d86dbd92ad8a9da32fe87cf'),
     (4, 'eu posso porque o meu pai e diretor do curso e se n aceitarem ficam sem emprego', 0, 'untreated', '2026-02-03 22:20:10.437968', '202307295', 'Filipe Rocha', '3f0d3f97c8fd0f38e109e958151bf1e96134dabfc5dc2250d2818f61fe193675'),
     (5, 'Aceita pls pls pls pls pls pls pls pls', 0, 'untreated', '2026-02-03 22:22:27.575354', '202305033', 'Eva Ferreira', '62255b24f720b9a420ba876546f39411c5b126a1713e149e4966dfda0e5fa838');
 
-INSERT INTO exchange_urgent_request_options(id, class_issuer_goes_from, class_issuer_goes_to, course_unit_id, exchange_urgent_request_id, created_at) VALUES
+INSERT INTO exchange_urgent_request_options(id, class_issuer_goes_from, class_issuer_goes_to, course_unit_id, exchange_urgent_request_id, date) VALUES
     (1, '3LEIC01', '3LEIC12', 560107, 1, '2026-02-03 22:00:17.074477'),
     (2, '3LEIC02', '3LEIC07', 560108, 2, '2026-02-03 22:03:50.066350'),
     (3, '3LEIC13', '3LEIC17', 560109, 3, '2026-02-03 22:08:56.236400'),
