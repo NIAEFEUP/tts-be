@@ -32,9 +32,14 @@ from university.routes.admin.AdminExchangeCourseUnitPeriodsView import AdminExch
 from university.routes.admin.AdminExchangeCoursePeriodsView import AdminExchangeCoursePeriodsView
 from university.routes.exchange.related.ExchangeRelatedView import ExchangeRelatedView
 from university.routes.admin.AdminExchangeClassesView import AdminExchangeClassesView
+from university.routes.admin.AdminExchangeCoursesSearchView import AdminExchangeCoursesSearchView
+from university.routes.admin.AdminExchangeCourseUnitsSearchView import AdminExchangeCourseUnitsSearchView
+from university.routes.admin.AdminExchangeCandidatesView import AdminExchangeCandidatesView
+from university.routes.admin.AdminExchangeAdminsView import AdminExchangeAdminsView
 from university.routes.admin.AdminExchangeStatisticsView import AdminExchangeStatisticsView
 
 from university.middleware.exchange_admin import exchange_admin_required
+from university.middleware.is_superuser import superuser_required
 from university.routes.exchange.verify.DirectExchangeValidationView import DirectExchangeValidationView
 
 from tts_be.settings import FEDERATED_AUTH
@@ -82,10 +87,18 @@ urlpatterns = [
     path('course_unit/enrollment/', CourseUnitEnrollmentView.as_view()), 
     path('oidc-auth/', include('mozilla_django_oidc.urls')),
     path('exchange/admin/courses/', exchange_admin_required(AdminExchangeCoursesView.as_view())),
+    path('exchange/admin/courses/<int:course_id>/', exchange_admin_required(AdminExchangeCoursesView.as_view())),
+   ## path('exchange/admin/exchange_admin/', exchange_admin_required(views.add_exchange_admin)),
     path('exchange/admin/course_units/', AdminExchangeCourseUnitsView.as_view()),
+    path('exchange/admin/course_units/<int:course_unit_id>/', AdminExchangeCourseUnitsView.as_view()),
     path('exchange/admin/classes/',  AdminExchangeClassesView.as_view()),
     path('exchange/admin/statistics/',AdminExchangeStatisticsView.as_view()),
     path('exchange/admin/marketplace', exchange_admin_required(AdminMarketplaceView.as_view())),
+    path('exchange/admin/courses/search/', exchange_admin_required(AdminExchangeCoursesSearchView.as_view())),
+    path('exchange/admin/course_units/search/', exchange_admin_required(AdminExchangeCourseUnitsSearchView.as_view())),
+    path('exchange/admin/candidates/', superuser_required(exchange_admin_required(AdminExchangeCandidatesView.as_view()))),
+    path('exchange/admin/admins/', superuser_required(exchange_admin_required(AdminExchangeAdminsView.as_view()))),
+    path('exchange/admin/admins/<str:username>/', superuser_required(exchange_admin_required(AdminExchangeAdminsView.as_view()))),
     path('exchange/admin/course_unit/periods/', exchange_admin_required(AdminExchangeCourseUnitPeriodsView.as_view())),
     path('exchange/admin/courses/periods/', exchange_admin_required(AdminExchangeCoursePeriodsView.as_view())),
     path('exchange/admin/course_unit/<int:course_unit_id>/period/', exchange_admin_required(ExchangeCourseUnitPeriodView.as_view())),
