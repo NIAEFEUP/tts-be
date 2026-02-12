@@ -91,10 +91,10 @@ INSERT INTO marketplace_exchange_class(marketplace_exchange, course_unit_name, c
     (20, 'Fundamentos de Segurança Informática', 'FSI', 560106, '3LEIC14', '3LEIC12');
 
 -- Mock data for course_unit_enrollments
-INSERT INTO course_unit_enrollments(id, user_nmec, accepted, admin_state, date) VALUES
-    (1, '202307321', 0, 'untreated', '2026-02-03 22:12:01.598239'),
-    (2, '202304594', 0, 'untreated', '2026-02-03 22:12:54.939139'),
-    (3, '202305033', 0, 'untreated', '2026-02-03 22:22:34.893334');
+INSERT INTO course_unit_enrollments(id, user_name, user_nmec, accepted, admin_state, date) VALUES
+    (1, 'Inês Gomes', '202307321', 0, 'untreated', '2026-02-03 22:12:01.598239'),
+    (2, 'João Marques', '202304594', 0, 'untreated', '2026-02-03 22:12:54.939139'),
+    (3, 'Eva Ferreira', '202305033', 0, 'untreated', '2026-02-03 22:22:34.893334');
 
 INSERT INTO course_unit_enrollment_options(id, date, course_unit_id, course_unit_enrollment_id, enrolling) VALUES
     (1, '2026-02-03 22:12:01.598778', 560109, 1, 0),
