@@ -74,7 +74,7 @@ class ExchangeValidationController:
 
     def cancel_exchange(self, exchange):
         exchange.canceled = True
-        exchange.accepted = True
+        exchange.accepted = False
         exchange.save()
 
     def fetch_conflicting_exchanges_metadata(
