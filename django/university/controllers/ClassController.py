@@ -56,9 +56,6 @@ class ClassController:
             eh, em, es = map(int, end_str.split(':'))
             duration = (eh + em / 60.0) - start_time_decimal
 
-            raw_day = entry.get('week_days', [None])[0]
-            day = schedule_controller.day_from_sigarra_week_day(raw_day)
-            
             ucs = entry.get('ucs', [])
             primary_uc_sigarra_id = ucs[0].get('sigarra_id') if ucs else None
             
