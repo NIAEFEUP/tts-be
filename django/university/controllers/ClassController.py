@@ -29,21 +29,26 @@ class ClassController:
 
     @staticmethod
     def get_classes(course_unit_id: int, fetch_professors: bool = True):
+        
+        valid_slots_queryset = SlotClass.objects.select_related('slot').filter(
+            slot__day__gte=0
+        )
+
         classes = Class.objects.filter(
             course_unit=course_unit_id
         ).select_related(
             'course_unit'
         ).prefetch_related(
-            Prefetch('slotclass_set', queryset=SlotClass.objects.select_related('slot'))
+            Prefetch('slotclass_set', queryset=valid_slots_queryset)
         ).order_by("name")
 
         result = []
 
         for class_obj in classes:
-            slot_list = []
-
+            slots_raw = class_obj.slotclass_set.all()
+            
             if fetch_professors:
-                slot_list = [ClassController.get_professors(sc.slot) for sc in class_obj.slotclass_set.all()]
+                slot_list = [ClassController.get_professors(sc.slot) for sc in slots_raw]
             else: 
                 slot_list = [
                     {
@@ -55,7 +60,7 @@ class ClassController:
                         'location': sc.slot.location,
                         'is_composed': sc.slot.is_composed,
                         'professors': []
-                    } for sc in class_obj.slotclass_set.all()
+                    } for sc in slots_raw
                 ]
 
             result.append({
@@ -66,3 +71,4 @@ class ClassController:
             })
 
         return result
+    
