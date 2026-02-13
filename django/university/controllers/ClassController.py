@@ -42,6 +42,12 @@ class ClassController:
             if lesson_id in processed_slot_ids:
                 continue
 
+            raw_day = entry.get('week_days', [None])[0]
+            day = schedule_controller.day_from_sigarra_week_day(raw_day)
+            
+            if day is None or day < 0:
+                continue
+
             start_str = entry.get('hour_start', '00:00:00')
             h, m, s = map(int, start_str.split(':'))
             start_time_decimal = h + (m / 60.0)
@@ -50,9 +56,6 @@ class ClassController:
             eh, em, es = map(int, end_str.split(':'))
             duration = (eh + em / 60.0) - start_time_decimal
 
-            raw_day = entry.get('week_days', [None])[0]
-            day = schedule_controller.day_from_sigarra_week_day(raw_day)
-            
             ucs = entry.get('ucs', [])
             primary_uc_sigarra_id = ucs[0].get('sigarra_id') if ucs else None
             
