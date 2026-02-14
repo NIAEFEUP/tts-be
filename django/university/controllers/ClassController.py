@@ -113,6 +113,7 @@ class ClassController:
             course_unit_id = int(entry.get('ocorrencia_id'))
             start_time = float(entry.get('hora_inicio', 0)) / 3600.0
             duration = float(entry.get('aula_duracao', 0))
+            location = entry.get('sala_sigla')
             lesson_type = entry.get('tipo')
             day = schedule_controller.from_sigarra_day(entry.get('dia'))
 
@@ -126,7 +127,7 @@ class ClassController:
             slot = Slot(
                 id=entry.get('aula_id'),
                 lesson_type=entry.get('tipo'),
-                day=day,
+                day=ScheduleController.from_sigarra_day(entry.get('dia'), 0),
                 start_time=float(entry.get('hora_inicio', 0)) / 3600.0,
                 duration=float(entry.get('aula_duracao', 0)),
                 location=entry.get('sala_sigla'),
