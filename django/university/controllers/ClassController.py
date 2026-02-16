@@ -37,6 +37,9 @@ class ClassController:
         processed_slot_ids = set()
         schedule_controller = ScheduleController()
 
+        if response_data is None:
+            return
+
         for entry in response_data:
             lesson_id = entry.get('id')
             if lesson_id in processed_slot_ids:
