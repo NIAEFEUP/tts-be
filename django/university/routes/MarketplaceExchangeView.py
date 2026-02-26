@@ -117,10 +117,28 @@ class MarketplaceExchangeView(APIView):
 
     def post(self, request):
         return self.submit_marketplace_exchange_request(request)
+    
+    def validate_exchange_periods(self, exchanges):
+        for exchange in exchanges:
+            course_unit_id = int(exchange["courseUnitId"])
+            if not ExchangeController.is_exchange_period_open_for_course_unit(course_unit_id):
+                return JsonResponse(
+                    {"error": f"O período de trocas não se encontra aberto para a(s) UC(s) selecionada(s)."},
+                    status=400,
+                    safe=False
+                )
+        return None
 
     def submit_marketplace_exchange_request(self, request):
         exchanges = request.POST.getlist('exchangeChoices[]')
         exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
+
+        if len(exchanges) == 0:
+            return JsonResponse({"error": "Pedido vazio"}, status=400, safe=False)
+
+        period_validation_error = self.validate_exchange_periods(exchanges)
+        if period_validation_error:
+            return period_validation_error
 
         # If user sent a message explaining why their request should be directly handled by the commission instead of having to be
         # accepted by students in the marketplace
