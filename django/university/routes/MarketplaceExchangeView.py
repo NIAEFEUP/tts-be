@@ -174,9 +174,14 @@ class MarketplaceExchangeView(APIView):
         else:
             return self.add_normal_marketplace_exchange(request, exchanges, exchange_hash, replace)
 
-    def add_urgent_exchange(self, request, exchanges, message: str, exchange_hash, replace_existing=False):
+
+    def add_urgent_exchange(self, request, exchanges, message: str, exchange_hash, replace):
+        period_validation_error = self.validate_exchange_periods(exchanges)
+        if period_validation_error:
+            return period_validation_error
+
         with transaction.atomic():
-            if replace_existing:
+            if replace:
                 self.reject_old_urgent_requests(request.user, exchange_hash)
             elif ExchangeUrgentRequests.objects.filter(hash=exchange_hash, admin_state="untreated").exists():
                 # Replace not set to true and an untreated exchange with the same hash already exists => return error
@@ -205,23 +210,16 @@ class MarketplaceExchangeView(APIView):
 
         return JsonResponse({"success": True}, safe=False)
 
-    def reject_old_urgent_requests(self, user, exchange_hash):
-        with transaction.atomic():
-            old_requests = ExchangeUrgentRequests.objects.filter(
-                issuer_nmec=user.username,
-                hash=exchange_hash,
-                admin_state="untreated"
-            )
-            for old_request in old_requests:
-                old_request.admin_state = "rejected"
-                old_request.save()
+    def add_normal_marketplace_exchange(self, request, exchanges, exchange_hash, replace):
+        self.insert_marketplace_exchange(exchanges, request.user, exchange_hash, replace)
 
-    def add_normal_marketplace_exchange(self, request, exchanges, exchange_hash, replace_existing=False):
-        user = request.user
+        return JsonResponse({"success": True}, safe=False)
+
+    def insert_marketplace_exchange(self, exchanges, user, exchange_hash, replace):
         issuer_name = f"{user.first_name} {user.last_name.split(' ')[-1]}"
 
         with transaction.atomic():
-            if replace_existing:
+            if replace:
                 self.cancel_old_marketplace_exchanges(user, exchange_hash)
             elif MarketplaceExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
                 # Replace not set to true and a non-canceled exchange with the same hash already exists => return error
