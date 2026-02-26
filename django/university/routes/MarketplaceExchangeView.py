@@ -117,10 +117,28 @@ class MarketplaceExchangeView(APIView):
 
     def post(self, request):
         return self.submit_marketplace_exchange_request(request)
+    
+    def validate_exchange_periods(self, exchanges):
+        for exchange in exchanges:
+            course_unit_id = int(exchange["courseUnitId"])
+            if not ExchangeController.is_exchange_period_open_for_course_unit(course_unit_id):
+                return JsonResponse(
+                    {"error": f"O período de trocas não se encontra aberto para a(s) UC(s) selecionada(s)."},
+                    status=400,
+                    safe=False
+                )
+        return None
 
     def submit_marketplace_exchange_request(self, request):
         exchanges = request.POST.getlist('exchangeChoices[]')
         exchanges = list(map(lambda exchange : json.loads(exchange), exchanges))
+
+        if len(exchanges) == 0:
+            return JsonResponse({"error": "Pedido vazio"}, status=400, safe=False)
+
+        period_validation_error = self.validate_exchange_periods(exchanges)
+        if period_validation_error:
+            return period_validation_error
 
         # If user sent a message explaining why their request should be directly handled by the comission instead of having to be
         # accepted by students in the marketplace
@@ -162,6 +180,9 @@ class MarketplaceExchangeView(APIView):
 
 
     def add_urgent_exchange(self, request, exchanges, message: str, exchange_hash):
+        period_validation_error = self.validate_exchange_periods(exchanges)
+        if period_validation_error:
+            return period_validation_error
 
         with transaction.atomic():
             urgent_request = ExchangeUrgentRequests.objects.create(
@@ -188,11 +209,17 @@ class MarketplaceExchangeView(APIView):
         return JsonResponse({"success": True}, safe=False)
 
     def add_normal_marketplace_exchange(self, request, exchanges, exchange_hash):
-        self.insert_marketplace_exchange(exchanges, request.user, exchange_hash)
+        period_validation_error = self.insert_marketplace_exchange(exchanges, request.user, exchange_hash)
+        if period_validation_error:
+            return period_validation_error
 
         return JsonResponse({"success": True}, safe=False)
 
     def insert_marketplace_exchange(self, exchanges, user, exchange_hash):
+        period_validation_error = self.validate_exchange_periods(exchanges)
+        if period_validation_error:
+            return period_validation_error
+
         issuer_name = f"{user.first_name} {user.last_name.split(' ')[-1]}"
 
         marketplace_exchange = MarketplaceExchange.objects.create(
@@ -214,3 +241,5 @@ class MarketplaceExchangeView(APIView):
                 class_issuer_goes_from=exchange["classNameRequesterGoesFrom"],
                 class_issuer_goes_to=exchange["classNameRequesterGoesTo"]
             )
+
+        return None
