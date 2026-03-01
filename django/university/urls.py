@@ -1,5 +1,6 @@
 from django.urls import path, include
 
+from university.routes.docs.DocsView import SwaggerUIView, OpenAPISchemaView
 from university.routes.course_unit.CourseUnitEnrollmentView import CourseUnitEnrollmentView
 from university.routes.exchange.AdminMarketplaceView import AdminMarketplaceView
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
@@ -95,8 +96,9 @@ urlpatterns = [
     path('exchange/admin/request/<str:request_type>/<int:id>/reject/', exchange_admin_required(AdminExchangeRequestRejectView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/accept/', exchange_admin_required(AdminExchangeRequestAcceptView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/awaiting-information/', exchange_admin_required(AdminRequestAwaitingInformationView.as_view())),
-    path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback")
-
+    path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback"),
+    path('docs/', SwaggerUIView.as_view(), name="swagger-ui"),
+    path('schema/', OpenAPISchemaView.as_view(), name="openapi-schema"),
 ]
 
 if FEDERATED_AUTH == 0:
