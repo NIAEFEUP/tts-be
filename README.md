@@ -48,3 +48,15 @@ And then you need to set the correct desired values in the `.env.dev` file.
 ```yaml
 docker compose up
 ```
+
+## API Documentation
+
+The API is documented using the OpenAPI 3.0 specification. Once the backend is running, the interactive Swagger UI is available at:
+
+```
+http://localhost:8000/api/docs/
+```
+
+The raw schema file is at `docs/openapi.yaml` and is served at `/api/schema/`.
+
+> **Convention:** whenever a view is changed or a new endpoint is added, the spec must be updated in the same PR.
