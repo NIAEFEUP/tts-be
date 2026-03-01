@@ -48,7 +48,7 @@ paths:
     get:
       tags: [auth]
       summary: Get authenticated user info
-      description: Returns the currently logged-in user's info and exchange eligibility. Returns `signed: false` if not authenticated.
+      description: "Returns the currently logged-in user's info and exchange eligibility. Returns `signed: false` if not authenticated."
       responses:
         "200":
           description: User info
@@ -562,7 +562,7 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [exchangeChoices[]]
+              required: ["exchangeChoices[]"]
               properties:
                 exchangeChoices[]:
                   type: array
@@ -733,7 +733,7 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [exchangeChoices[]]
+              required: ["exchangeChoices[]"]
               properties:
                 exchangeChoices[]:
                   type: array

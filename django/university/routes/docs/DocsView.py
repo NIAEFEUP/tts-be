@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.views import View
 
 
-SCHEMA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'docs', 'openapi.yaml')
+SCHEMA_PATH = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'docs', 'openapi.yaml')
 
 SWAGGER_UI_HTML = """<!DOCTYPE html>
 <html>

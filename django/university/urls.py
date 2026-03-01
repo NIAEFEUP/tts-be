@@ -97,8 +97,8 @@ urlpatterns = [
     path('exchange/admin/request/<str:request_type>/<int:id>/accept/', exchange_admin_required(AdminExchangeRequestAcceptView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/awaiting-information/', exchange_admin_required(AdminRequestAwaitingInformationView.as_view())),
     path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback"),
-    path('api/docs/', SwaggerUIView.as_view(), name="swagger-ui"),
-    path('api/schema/', OpenAPISchemaView.as_view(), name="openapi-schema"),
+    path('docs/', SwaggerUIView.as_view(), name="swagger-ui"),
+    path('schema/', OpenAPISchemaView.as_view(), name="openapi-schema"),
 ]
 
 if FEDERATED_AUTH == 0:
