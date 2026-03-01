@@ -200,16 +200,17 @@ class DirectExchangeView(View):
         try:
             with transaction.atomic():
                 # Update exchange accepted states
+                exchange = DirectExchange.objects.select_for_update().get(id=id)
                 self.set_participant_acceptance(exchange, request.user.username, True)
 
-                participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-                participant_nmecs = {participant.participant_nmec for participant in participants}
-
+                participants = list(DirectExchangeParticipants.objects.filter(direct_exchange=exchange))
                 all_accepted = all(participant.accepted for participant in participants)
 
-            # Do not do anything else if not everybody accepted
-            if not all_accepted:
-                return JsonResponse({"success": True}, safe=False)
+                # Do not do anything else if not everybody accepted
+                if not all_accepted:
+                    return JsonResponse({"success": True}, safe=False)
+
+                self.set_participant_acceptance(exchange, request.user.username, False)
 
             # Prefetch information before entering the transaction
             student_schedule_metadata = StudentScheduleMetadata()
@@ -219,18 +220,17 @@ class DirectExchangeView(View):
                 StudentScheduleController.fetch_student_schedule_metadata(SigarraController(), student_schedule_metadata, participant.participant_nmec)
 
             with transaction.atomic():
-                # Ensure fetched participants are consistent with current view
-                new_participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-                new_participant_nmecs = {participant.participant_nmec for participant in new_participants}
+                exchange = DirectExchange.objects.select_for_update().get(id=id)
 
-                if participant_nmecs != new_participant_nmecs:
-                    # New participant added/removed, must revert operation and need to reverify acceptances
-                    self.set_participant_acceptance(exchange, request.user.username, False)
-                    return JsonResponse({"success": False}, safe=False, status=409)
+                if exchange.accepted or exchange.canceled:
+                    return JsonResponse({"success": True}, safe=False)
 
+                # Re-apply the current user's acceptance atomically with exchange.accepted and
+                # the schedule rewrites — if anything fails, all three roll back together.
+                self.set_participant_acceptance(exchange, request.user.username, True)
                 exchange.accepted = True
                 exchange.save()
-
+                
                 # Rewrite participants' schedules
                 for participant in participants:
                     StudentController.populate_user_course_unit_data(int(participant.participant_nmec), erase_previous=True, metadata=student_schedule_metadata)
@@ -250,15 +250,10 @@ class DirectExchangeView(View):
             return JsonResponse({"success": True}, safe=False)
 
         except Exception as e:
-            # Revert participant acceptance, to allow to retry in case of an error
-            self.set_participant_acceptance(exchange, request.user.username, False)
-
             return JsonResponse({"success": False}, status=400, safe=False)
 
     def set_participant_acceptance(self, exchange, nmec: str, accepted: bool):
-        with transaction.atomic():
-            participants = DirectExchangeParticipants.objects.filter(direct_exchange=exchange)
-            for participant in participants:
-                if participant.participant_nmec == nmec:
-                    participant.accepted = accepted
-                    participant.save()
+        DirectExchangeParticipants.objects.filter(
+                    direct_exchange=exchange, 
+                    participant_nmec=nmec
+                ).update(accepted=accepted)
