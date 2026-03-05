@@ -101,15 +101,30 @@ INSERT INTO course_unit_enrollment_options(id, date, course_unit_id, course_unit
     (2, '2026-02-03 22:12:54.939542', 560108, 2, 0),
     (3, '2026-02-03 22:22:34.893775', 560110, 3, 0);
 
+-- Exchange periods — open for all mock course units
+-- is_course_expiration=0 means course-unit-level expiration (used by period validation)
+INSERT INTO exchange_expirations(course_unit_id, active_date, end_date, is_course_expiration) VALUES
+    (560106, '2025-09-01', '2026-08-31', 0),
+    (560107, '2025-09-01', '2026-08-31', 0),
+    (560108, '2025-09-01', '2026-08-31', 0),
+    (560109, '2025-09-01', '2026-08-31', 0),
+    (560110, '2025-09-01', '2026-08-31', 0);
+
 -- Mock data for direct_exchange
+-- Pending (both students still need to accept): ids 1–5
+-- Accepted (both agreed, waiting for admin to process): ids 6–8
 INSERT INTO direct_exchange(id, issuer_name, issuer_nmec, accepted, admin_state, marketplace_exchange) VALUES
     (1, 'Daniel Costa', '202304064', false, 'untreated', 2),
     (2, 'Gabriela Lima', '202306618', false, 'untreated', 3),
     (3, 'Hugo Fernandes', '202306498', false, 'untreated', 5),
     (4, 'Carla Mendes', '202204914', false, 'untreated', 7),
-    (5, 'João Marques', '202304594', false, 'untreated', 8);
+    (5, 'João Marques', '202304594', false, 'untreated', 8),
+    (6, 'Alice Oliveira', '202307365', true, 'untreated', NULL),
+    (7, 'Bruno Silva', '202303872', true, 'untreated', NULL),
+    (8, 'Eva Ferreira', '202305033', true, 'untreated', NULL);
 
 INSERT INTO direct_exchange_participants(direct_exchange, participant_name, participant_nmec, class_participant_goes_from, class_participant_goes_to, course_unit, course_unit_id, accepted) VALUES
+    -- Pending exchanges
     (1, 'Daniel Costa', '202304064', '3LEIC05', '3LEIC07', 'PFL', 560109, false),
     (1, 'Eva Ferreira', '202305033', '3LEIC07', '3LEIC05', 'PFL', 560109, false),
     (2, 'Gabriela Lima', '202306618', '3LEIC11', '3LEIC13', 'RC', 560110, false),
@@ -121,7 +136,14 @@ INSERT INTO direct_exchange_participants(direct_exchange, participant_name, part
     (4, 'Filipe Rocha', '202307295', '3LEIC06', '3LEIC03', 'RC', 560110, false),
     (4, 'Filipe Rocha', '202307295', '3LEIC06', '3LEIC03', 'PFL', 560109, false),
     (5, 'João Marques', '202304594', '3LEIC14', '3LEIC11', 'LBAW', 560108, false),
-    (5, 'Gabriela Lima', '202306618', '3LEIC11', '3LEIC14', 'LBAW', 560108, false);
+    (5, 'Gabriela Lima', '202306618', '3LEIC11', '3LEIC14', 'LBAW', 560108, false),
+    -- Accepted exchanges (both agreed, visible in admin panel)
+    (6, 'Alice Oliveira', '202307365', '3LEIC01', '3LEIC02', 'FSI', 560106, true),
+    (6, 'Bruno Silva', '202303872', '3LEIC02', '3LEIC01', 'FSI', 560106, true),
+    (7, 'Bruno Silva', '202303872', '3LEIC02', '3LEIC05', 'IPC', 560107, true),
+    (7, 'Daniel Costa', '202304064', '3LEIC05', '3LEIC02', 'IPC', 560107, true),
+    (8, 'Eva Ferreira', '202305033', '3LEIC06', '3LEIC10', 'RC', 560110, true),
+    (8, 'Filipe Rocha', '202307295', '3LEIC10', '3LEIC06', 'RC', 560110, true);
 
 -- Mock data for exchange_urgent_requests
 INSERT INTO exchange_urgent_requests(id, message, accepted, admin_state, date, issuer_nmec, issuer_name, hash) VALUES
@@ -163,40 +185,10 @@ INSERT INTO exchange_admin_courses (exchange_admin_id, course_id) VALUES
 INSERT INTO exchange_admin_course_units (exchange_admin_id, course_unit_id) VALUES
     (4, 560109);
 
-    
+
+-- Course-level expirations (is_course_expiration=1) are used elsewhere; uncomment and adjust if needed:
 -- INSERT INTO exchange_expirations(course_unit_id, active_date, end_date, is_course_expiration) VALUES
---     -- First year
---     (541865, '2025-09-01', '2026-08-31', 1),
---     (541866, '2025-09-01', '2026-08-31', 1),
---     (541867, '2025-09-01', '2026-08-31', 1),
---     (541868, '2025-09-01', '2026-08-31', 1),
---     (541869, '2025-09-01', '2026-08-31', 1),
---     (541870, '2025-09-01', '2026-08-31', 1),
---     -- Second year
---     (541876, '2025-09-01', '2026-08-31', 1),
---     (541877, '2025-09-01', '2026-08-31', 1),
---     (541878, '2025-09-01', '2026-08-31', 1),
---     (541879, '2025-09-01', '2026-08-31', 1),
---     (541880, '2025-09-01', '2026-08-31', 1),
---     -- Third year
---     (541886, '2025-09-01', '2026-08-31', 1),
---     (541887, '2025-09-01', '2026-08-31', 1),
---     (541888, '2025-09-01', '2026-08-31', 1),
---     (541889, '2025-09-01', '2026-08-31', 1),
---     (541890, '2025-09-01', '2026-08-31', 1),
---     -- Fourth year
---     (560265, '2025-09-01', '2026-08-31', 1),
---     (560266, '2025-09-01', '2026-08-31', 1),
---     (560267, '2025-09-01', '2026-08-31', 1),
---     (560268, '2025-09-01', '2026-08-31', 1),
---     (560269, '2025-09-01', '2026-08-31', 1);
-
-
-
--- Exchange Admins
--- These are just regular exchange admins (mostly professors)
-
-
-
--- Admins (Super Users)
--- This is reserved for TTS administrators , they can manage exchange admins
+--     (541865, '2025-09-01', '2026-08-31', 1), -- 1st year
+--     (541876, '2025-09-01', '2026-08-31', 1), -- 2nd year
+--     (541886, '2025-09-01', '2026-08-31', 1), -- 3rd year
+--     (560265, '2025-09-01', '2026-08-31', 1); -- 4th year
