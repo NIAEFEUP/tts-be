@@ -25,7 +25,7 @@ class SigarraController:
         self.username = CONFIG["SIGARRA_USERNAME"]
         self.password = CONFIG["SIGARRA_PASSWORD"]
         self.cookies = None
-        self.mock = CONFIG["MOCK_SIGARRA"] if "MOCK_SIGARRA" in CONFIG else 0
+        self.mock = int(CONFIG.get("MOCK_SIGARRA", "0"))
 
         if login and not self.mock:
             self.login()
@@ -45,10 +45,11 @@ class SigarraController:
 
     def semester_weeks(self):
         currdate = date.today()
-        year = str(currdate.year) if not CONFIG["EXCHANGE_YEAR"] else CONFIG["EXCHANGE_YEAR"] 
+        exchange_year = CONFIG.get("EXCHANGE_YEAR", "")
+        year = str(currdate.year) if not exchange_year else exchange_year
         first_semester = int(CONFIG["EXCHANGE_SEMESTER"]) == 1 if CONFIG["EXCHANGE_SEMESTER"] else currdate.month >= 10 or currdate.month <= 1
         if first_semester:
-            if currdate.month <= 2 and not CONFIG["EXCHANGE_YEAR"]:
+            if currdate.month <= 2 and not exchange_year:
                 year = str(int(year) - 1)
 
             semana_ini = year + "1001"
