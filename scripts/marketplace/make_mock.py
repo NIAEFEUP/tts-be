@@ -4,7 +4,6 @@ import base64
 import json
 
 from pathlib import Path
-from urllib.parse import parse_qsl, urlencode, urlunparse
 
 import requests
 
