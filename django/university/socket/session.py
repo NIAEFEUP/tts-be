@@ -21,7 +21,7 @@ class Session:
         return not self.participants 
     
     def expired(self):
-        return datetime.now() > self.expiration_datetime
+        return datetime.now(timezone.utc) > self.expiration_datetime
     
     def to_json(self):
         return {
