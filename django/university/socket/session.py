@@ -25,7 +25,7 @@ class Session:
     
     def to_json(self):
         return {
-            'expiration_time': int(time.mktime(self.expiration_datetime.timetuple())) * 1000.0,
+            'expiration_time': self.expiration_datetime.timestamp() * 1000.0,
             'participants': list(map(Participant.to_json, self.participants.values()))
         }
     
