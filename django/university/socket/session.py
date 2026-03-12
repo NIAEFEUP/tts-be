@@ -18,7 +18,7 @@ class Session:
         self.participants[participant.sid] = participant
         
     def no_participants(self):
-        return self.participants == []
+        return not self.participants 
     
     def expired(self):
         return datetime.now() > self.expiration_datetime
