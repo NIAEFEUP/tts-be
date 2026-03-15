@@ -18,14 +18,14 @@ class Session:
         self.participants[participant.sid] = participant
         
     def no_participants(self):
-        return self.participants == []
+        return not self.participants 
     
     def expired(self):
-        return datetime.now() > self.expiration_datetime
+        return datetime.now(timezone.utc) > self.expiration_datetime
     
     def to_json(self):
         return {
-            'expiration_time': int(time.mktime(self.expiration_datetime.timetuple())) * 1000.0,
+            'expiration_time': self.expiration_datetime.timestamp() * 1000.0,
             'participants': list(map(Participant.to_json, self.participants.values()))
         }
     
