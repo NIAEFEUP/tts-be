@@ -68,7 +68,9 @@ async def disconnect(sid):
     await sessions_server.leave_session(sid)
     print(f'Client {sid} disconnected')
     
-    await emit_session_update(sid, session)
+    if sessions_server.get_session(session.session_id) is not None:
+
+        await emit_session_update(sid, session)
 
 # TODO: Remove this
 @sessions_server.event
