@@ -45,7 +45,7 @@ class SessionsServer:
         
     
     def enter_session(self, participant: Participant, session_id: str) -> Coroutine:
-        if self.get_client_session(participant):
+        if self.get_client_session(participant.sid):
             raise ConnectionRefusedError('Client is already in a session')
         
         if session_id not in self.sessions:
