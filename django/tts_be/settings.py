@@ -95,7 +95,7 @@ if not DEBUG:
 INSTALLED_APPS = [
     'corsheaders',
     'anymail',
-    # 'daphne',
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -106,7 +106,7 @@ INSTALLED_APPS = [
     'mozilla_django_oidc',
     'university',
     'exchange',
-    # 'channels',
+    'channels',
 ]
 
 EMAIL_HOST = os.getenv("EMAIL_HOST", "tts-mailpit")
