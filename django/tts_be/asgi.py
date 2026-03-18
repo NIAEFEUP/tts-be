@@ -15,4 +15,5 @@ from university.socket.views import sessions_server
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tts_be.settings')
 
-application = socketio.ASGIApp(sessions_server.sio, get_asgi_application())
+django_app = socketio.ASGIApp(sessions_server.sio, get_asgi_application())
+application = socketio.ASGIApp(sessions_server.sio, django_app)

@@ -86,13 +86,13 @@ if not DEBUG:
         },
     },
     }
-    
+
     logging.config.dictConfig(LOGGING)
 
 
 # Application definition
 
-INSTALLED_APPS = [ 
+INSTALLED_APPS = [
     'corsheaders',
     'anymail',
     # 'daphne',
@@ -101,7 +101,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions', # legacy
     'django.contrib.messages',
-    'rest_framework', 
+    'rest_framework',
     'django.contrib.staticfiles',
     'mozilla_django_oidc',
     'university',
@@ -168,6 +168,8 @@ TEMPLATES = [
 
 
 WSGI_APPLICATION = 'tts_be.wsgi.application'
+
+ASGI_APPLICATION = 'tts_be.asgi.application'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
