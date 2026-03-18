@@ -68,9 +68,15 @@ async def disconnect(sid):
     await sessions_server.leave_session(sid)
     print(f'Client {sid} disconnected')
 
-    if sessions_server.get_session(session.session_id) is not None:
-        
-        await emit_session_update(sid, session)
+    await emit_session_update(sid, session)
+
+# TODO: Remove this
+@sessions_server.event
+async def ping(sid, data):
+    user_session = cast(Session, sessions_server.get_client_session(sid))
+    session_id = user_session.session_id
+
+    await sessions_server.emit_to_session('ping', data, session_id=session_id, sid=sid)
 
 @sessions_server.event
 async def update_participant(sid, updated_participant):
