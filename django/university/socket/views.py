@@ -79,3 +79,12 @@ async def update_participant(sid, updated_participant):
     participant.update_from_json(updated_participant)
 
     await emit_session_update(sid, user_session)
+
+@sessions_server.event
+async def update_schedule(sid, selected_slots):
+    user_session = cast(Session, sessions_server.get_client_session(sid))
+    participant = user_session.participants[sid]
+
+    participant.selected_slots = selected_slots
+
+    await emit_session_update(sid, user_session)
