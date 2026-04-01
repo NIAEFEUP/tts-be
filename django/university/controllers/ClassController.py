@@ -144,7 +144,7 @@ class ClassController:
             slot = Slot(
                 id=entry.get('aula_id'),
                 lesson_type=entry.get('tipo'),
-                day=ScheduleController.from_sigarra_day(entry.get('dia'), 0),
+                day=day,
                 start_time=float(entry.get('hora_inicio', 0)) / 3600.0,
                 duration=float(entry.get('aula_duracao', 0)),
                 location=entry.get('sala_sigla'),
