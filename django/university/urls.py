@@ -5,6 +5,7 @@ from university.routes.course_unit.CourseUnitEnrollmentView import CourseUnitEnr
 from university.routes.exchange.AdminMarketplaceView import AdminMarketplaceView
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
 from university.routes.auth.Csrf import Csrf
+from university.routes.auth.SocketToken import SocketToken
 from university.routes.exchange.DirectExchangeView import DirectExchangeView
 from university.routes.exchange.export.ExchangeExportView import ExchangeExportView
 from university.routes.exchange.options.ExchangeOptionsView import ExchangeOptionsView
@@ -55,6 +56,7 @@ urlpatterns = [
     path('professors/<int:schedule>/', views.professor),
     path('info/', views.info),
     path('auth/info/', InfoView.as_view()),
+    path("auth/socket-token/", SocketToken.as_view()),
     path('csrf/', Csrf.as_view()),
     path('admin/courses/', AdminExchangeCoursesView.as_view()),
     path('student/schedule', StudentScheduleView.as_view(), name="auth-student-schedule"),
@@ -81,7 +83,7 @@ urlpatterns = [
     path('class/<int:course_unit_id>/', views.classes),
     path('professors/<int:slot>/', views.professor),
     path('course_unit/hash', views.get_course_unit_hashes),
-    path('course_unit/enrollment/', CourseUnitEnrollmentView.as_view()), 
+    path('course_unit/enrollment/', CourseUnitEnrollmentView.as_view()),
     path('oidc-auth/', include('mozilla_django_oidc.urls')),
     path('exchange/admin/courses/', exchange_admin_required(AdminExchangeCoursesView.as_view())),
     path('exchange/admin/course_units/', AdminExchangeCourseUnitsView.as_view()),
