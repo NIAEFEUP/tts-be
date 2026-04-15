@@ -2,7 +2,7 @@ from django.forms.models import model_to_dict
 from rest_framework import serializers
 
 from university.models import CourseUnit
-from exchange.models import DirectExchangeParticipants
+from exchange.models import DirectExchangeParticipants, UserCourseUnits
 from university.controllers.ClassController import ClassController
 
 from university.controllers.SigarraController import SigarraController
@@ -33,6 +33,7 @@ class DirectExchangeParticipantsSerializer(serializers.Serializer):
     course_unit_id = serializers.CharField(max_length=16)
     accepted = serializers.BooleanField()
     date = serializers.DateTimeField()
+    is_enrolled_in_expected_class = serializers.SerializerMethodField()
 
     def get_course_info(self, obj):
         course_unit_id = obj.course_unit_id
@@ -62,3 +63,10 @@ class DirectExchangeParticipantsSerializer(serializers.Serializer):
             return filtered_classes[0]
         except:
             return None
+
+    def get_is_enrolled_in_expected_class(self, obj):
+        return UserCourseUnits.objects.filter(
+            user_nmec=obj.participant_nmec,
+            course_unit__id=obj.course_unit_id,
+            class_field__name=obj.class_participant_goes_from
+        ).exists()
