@@ -29,7 +29,7 @@ async def connect(sid, environ, auth):
     if auth is None or 'token' not in auth:
         raise ConnectionRefusedError('Authentication failed: No token provided')
 
-    username = sessions_server.valid_token(auth['token'])
+    username = sessions_server.validate_token(auth['token'])
     if not username:
         raise ConnectionRefusedError('Authentication failed: Invalid token')
 

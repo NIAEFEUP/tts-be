@@ -15,7 +15,7 @@ class SessionsServer:
         self.sessions = {}
         self.clients = {}
 
-    def valid_token(self, token: str) -> Optional[str]:
+    def validate_token(self, token: str) -> Optional[str]:
         try:
             payload = jwt.decode(token, settings.JWT_KEY, algorithms=["HS256"])
             return payload.get("username")
