@@ -5,7 +5,7 @@ class CustomOIDCAuthentationBackend(OIDCAuthenticationBackend):
 
     def create_user(self, claims):
         User = get_user_model()
-        
+
         if User.objects.filter(username=claims.get('nmec', '')).exists():
             user = User.objects.get(username=claims.get('nmec', ''))
             return self.update_user(user, claims)
