@@ -1,5 +1,6 @@
 from django.urls import path, include
 
+from django.university.middleware.authentication import is_authenticated
 from university.routes.course_unit.CourseUnitEnrollmentView import CourseUnitEnrollmentView
 from university.routes.exchange.AdminMarketplaceView import AdminMarketplaceView
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
@@ -61,7 +62,7 @@ urlpatterns = [
     path('student/exchange/received/', StudentReceivedExchangesView.as_view()),
     path('student/<str:nmec>/<int:course_id>/metadata', exchange_admin_required(StudentCourseMetadataView.as_view())),
     path('student/course_units/eligible', StudentEligibleCourseUnits.as_view()),
-    path('student/<str:nmec>/photo', StudentPhotoView.as_view()),
+    path('student/<str:nmec>/photo', is_authenticated(StudentPhotoView.as_view())),
     path('exchange/verify/<str:token>', ExchangeVerifyView.as_view()),
     path('student_data/<str:codigo>/', views.student_data),
     path('exchange/marketplace/', MarketplaceExchangeView.as_view()),
@@ -74,7 +75,7 @@ urlpatterns = [
     path('exchange/urgent/', ExchangeUrgentView.as_view()),
     path('exchange/related/', ExchangeRelatedView.as_view()),
     path('exchange/<int:exchange_id>/revalidate/', RevalidateExchangeView.as_view(), name='revalidate_exchange'),
-    path('course_unit/<int:course_unit_id>/exchange/metadata', ExchangeCardMetadataView.as_view()),
+    path('course_unit/<int:course_unit_id>/exchange/metadata', is_authenticated(ExchangeCardMetadataView.as_view())),
     path('course_unit/<int:course_unit_id>/', views.course_unit_by_id),
     path('class/<int:course_unit_id>/', views.classes),
     path('professors/<int:slot>/', views.professor),
