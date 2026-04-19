@@ -1,7 +1,6 @@
 from django.urls import path, include
 
 from university.routes.docs.DocsView import SwaggerUIView, OpenAPISchemaView
-from django.university.middleware.authentication import is_authenticated
 from university.routes.course_unit.CourseUnitEnrollmentView import CourseUnitEnrollmentView
 from university.routes.exchange.AdminMarketplaceView import AdminMarketplaceView
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
@@ -37,6 +36,7 @@ from university.routes.admin.AdminExchangeClassesView import AdminExchangeClasse
 from university.routes.admin.AdminExchangeStatisticsView import AdminExchangeStatisticsView
 
 from university.middleware.exchange_admin import exchange_admin_required
+from university.middleware.authentication import is_authenticated
 from university.routes.exchange.verify.DirectExchangeValidationView import DirectExchangeValidationView
 
 from tts_be.settings import FEDERATED_AUTH
