@@ -45,7 +45,7 @@ class SessionsServer:
         
     
     def enter_session(self, participant: Participant, session_id: str) -> Coroutine:
-        if self.get_client_session(participant):
+        if self.get_client_session(participant.sid):
             raise ConnectionRefusedError('Client is already in a session')
         
         if session_id not in self.sessions:
@@ -67,7 +67,7 @@ class SessionsServer:
         result = self.sio.leave_room(sid, session_id)
         
         self.sessions[session_id].remove_client(sid)
-        if self.sessions[session_id].no_participants() and self.sessions[session_id].expired():
+        if self.sessions[session_id].no_participants() or self.sessions[session_id].expired():
             del self.sessions[session_id]
 
         del self.clients[sid]
