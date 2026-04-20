@@ -11,16 +11,28 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
-import os 
+import os
 from dotenv import dotenv_values
 from django.core import mail
 
 import logging.config
+import sentry_sdk
 
 CONFIG={
     **dotenv_values(".env"),  # load variables
     **os.environ,  # override loaded values with environment variables
 }
+
+SENTRY_DSN = CONFIG.get("SENTRY_DSN")
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        send_default_pii=True,
+        enable_logs=True,
+        traces_sample_rate=float(CONFIG.get("SENTRY_TRACES_SAMPLE_RATE", 1.0)),
+        profile_session_sample_rate=float(CONFIG.get("SENTRY_PROFILE_SAMPLE_RATE", 1.0)),
+        profile_lifecycle="trace",
+    )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,6 +56,9 @@ DOMAIN = os.getenv('DOMAIN')
 DEBUG = False if int(CONFIG['DEBUG']) == 0 else True
 
 EXCHANGE_SEMESTER = CONFIG["EXCHANGE_SEMESTER"]
+EXCHANGE_YEAR = CONFIG.get("EXCHANGE_YEAR", "")
+
+MOCK_SIGARRA = CONFIG.get("MOCK_SIGARRA", "0")
 
 CLASS_SCHEDULE_CACHE_TTL = int(CONFIG.get("CLASS_SCHEDULE_CACHE_TTL", 60 * 60 * 6))
 

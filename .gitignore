@@ -27,3 +27,6 @@ django/university/stats_graphs/*
 
 httpd/shibboleth/*.pem
 
+# Mock data for testing
+django/mock-data.json
+
