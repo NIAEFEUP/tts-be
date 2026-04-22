@@ -22,7 +22,7 @@ class ExchangeCardMetadataView(APIView):
             students = sigarra_res.data
 
             new_response = JsonResponse({
-                "classes": list(ClassController.get_classes(course_unit_id)),
+                "classes": list(ClassController.get_classes(course_unit_id, new_schedule_api=True)),
                 "students": [
                     {
                         "mecNumber": student.get("codigo"),
