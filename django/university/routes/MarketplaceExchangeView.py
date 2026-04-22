@@ -210,8 +210,21 @@ class MarketplaceExchangeView(APIView):
 
         return JsonResponse({"success": True}, safe=False)
 
+    def reject_old_urgent_requests(self, user, exchange_hash):
+        with transaction.atomic():
+            old_requests = ExchangeUrgentRequests.objects.filter(
+                issuer_nmec=user.username,
+                hash=exchange_hash,
+                admin_state="untreated"
+            )
+            for old_request in old_requests:
+                old_request.admin_state = "rejected"
+                old_request.save()
+
     def add_normal_marketplace_exchange(self, request, exchanges, exchange_hash, replace):
-        self.insert_marketplace_exchange(exchanges, request.user, exchange_hash, replace)
+        error = self.insert_marketplace_exchange(exchanges, request.user, exchange_hash, replace)
+        if error:
+            return error
 
         return JsonResponse({"success": True}, safe=False)
 
@@ -245,7 +258,7 @@ class MarketplaceExchangeView(APIView):
                     class_issuer_goes_to=exchange["classNameRequesterGoesTo"]
                 )
 
-        return JsonResponse({"success": True}, safe=False)
+        return None
 
     def cancel_old_marketplace_exchanges(self, user, exchange_hash):
         with transaction.atomic():
