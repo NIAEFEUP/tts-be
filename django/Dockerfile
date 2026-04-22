@@ -32,11 +32,7 @@ COPY university/ ./university
 COPY exchange ./exchange
 COPY manage.py tasks.py ./
 
-COPY ./entrypoint.sh ./entrypoint.sh  
-ENTRYPOINT ["/usr/src/django/entrypoint.sh"]
-
-# Create a fallback mock data file if none was provided at build time
-RUN if [ ! -f "mock-data.json" ]; then echo "{}" > mock-data.json; fi
+COPY ./entrypoint.dev.sh ./entrypoint.dev.sh
 
 # prod
 FROM deps AS prod
