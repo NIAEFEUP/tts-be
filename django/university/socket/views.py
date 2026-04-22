@@ -15,6 +15,7 @@ sessions_server = SessionsServer(
     )
 )
 
+
 async def emit_session_update(sid, session: Session):
     payload = {
         'session_id': session.session_id,
@@ -27,16 +28,18 @@ async def emit_session_update(sid, session: Session):
 async def connect(sid, environ, auth):
     if auth is None or 'token' not in auth:
         raise ConnectionRefusedError('Authentication failed: No token provided')
-    if not sessions_server.valid_token(auth['token']):
+
+    username = sessions_server.validate_token(auth['token'])
+    if not username:
         raise ConnectionRefusedError('Authentication failed: Invalid token')
 
-    print(f'Participant {sid} connected')
+    print(f'Participant {sid} connected (username: {username})')
 
-    query_params = parse_qs(environ.get("QUERY_STRING", ""))
+    query_params = parse_qs(environ.get('QUERY_STRING', ''))
     session_id = query_params.get('session_id', [None])[0]
 
-    participant_name = query_params.get('participant_name', ["Anonymous"])[0]
-    participant = Participant(sid, participant_name)
+    participant_name = query_params.get('participant_name', ['Anonymous'])[0]
+    participant = Participant(sid, participant_name, username)
 
     if session_id is None:
         await sessions_server.create_session(participant)
@@ -61,6 +64,7 @@ async def connect(sid, environ, auth):
     await sessions_server.emit('connected', payload, to=sid)
     await emit_session_update(sid, session)
 
+
 @sessions_server.event
 async def disconnect(sid):
     session = cast(Session, sessions_server.get_client_session(sid))
@@ -68,9 +72,8 @@ async def disconnect(sid):
     await sessions_server.leave_session(sid)
     print(f'Client {sid} disconnected')
 
-    if sessions_server.get_session(session.session_id) is not None:
-        
-        await emit_session_update(sid, session)
+    await emit_session_update(sid, session)
+
 
 @sessions_server.event
 async def update_participant(sid, updated_participant):
