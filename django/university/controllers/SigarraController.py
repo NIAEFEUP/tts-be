@@ -118,7 +118,7 @@ class SigarraController:
             semana_fim
         ))
 
-        if(response.status_code != 200):
+        if response.status_code != 200:
             return SigarraResponse(None, response.status_code)
 
         return SigarraResponse(response.json()['horario'], response.status_code)
@@ -185,5 +185,6 @@ class SigarraController:
         theoretical_schedule = list(filter(lambda c: c["tipo"] == "T" and any(schedule["turma_sigla"] == class_name for schedule in c["turmas"]), classes))
 
         return SigarraResponse((class_schedule, theoretical_schedule), 200)
+
 
 
