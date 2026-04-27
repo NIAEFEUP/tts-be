@@ -1,6 +1,5 @@
 from django.urls import path, include
 
-from university.routes.docs.DocsView import SwaggerUIView, OpenAPISchemaView
 from university.routes.course_unit.CourseUnitEnrollmentView import CourseUnitEnrollmentView
 from university.routes.exchange.AdminMarketplaceView import AdminMarketplaceView
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
