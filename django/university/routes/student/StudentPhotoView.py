@@ -1,4 +1,4 @@
-from django.http.response import HttpResponse 
+from django.http import HttpResponse
 from rest_framework.views import APIView
 
 from university.controllers.SigarraController import SigarraController
