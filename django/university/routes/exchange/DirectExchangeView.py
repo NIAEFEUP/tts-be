@@ -211,12 +211,18 @@ class DirectExchangeView(View):
         return JsonResponse({"success": True}, safe=False)
 
     def put(self, request, id):
+        exchange = DirectExchange.objects.get(id=id)
+
+        is_participant = DirectExchangeParticipants.objects.filter(
+            direct_exchange=exchange, participant_nmec=request.user.username
+        ).exists()
+        if not is_participant:
+            return JsonResponse({"error": "Sem permissões suficientes"}, status=403, safe=False)
+
         # Validate if exchange is still valid
         if not ExchangeValidationController().validate_direct_exchange(id).status:
-            ExchangeValidationController().cancel_exchange(DirectExchange.objects.get(id=id))
+            ExchangeValidationController().cancel_exchange(exchange)
             return JsonResponse({"error": ExchangeValidationController().validate_direct_exchange(id).message}, status=400, safe=False)
-
-        exchange = DirectExchange.objects.get(id=id)
 
         try:
             with transaction.atomic():
