@@ -1,12 +1,13 @@
 from django.urls import path, include
 
+from university.routes.docs.DocsView import SwaggerUIView, OpenAPISchemaView
+
 from university.routes.course_unit.CourseUnitEnrollmentView import CourseUnitEnrollmentView
 from university.routes.exchange.AdminMarketplaceView import AdminMarketplaceView
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
 from university.routes.auth.Csrf import Csrf
 from university.routes.exchange.DirectExchangeView import DirectExchangeView
 from university.routes.exchange.export.ExchangeExportView import ExchangeExportView
-from university.routes.exchange.options.ExchangeOptionsView import ExchangeOptionsView
 from university.routes.student.course_units.eligible.StudentEligibleCourseUnits import StudentEligibleCourseUnits
 from university.routes.student.exchange.StudentReceivedExchangesView import StudentReceivedExchangesView
 from university.routes.student.exchange.StudentSentExchangesView import StudentSentExchangesView
@@ -69,7 +70,6 @@ urlpatterns = [
     path('exchange/direct/', is_authenticated(DirectExchangeView.as_view()), name="direct_exchange"),
     path('exchange/direct/<int:id>', is_authenticated(DirectExchangeView.as_view()), name="direct_exchange-id"),
     path('exchange/direct/validate/<int:id>', exchange_admin_required(DirectExchangeValidationView.as_view())),
-    path('exchange/options/', ExchangeOptionsView.as_view()),
     path('exchange/<str:request_type>/<int:id>/cancel/', is_authenticated(ExchangeCancelView.as_view())),
     path('exchange/export/csv', exchange_admin_required(ExchangeExportView.as_view())),
     path('exchange/urgent/', is_authenticated(ExchangeUrgentView.as_view())),
