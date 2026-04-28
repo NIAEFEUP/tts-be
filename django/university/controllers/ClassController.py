@@ -37,9 +37,18 @@ class ClassController:
         processed_slot_ids = set()
         schedule_controller = ScheduleController()
 
+        if response_data is None:
+            return
+
         for entry in response_data:
             lesson_id = entry.get('id')
             if lesson_id in processed_slot_ids:
+                continue
+
+            raw_day = entry.get('week_days', [None])[0]
+            day = schedule_controller.day_from_sigarra_week_day(raw_day)
+            
+            if day is None or day < 0:
                 continue
 
             start_str = entry.get('hour_start', '00:00:00')
@@ -50,47 +59,24 @@ class ClassController:
             eh, em, es = map(int, end_str.split(':'))
             duration = (eh + em / 60.0) - start_time_decimal
 
-            raw_day = entry.get('week_days', [None])[0]
-            day = schedule_controller.day_from_sigarra_week_day(raw_day)
-            
             ucs = entry.get('ucs', [])
             primary_uc_sigarra_id = ucs[0].get('sigarra_id') if ucs else None
             
             typology = entry.get('typology', {})
             lesson_type = typology.get('acronym')
 
-            existing_updated_slot = SlotClass.objects.filter(
-                class_field__course_unit_id=primary_uc_sigarra_id, 
-                slot__lesson_type=lesson_type, 
-                slot__day=day, 
-                slot__start_time=start_time_decimal, 
-                slot__duration=duration, 
-            ).exclude(slot__location=entry.get('rooms', [{}])[0].get('acronym')).first()
+            slot = Slot(
+                id=lesson_id,
+                lesson_type=lesson_type,
+                day=day,
+                start_time=start_time_decimal,
+                duration=duration,  
+                location=entry.get('rooms', [{}])[0].get('acronym'),
+                is_composed=len(entry.get('classes', [])) > 1,
+                last_updated=timezone.now()
+            )
+            slot.save()
 
-            slot = None
-            if existing_updated_slot:
-                existing_updated_slot.slot.location = entry.get('rooms', [{}])[0].get('acronym')
-                existing_updated_slot.slot.last_updated = timezone.now()
-                existing_updated_slot.save()
-
-                slot = existing_updated_slot.slot
-            else:
-                slot, created = Slot.objects.update_or_create(
-                    id=lesson_id,
-                    defaults={
-                        'lesson_type': lesson_type,
-                        'day': day,
-                        'start_time': start_time_decimal,
-                        'duration': duration,
-                        'location': entry.get('rooms', [{}])[0].get('acronym'),
-                        'is_composed': len(entry.get('classes', [])) > 1,
-                        'last_updated': timezone.now()
-                    },
-                )
-            
-            if not slot:
-                continue
-           
             for turma in entry.get('classes', []):
                 new_class, _ = Class.objects.update_or_create(
                     name=turma.get('acronym'),
@@ -105,8 +91,8 @@ class ClassController:
             for person in entry.get('persons', []):
                 sigarra_id = person.get('sigarra_id')
                 person_id = person.get('id')
-
                 professor, _ = Professor.objects.update_or_create(
+
                     id=sigarra_id if sigarra_id else person_id,
                     defaults={
                         'professor_acronym': person.get('acronym'),
@@ -116,7 +102,7 @@ class ClassController:
 
                 if professor == None:
                     continue
-                
+
                 SlotProfessor.objects.update_or_create(slot=slot, professor=professor)
 
             processed_slot_ids.add(lesson_id) 
@@ -209,14 +195,10 @@ class ClassController:
 
     @staticmethod
     def get_classes(course_unit_id: int, fetch_professors: bool = True, new_schedule_api: bool = False):
-        sigarra_controller = SigarraController(login = False)
-        (semana_ini, semana_fim) = sigarra_controller.semester_weeks()
-
         course_unit = CourseUnit.objects.get(id=course_unit_id)
 
         if not cache.get(f"schedule-{course_unit_id}"):
             with transaction.atomic():
-                ClassController.delete_cached_classes(course_unit_id)
                 schedule = SigarraController().get_course_schedule(course_unit_id, new_schedule_api=new_schedule_api, faculty=course_unit.course.faculty.acronym).data
                 
                 if new_schedule_api:
