@@ -16,15 +16,15 @@ class AdminExchangeStatisticsView(APIView):
         total_requests = direct_exchanges.count() + marketplace_exchanges.count() + urgent_requests.count()
 
         accepted_count = (
-            direct_exchanges.filter(accepted=True, admin_state='treated').count() +
-            marketplace_exchanges.filter(accepted=True, admin_state='treated').count() +
-            urgent_requests.filter(accepted=True, admin_state='treated').count()
+            direct_exchanges.filter(admin_state='treated').count() +
+            marketplace_exchanges.filter(admin_state='treated').count() +
+            urgent_requests.filter(admin_state='treated').count()
         )
 
         rejected_count = (
-            direct_exchanges.filter(accepted=False, admin_state='treated').count() +
-            marketplace_exchanges.filter(accepted=False, admin_state='treated').count() +
-            urgent_requests.filter(accepted=False, admin_state='treated').count()
+            direct_exchanges.filter(admin_state='rejected').count() +
+            marketplace_exchanges.filter(admin_state='rejected').count() +
+            urgent_requests.filter(admin_state='rejected').count()
         )
 
         pending_count = (
