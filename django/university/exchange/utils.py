@@ -1,6 +1,6 @@
 from university.controllers.SigarraController import SigarraController
 from university.models import CourseUnit, Professor
-from exchange.models import MarketplaceExchange, MarketplaceExchangeClass
+from exchange.models import MarketplaceExchangeClass
 from enum import Enum
 import requests
 import os
