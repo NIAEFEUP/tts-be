@@ -49,7 +49,7 @@ class CourseMetadata(models.Model):
     class Meta:
         managed = True
         db_table = 'course_metadata'
-        unique_together = (('course', 'course_unit', 'course_unit_year'), ('course', 'course_unit', 'course_unit_year'),)
+        unique_together = (('course', 'course_unit', 'course_unit_year'),)
 
 class Class(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -127,7 +127,7 @@ class SlotProfessor(models.Model):
     class Meta:
         managed = True
         db_table = 'slot_professor'
-        unique_together = (('slot', 'professor'), ('slot', 'professor'),)
+        unique_together = (('slot', 'professor'),)
 
 
 

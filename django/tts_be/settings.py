@@ -13,8 +13,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import dotenv_values
-from django.core import mail
-
 import logging.config
 import sentry_sdk
 
@@ -65,7 +63,7 @@ CLASS_SCHEDULE_CACHE_TTL = int(CONFIG.get("CLASS_SCHEDULE_CACHE_TTL", 60 * 60 * 
 ALLOWED_HOSTS = ['tts.niaefeup.pt', 'tts-staging.niaefeup.pt']
 
 if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', 'tts-dev.niaefeup.pt', 'http://localhost:3100'])
+    ALLOWED_HOSTS.extend(['localhost', 'tts-dev.niaefeup.pt', 'localhost:3100'])
 
 if not DEBUG:
     LOGGING = {

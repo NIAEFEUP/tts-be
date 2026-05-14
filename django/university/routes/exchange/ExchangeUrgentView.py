@@ -1,7 +1,4 @@
 import json
-import jwt
-import requests
-import datetime
 
 from django.core.paginator import Paginator
 

@@ -10,8 +10,6 @@ from tts_be.settings import CLASS_SCHEDULE_CACHE_TTL
 import hashlib
 
 from django.utils import timezone
-from datetime import datetime
-
 from django.db.models import Prefetch
 
 class ClassController:

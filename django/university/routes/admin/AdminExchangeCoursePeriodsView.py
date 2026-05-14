@@ -1,7 +1,5 @@
 from rest_framework.views import APIView
 from django.http import JsonResponse
-from django.utils import timezone
-from datetime import datetime
 from django.db.models import Min
 
 from university.models import Course

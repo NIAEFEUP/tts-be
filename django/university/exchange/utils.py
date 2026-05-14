@@ -1,7 +1,6 @@
-from datetime import date
 from university.controllers.SigarraController import SigarraController
 from university.models import CourseUnit, Professor
-from exchange.models import MarketplaceExchange, MarketplaceExchangeClass, DirectExchange
+from exchange.models import MarketplaceExchange, MarketplaceExchangeClass
 from enum import Enum
 import requests
 import os
@@ -32,16 +31,6 @@ def get_student_data(username, cookies):
     response = requests.get(url, cookies=cookies)
     return response
 
-def get_student_schedule_url(username, semana_ini, semana_fim):
-    return f"https://sigarra.up.pt/feup/pt/hor_geral.estudantes_view?pv_num_unico={username}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
-
-def create_marketplace_exchange_on_db(exchanges, curr_student):
-    marketplace_exchange = MarketplaceExchange.objects.create(issuer=curr_student, accepted=False)
-    for exchange in exchanges:
-        course_unit = course_unit_by_id(exchange["course_unit_id"])
-        MarketplaceExchangeClass.objects.create(marketplace_exchange=marketplace_exchange, course_unit_acronym=course_unit.acronym, course_unit_id=exchange["course_unit_id"], course_unit_name=exchange["course_unit"], old_class=exchange["old_class"], new_class=exchange["new_class"])
-
-
 def build_marketplace_submission_schedule(schedule, submission, auth_student):
     for exchange in submission:
         course_unit = exchange["courseUnitId"]
@@ -60,9 +49,6 @@ def build_marketplace_submission_schedule(schedule, submission, auth_student):
             del schedule[auth_student][(class_auth_student_goes_from, course_unit)]
 
     return (ExchangeStatus.SUCCESS, None)
-
-def get_unit_schedule_url(ocorrencia_id, semana_ini, semana_fim):
-    return f"https://sigarra.up.pt/feup/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
 
 """
     Generates the new schedules the students will have after the exchange
@@ -138,40 +124,14 @@ def exchange_overlap(student_schedules, username) -> bool:
     return False
 
 """
-    Returns name of course unit given its id
-"""
-def course_unit_name(course_unit_id):
-    course_unit = CourseUnit.objects.get(id=course_unit_id)
-    return course_unit.name
-
-"""
-    Returns the course unit given its acronym
+    Returns the course unit given its id
 """
 def course_unit_by_id(id):
     course_units = CourseUnit.objects.filter(id=id)
     return course_units.first()
 
-def curr_semester_weeks():
-    currdate = date.today()
-    year = str(currdate.year)
-    primeiro_semestre = currdate.month >= 9 and currdate.month <= 12
-    if primeiro_semestre:
-        semana_ini = "1001"
-        semana_fim = "1201"
-    else:
-        semana_ini = "0101"
-        semana_fim = "0601"
-    return (year+semana_ini, year+semana_fim)
-
 def incorrect_class_error() -> str:
     return "students-with-incorrect-classes"
-
-def append_tts_info_to_sigarra_schedule(schedule):
-    course_unit = CourseUnit.objects.filter(id=schedule['ocorrencia_id'])[0]
-
-    schedule['url'] = course_unit.url
-    # The sigarra api does not return the course with the full name, just the acronym
-    schedule['ucurr_nome'] = course_unit_name(schedule['ocorrencia_id'])
 
 def convert_sigarra_schedule(schedule_data):
     new_schedule_data = []
