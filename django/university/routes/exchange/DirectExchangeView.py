@@ -211,7 +211,10 @@ class DirectExchangeView(View):
         return JsonResponse({"success": True}, safe=False)
 
     def put(self, request, id):
-        exchange = DirectExchange.objects.get(id=id)
+        try:
+            exchange = DirectExchange.objects.get(id=id)
+        except DirectExchange.DoesNotExist:
+            return JsonResponse({"error": "Exchange not found"}, status=404, safe=False)
 
         is_participant = DirectExchangeParticipants.objects.filter(
             direct_exchange=exchange, participant_nmec=request.user.username
