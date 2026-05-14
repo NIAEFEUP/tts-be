@@ -1,16 +1,8 @@
 from django.utils import timezone
 from django.http.response import HttpResponse
 from university.exchange.utils import get_student_data
-from university.models import Faculty
-from university.models import Course
-from university.models import CourseUnit
-from university.models import Professor
-from university.models import SlotProfessor
-from university.models import CourseMetadata
-from university.models import Info
-from university.models import Info
-from university.models import CourseGroup
-from university.models import CourseUnitCourseGroup
+from university.models import Faculty, Course, CourseUnit, Professor,SlotProfessor
+from university.models import CourseMetadata, Info, CourseGroup, CourseUnitCourseGroup
 from university.controllers.ClassController import ClassController
 from university.response.errors import course_unit_not_found_error
 from django.http import JsonResponse
@@ -18,7 +10,6 @@ from rest_framework.decorators import api_view
 import requests
 from rest_framework import status
 
-from django.utils import timezone
 from django.forms.models import model_to_dict
 
 from tts_be.settings import CONFIG, FEDERATED_AUTH
@@ -27,8 +18,6 @@ from university.controllers.SigarraController import SigarraController
 
 from django.contrib.auth import get_user_model, login
 
-def get_field(value):
-    return value.field
 
 if not FEDERATED_AUTH:
     @api_view(['POST'])

@@ -1,7 +1,6 @@
 import base64
 import json
 
-from django.core.paginator import Paginator
 from university.controllers.ClassController import ClassController
 from university.controllers.SigarraController import SigarraController
 from university.exchange.utils import ExchangeStatus, check_class_mandatory, check_class_schedule_overlap, course_unit_by_id

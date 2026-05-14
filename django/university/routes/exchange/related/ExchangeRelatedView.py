@@ -12,11 +12,7 @@ from django.db.models import Prefetch
 
 
 
-from django.http import HttpResponse 
 from django.views import View
-
-from university.controllers.AdminExchangeStateChangeController import AdminExchangeStateChangeController
-from university.models import Class
 
 from exchange.models import MarketplaceExchange
 

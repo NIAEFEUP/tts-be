@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from django.http import JsonResponse
+import logging
 
 from university.models import CourseUnit
 from exchange.models import ExchangeAdminCourseUnits, ExchangeExpirations
@@ -37,7 +38,7 @@ class AdminExchangeCourseUnitPeriodsView(APIView):
                         "endDate": end_date
                     })
                 except (ValueError, AttributeError) as e:
-                    print(f"Malformed datetime found: {expiration}, error: {e}")
+                    logging.error("Malformed datetime found: %s, error: %s", expiration, e)
                     continue
 
             response_data.append({

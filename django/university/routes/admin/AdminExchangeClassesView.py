@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from django.http import JsonResponse
 
-from university.models import Class, CourseUnit, Course
+from university.models import CourseUnit, Course
 
 from university.controllers.ClassController import ClassController
 

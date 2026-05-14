@@ -1,18 +1,9 @@
 from django.http import JsonResponse
 from django.views import View
-from django.utils import timezone
-from django.http.response import HttpResponse
-from django.shortcuts import redirect
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
-import requests
 
 from tts_be.settings import DEBUG
 
 from university.controllers.ExchangeController import ExchangeController
-from university.controllers.SigarraController import SigarraController
-
-from exchange.models import ExchangeExpirations, ExchangeAdmin
 
 class InfoView(View):
     def get(self, request):

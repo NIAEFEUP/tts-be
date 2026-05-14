@@ -1,6 +1,6 @@
-import json
 import jwt
 import time
+import logging
 
 from django.core.cache import cache
 
@@ -23,6 +23,12 @@ class ExchangeVerifyView(View):
             exchange_info = jwt.decode(token, JWT_KEY, algorithms=["HS256"], options={"verify_exp": False})
 
             direct_exchange = DirectExchange.objects.get(id=exchange_info["exchange_id"])
+
+            is_participant = DirectExchangeParticipants.objects.filter(
+                direct_exchange=direct_exchange, participant_nmec=request.user.username
+            ).exists()
+            if not is_participant:
+                return JsonResponse({"verified": False}, status=403, safe=False)
 
             if not ExchangeValidationController().validate_direct_exchange(exchange_info["exchange_id"]).status:
                 ExchangeValidationController().cancel_exchange(direct_exchange)
@@ -102,5 +108,5 @@ class ExchangeVerifyView(View):
                 return JsonResponse({"verified": False, "expired" : True}, safe=False)
 
         except Exception as e:
-            print("Error: ", e)
+            logging.error("Exchange verify error: %s", e)
             return HttpResponse(status=500)

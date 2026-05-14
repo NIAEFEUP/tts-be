@@ -2,7 +2,7 @@ import json
 
 from django.utils import timezone
 
-from tts_be.settings import CONFIG, DEBUG
+from tts_be.settings import DEBUG
 
 from django.db.models import Q
 

@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 
 from university.models import Course
 

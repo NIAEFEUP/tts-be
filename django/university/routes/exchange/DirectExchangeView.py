@@ -3,6 +3,7 @@ import base64
 import jwt
 import datetime
 import os
+import logging
 
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -26,7 +27,7 @@ from university.controllers.StudentScheduleController import StudentScheduleCont
 from university.exchange.utils import ExchangeStatus, build_new_schedules, build_student_schedule_dict, build_student_schedule_dicts, incorrect_class_error
 from university.utils.ExchangeHasher import ExchangeHasher
 
-from exchange.models import DirectExchange, DirectExchangeParticipants, DirectExchangeParticipants, ExchangeAdmin, MarketplaceExchange, MarketplaceExchangeClass
+from exchange.models import DirectExchange, DirectExchangeParticipants, ExchangeAdmin, MarketplaceExchange, MarketplaceExchangeClass
 
 class DirectExchangeView(View):
     def __init__(self):
@@ -206,17 +207,26 @@ class DirectExchangeView(View):
                     [f'up{participant_num}@up.pt']
                 )
             except Exception as e:
-                print("Error: ", e)
+                logging.error("Direct exchange email error: %s", e)
 
         return JsonResponse({"success": True}, safe=False)
 
     def put(self, request, id):
+        try:
+            exchange = DirectExchange.objects.get(id=id)
+        except DirectExchange.DoesNotExist:
+            return JsonResponse({"error": "Exchange not found"}, status=404, safe=False)
+
+        is_participant = DirectExchangeParticipants.objects.filter(
+            direct_exchange=exchange, participant_nmec=request.user.username
+        ).exists()
+        if not is_participant:
+            return JsonResponse({"error": "Sem permissões suficientes"}, status=403, safe=False)
+
         # Validate if exchange is still valid
         if not ExchangeValidationController().validate_direct_exchange(id).status:
-            ExchangeValidationController().cancel_exchange(DirectExchange.objects.get(id=id))
+            ExchangeValidationController().cancel_exchange(exchange)
             return JsonResponse({"error": ExchangeValidationController().validate_direct_exchange(id).message}, status=400, safe=False)
-
-        exchange = DirectExchange.objects.get(id=id)
 
         try:
             with transaction.atomic():

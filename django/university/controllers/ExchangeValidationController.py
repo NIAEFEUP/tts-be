@@ -11,7 +11,7 @@ from university.exchange.utils import build_student_schedule_dict, ExchangeStatu
 from exchange.models import DirectExchangeParticipants, DirectExchange
 
 from django.db import transaction
-from django.utils import timezone  # Parece faltar esta importação
+from django.utils import timezone
 
 @dataclass
 class ExchangeValidationMetadata:

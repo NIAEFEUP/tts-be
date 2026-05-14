@@ -2,6 +2,7 @@ import base64
 import jwt
 import datetime
 import os
+import logging
 
 from django.http import JsonResponse
 from django.views import View
@@ -42,7 +43,7 @@ class RevalidateExchangeView(View):
                 [f'up{username}@up.pt']
             )
         except Exception as e:
-            print("Error: ", e)
+            logging.error("Revalidate exchange email error: %s", e)
         
         return JsonResponse({"success": True}, safe=False)
         
