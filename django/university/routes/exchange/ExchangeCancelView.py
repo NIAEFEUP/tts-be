@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import JsonResponse
 from django.views import View
 
 from university.controllers.ExchangeValidationController import ExchangeValidationController
@@ -14,21 +14,23 @@ class ExchangeCancelView(View):
             try:
                 exchange = DirectExchange.objects.get(id=id)
             except DirectExchange.DoesNotExist:
-                return HttpResponse(status=404)
+                return JsonResponse({"error": "Exchange not found"}, status=404, safe=False)
             is_participant = DirectExchangeParticipants.objects.filter(
                 direct_exchange=exchange, participant_nmec=username
             ).exists()
             if not is_admin and not is_participant:
-                return HttpResponse(status=403)
+                return JsonResponse({"error": "Sem permissões suficientes"}, status=403, safe=False)
             ExchangeValidationController().cancel_exchange(exchange)
+            return JsonResponse({"success": True}, safe=False)
 
         elif request_type == "marketplace":
             try:
                 exchange = MarketplaceExchange.objects.get(id=id)
             except MarketplaceExchange.DoesNotExist:
-                return HttpResponse(status=404)
+                return JsonResponse({"error": "Exchange not found"}, status=404, safe=False)
             if not is_admin and exchange.issuer_nmec != username:
-                return HttpResponse(status=403)
+                return JsonResponse({"error": "Sem permissões suficientes"}, status=403, safe=False)
             ExchangeValidationController().cancel_exchange(exchange)
+            return JsonResponse({"success": True}, safe=False)
 
-        return HttpResponse(status=200)
+        return JsonResponse({"error": "Invalid request type"}, status=400, safe=False)
