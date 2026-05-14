@@ -1,4 +1,5 @@
 import json
+import logging
 
 import requests
 
@@ -108,7 +109,7 @@ class SigarraController:
 
             self.cookies = response.cookies
         except requests.exceptions.RequestException as e:
-            print("Error: ", e)
+            logging.error("Sigarra login error: %s", e)
 
     def get_student_schedule(self, nmec: int) -> SigarraResponse:
         (semana_ini, semana_fim) = self.semester_weeks()

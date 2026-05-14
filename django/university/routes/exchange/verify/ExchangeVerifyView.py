@@ -1,5 +1,6 @@
 import jwt
 import time
+import logging
 
 from django.core.cache import cache
 
@@ -107,5 +108,5 @@ class ExchangeVerifyView(View):
                 return JsonResponse({"verified": False, "expired" : True}, safe=False)
 
         except Exception as e:
-            print("Error: ", e)
+            logging.error("Exchange verify error: %s", e)
             return HttpResponse(status=500)

@@ -45,9 +45,6 @@ SECRET_KEY = CONFIG['SECRET_KEY']
 
 JWT_KEY= CONFIG['JWT_KEY']
 
-DEBUG = os.getenv('DEBUG')
-DEBUG = int(DEBUG) != 0 if DEBUG else False
-
 FEDERATED_AUTH = int(os.getenv('FEDERATED_AUTH'))
 
 DOMAIN = os.getenv('DOMAIN')
@@ -129,7 +126,6 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
