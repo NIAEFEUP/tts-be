@@ -194,7 +194,7 @@ class ClassController:
         }
 
     @staticmethod
-    def get_classes(course_unit_id: int, fetch_professors: bool = True, new_schedule_api: bool = False):
+    def get_classes(course_unit_id: int, fetch_professors: bool = True, new_schedule_api: bool = True):
         course_unit = CourseUnit.objects.get(id=course_unit_id)
 
         if not cache.get(f"schedule-{course_unit_id}"):

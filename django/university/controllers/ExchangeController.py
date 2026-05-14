@@ -98,7 +98,7 @@ class ExchangeController:
 
     @staticmethod
     def getExchangeOptionClasses(options):
-        classes = sum(list(map(lambda option: ClassController.get_classes(option.course_unit_id), options)), [])
+        classes = sum(list(map(lambda option: ClassController.get_classes(option.course_unit_id, new_schedule_api=True), options)), [])
         return filter(lambda currentClass: any(currentClass["name"] == option.class_issuer_goes_from for option in options), classes)
 
     @staticmethod
