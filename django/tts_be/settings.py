@@ -280,3 +280,6 @@ CORS_ALLOW_HEADERS = [
 ]
 
 VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS = int(os.getenv("VERIFY_EXCHANGE_TOKEN_EXPIRATION_SECONDS", 3600 * 24))
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = ['http://localhost:3100', 'https://tts-dev.niaefeup.pt']
