@@ -1,5 +1,3 @@
-from tts_be.settings import DEBUG
-
 import base64
 import json
 
@@ -58,14 +56,22 @@ class DirectExchangePendingMotive(Enum):
 
 class ExchangeController:
     @staticmethod
+    def is_exchange_period_open_for_course_unit(course_unit_id: int) -> bool:
+        now = timezone.now()
+        return ExchangeExpirations.objects.filter(
+            course_unit_id=course_unit_id,
+            is_course_expiration=False,
+            active_date__lte=now,
+            end_date__gte=now,
+        ).exists()
+    
+    @staticmethod
     def eligible_course_units(nmec):
         course_units = UserCourseUnits.objects.filter(user_nmec=nmec).values_list("course_unit_id", flat=True)
 
-        if DEBUG:
-            return list(course_units)
-
         exchange_expirations = ExchangeExpirations.objects.filter(
             course_unit_id__in=course_units,
+            is_course_expiration=False,
             active_date__lte=timezone.now(),
             end_date__gte=timezone.now(),
         ).values_list("course_unit_id", flat=True)
@@ -92,7 +98,7 @@ class ExchangeController:
 
     @staticmethod
     def getExchangeOptionClasses(options):
-        classes = sum(list(map(lambda option: ClassController.get_classes(option.course_unit_id), options)), [])
+        classes = sum(list(map(lambda option: ClassController.get_classes(option.course_unit_id, new_schedule_api=True), options)), [])
         return filter(lambda currentClass: any(currentClass["name"] == option.class_issuer_goes_from for option in options), classes)
 
     @staticmethod

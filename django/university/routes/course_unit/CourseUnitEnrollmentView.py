@@ -4,6 +4,8 @@ from exchange.models import CourseUnitEnrollments, CourseUnitEnrollmentOptions, 
 from university.serializers.CourseUnitEnrollmentsSerializer import CourseUnitEnrollmentsSerializer
 from university.controllers.CourseUnitController import CourseUnitController
 from university.controllers.AdminRequestFiltersController import AdminRequestFiltersController
+from university.controllers.ExchangeController import ExchangeController
+
 
 from django.utils import timezone
 from django.core.paginator import Paginator
@@ -72,7 +74,7 @@ class CourseUnitEnrollmentView(APIView):
             "enrollments": enrollments,
             "total_pages": paginator.num_pages
         }, safe=False)
-
+    
     def post(self, request):
         enrollments = request.POST.getlist("enrollCourses[]")
 
@@ -81,14 +83,16 @@ class CourseUnitEnrollmentView(APIView):
 
         student_course_units = list(UserCourseUnits.objects.filter(user_nmec=request.user.username).all())
 
-        username = request.user.username  
+        user_nmec = request.user.username
+        user_name = f"{request.user.first_name} {request.user.last_name}"
 
-        if len(username) > 9:
-            username = request.user.email[2:11]
+        if len(user_nmec) > 9:
+            user_nmec = request.user.email[2:11]
 
         with transaction.atomic():
             course_unit_enrollment = CourseUnitEnrollments(
-                user_nmec=username,
+                user_nmec=user_nmec,
+                user_name=user_name,
                 accepted=False,
                 admin_state="untreated",
                 date=timezone.now()
@@ -97,6 +101,12 @@ class CourseUnitEnrollmentView(APIView):
             models_to_save = []
             for enrollment in enrollments:
                 enrollment_metadata = json.loads(enrollment)
+                course_unit_id=int(enrollment_metadata["course_unit_id"])
+
+                if not ExchangeController.is_exchange_period_open_for_course_unit(course_unit_id):
+                    return JsonResponse({"error":f"O período de trocas encontra-se encerrado para a UC {course_unit_id}."},
+                    status=400
+                )
 
                 if len(list(CourseUnitEnrollmentOptions.objects.filter(course_unit__id=int(enrollment_metadata["course_unit_id"]), course_unit_enrollment__user_nmec=request.user.username, enrolling=enrollment_metadata["enrolling"]))) > 0:
                     return JsonResponse({"error": "Não podes fazer pedidos com disciplinas em que já pediste noutros!"}, status=400)

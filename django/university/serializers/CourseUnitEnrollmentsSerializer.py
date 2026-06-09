@@ -9,6 +9,7 @@ from university.controllers.SigarraController import SigarraController
 class CourseUnitEnrollmentsSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     user_nmec = serializers.CharField(max_length=32)
+    user_name = serializers.CharField(max_length=256)
     accepted = serializers.BooleanField()
     admin_state = serializers.CharField(max_length=32)
     date = serializers.DateTimeField()
