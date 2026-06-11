@@ -2,9 +2,7 @@ from rest_framework.views import APIView
 from django.http import JsonResponse
 
 
-from exchange.models import DirectExchange
-from exchange.models import MarketplaceExchange
-from exchange.models import ExchangeUrgentRequests
+from exchange.models import DirectExchange, MarketplaceExchange, ExchangeUrgentRequests
 
 class AdminExchangeStatisticsView(APIView):
     def get(self, request):

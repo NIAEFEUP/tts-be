@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from django.db import models
 
 from university.models import Slot, SlotClass
 from university.controllers.ClassController import ClassController

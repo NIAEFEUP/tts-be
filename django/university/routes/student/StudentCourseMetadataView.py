@@ -1,7 +1,7 @@
 from django.http.response import JsonResponse
 from rest_framework.views import APIView
 
-from university.models import Course, CourseUnit
+from university.models import Course
 from university.serializers.StudentCourseMetadataSerializer import StudentCourseMetadataSerializer
 
 from exchange.models import StudentCourseMetadata

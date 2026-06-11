@@ -1,13 +1,10 @@
-import base64
 import json
 from django.core.paginator import Paginator
 from django.db.models import Prefetch
-from django.http.response import HttpResponse, JsonResponse
+from django.http.response import JsonResponse
 from rest_framework.views import APIView
 
-from university.controllers.ClassController import ClassController
 from university.controllers.ExchangeController import ExchangeController, ExchangeType
-from university.controllers.SigarraController import SigarraController
 from university.serializers.MarketplaceExchangeClassSerializer import MarketplaceExchangeClassSerializer
 
 from exchange.models import DirectExchange, DirectExchangeParticipants, ExchangeUrgentRequestOptions, ExchangeUrgentRequests, MarketplaceExchange, MarketplaceExchangeClass
