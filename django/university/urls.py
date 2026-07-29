@@ -52,7 +52,6 @@ urlpatterns = [
     path('course/<int:course_id>/groups', is_authenticated(views.course_groups)),
     path('course_group/<int:course_group_id>/course_units', is_authenticated(views.course_group_course_units)),
     path('course_units/<int:course_id>/<int:year>/<int:semester>/', is_authenticated(views.course_units)),
-    path('professors/<int:schedule>/', is_authenticated(views.professor)),
     path('info/', is_authenticated(views.info)),
     path('auth/info/', InfoView.as_view()),
     path('csrf/', Csrf.as_view()),
