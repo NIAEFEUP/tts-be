@@ -122,7 +122,7 @@ class SigarraController:
             return SigarraResponse(None, response.status_code)
         
 
-        return SigarraResponse(data["horario"], response.status_code)
+        return SigarraResponse(response.json()['horario'], response.status_code)
 
     def get_student_course_units(self, nmec: int) -> SigarraResponse:
         schedule = self.get_student_schedule(nmec)
