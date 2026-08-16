@@ -120,7 +120,6 @@ class SigarraController:
 
         if response.status_code != 200:
             return SigarraResponse(None, response.status_code)
-        
 
         return SigarraResponse(response.json()['horario'], response.status_code)
 
