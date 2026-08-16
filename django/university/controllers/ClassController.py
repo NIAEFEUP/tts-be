@@ -130,7 +130,7 @@ class ClassController:
             slot = Slot(
                 id=entry.get('aula_id'),
                 lesson_type=entry.get('tipo'),
-                day=ScheduleController.from_sigarra_day(entry.get('dia'), 0),
+                day=day,
                 start_time=float(entry.get('hora_inicio', 0)) / 3600.0,
                 duration=float(entry.get('aula_duracao', 0)),
                 location=entry.get('sala_sigla'),
@@ -194,7 +194,7 @@ class ClassController:
         }
 
     @staticmethod
-    def get_classes(course_unit_id: int, fetch_professors: bool = True, new_schedule_api: bool = False):
+    def get_classes(course_unit_id: int, fetch_professors: bool = True, new_schedule_api: bool = True):
         course_unit = CourseUnit.objects.get(id=course_unit_id)
 
         if not cache.get(f"schedule-{course_unit_id}"):

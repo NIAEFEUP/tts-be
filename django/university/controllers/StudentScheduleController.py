@@ -83,7 +83,7 @@ class StudentScheduleController:
 
         schedule = []
         for course_unit in course_units:
-            classes = ClassController.get_classes(course_unit.course_unit.id)
+            classes = ClassController.get_classes(course_unit.course_unit.id, new_schedule_api=True)
             classes = list(filter(lambda class_: class_["id"] in class_ids, classes))
 
             if course_unit.course_unit.id == 548052:
