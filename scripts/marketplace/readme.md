@@ -12,6 +12,8 @@ MOCK_SIGARRA=1
 
 After that, run the `make_mock.py` script, which generates a `mock-data.json` file. If you want to add more users or courses to the mock data, you can modify this script.
 
+**Note:** running `make_mock.py` is optional. When `MOCK_SIGARRA=1`, any URL without a captured entry is fetched live from Sigarra, using the `SIGARRA_USERNAME`/`SIGARRA_PASSWORD` credentials configured in your env file. Use the script only if you want fully offline mock data.
+
 When using mock Sigarra, you only have data for the following users and courses:
 
 ### Students

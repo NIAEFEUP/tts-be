@@ -32,3 +32,6 @@ httpd/shibboleth/*.pem
 # Mock data for testing
 django/mock-data.json
 
+
+# macOS
+.DS_Store

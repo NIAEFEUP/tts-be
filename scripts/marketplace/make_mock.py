@@ -1,11 +1,122 @@
 from __future__ import annotations
 
 import base64
+import http.cookiejar
 import json
+import urllib.error
+import urllib.parse
+import urllib.request
 
+from datetime import date
 from pathlib import Path
 
-import requests
+REPO_ROOT = Path(__file__).resolve().parents[2]
+MOCK_DATA_PATH = REPO_ROOT / "django" / "mock-data.json"
+ENV_DEV_PATH = REPO_ROOT / "django" / ".env.dev"
+
+
+def load_env_config(path: Path) -> dict:
+    config = {}
+    if not path.exists():
+        return config
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, _, value = line.partition("=")
+            config[key.strip()] = value.strip()
+    return config
+
+
+CONFIG = load_env_config(ENV_DEV_PATH)
+
+
+def get_academic_year() -> str:
+    # Mirrors ScheduleController.get_academic_year(), honoring EXCHANGE_YEAR like SigarraController does.
+    exchange_year = CONFIG.get("EXCHANGE_YEAR")
+    if exchange_year:
+        return str(exchange_year)
+    currdate = date.today()
+    return str(currdate.year - 1 if currdate.month < 8 else currdate.year)
+
+
+def is_first_semester() -> bool:
+    semester = CONFIG.get("EXCHANGE_SEMESTER")
+    if semester:
+        return int(semester) == 1
+    currdate = date.today()
+    return currdate.month >= 10 or currdate.month <= 1
+
+
+def get_period() -> str:
+    # Mirrors ScheduleController.get_period(): period N+1 maps to semester N.
+    semester = CONFIG.get("EXCHANGE_SEMESTER")
+    if semester:
+        return f"{int(semester) + 1}"
+    return "2" if is_first_semester() else "3"
+
+
+def semester_weeks() -> tuple[str, str]:
+    # Mirrors SigarraController.semester_weeks().
+    year = get_academic_year()
+    if is_first_semester():
+        return (year + "1001", f"{int(year) + 1}0131")
+    return (year + "0210", year + "0601")
+
+
+SEMANA_INI, SEMANA_FIM = semester_weeks()
+ACADEMIC_YEAR = get_academic_year()
+PERIOD = get_period()
+
+
+class HTTPResponse:
+    def __init__(self, response):
+        self._headers = response.headers
+        self.status_code = getattr(response, "status", None) or response.code
+        body = response.read()
+        charset = response.headers.get_content_charset() or "utf-8"
+        self.content = body
+        self.text = body.decode(charset, errors="replace")
+
+    @property
+    def headers(self):
+        return self._headers
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            snippet = self.text[:300].strip()
+            raise RuntimeError(f"Request failed with status {self.status_code}: {snippet}")
+
+
+class HTTPSession:
+    """Minimal stdlib replacement for requests.Session: form posts + cookie persistence."""
+
+    # Sigarra rejects default Python user-agents with 403.
+    DEFAULT_HEADERS = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+        "Accept": "text/html,application/json;q=0.9,*/*;q=0.8",
+    }
+
+    def __init__(self):
+        cookie_jar = http.cookiejar.CookieJar()
+        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
+
+    def get(self, url):
+        request = urllib.request.Request(url, method="GET", headers=self.DEFAULT_HEADERS)
+        return self._open(request)
+
+    def post(self, url, data=None):
+        body = urllib.parse.urlencode(data or {}).encode("utf-8")
+        headers = {**self.DEFAULT_HEADERS, "Content-Type": "application/x-www-form-urlencoded"}
+        request = urllib.request.Request(url, data=body, method="POST", headers=headers)
+        return self._open(request)
+
+    def _open(self, request):
+        try:
+            response = self.opener.open(request)
+        except urllib.error.HTTPError as error:
+            response = error
+        return HTTPResponse(response)
+
 
 students = [
     "202307365",
@@ -45,19 +156,19 @@ sigarra_requests = {
     },
     "student_schedule": {
         "method": "GET",
-        "url": lambda nmec, semana_ini="20251001", semana_fim="20260131": (
+        "url": lambda nmec, semana_ini=SEMANA_INI, semana_fim=SEMANA_FIM: (
             f"https://sigarra.up.pt/feup/pt/mob_hor_geral.estudante?pv_codigo={nmec}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
         )
     },
     "course_unit_schedule": {
         "method": "GET",
-        "url": lambda ocorrencia_id, semana_ini="20251001", semana_fim="20260131", faculty="feup": (
+        "url": lambda ocorrencia_id, semana_ini=SEMANA_INI, semana_fim=SEMANA_FIM, faculty="feup": (
             f"https://sigarra.up.pt/{faculty}/pt/mob_hor_geral.ucurr?pv_ocorrencia_id={ocorrencia_id}&pv_semana_ini={semana_ini}&pv_semana_fim={semana_fim}"
         )
     },
     "course_unit_schedule_new": {
         "method": "GET",
-        "url": lambda faculty="feup", course_unit_id=None, year="2025", period="2": ( # period 2 means semester 1, it is really weird but it is that way
+        "url": lambda faculty="feup", course_unit_id=None, year=ACADEMIC_YEAR, period=PERIOD: ( # period N+1 means semester N
             f"https://sigarra.up.pt/calendarios-api/api/v1/events/{faculty}/uc/{course_unit_id}/?academic_year={year}&period={period}"
         )
     },
@@ -66,12 +177,6 @@ sigarra_requests = {
         "url": lambda course_unit_id: f"https://sigarra.up.pt/feup/pt/mob_ucurr_geral.uc_inscritos?pv_ocorrencia_id={course_unit_id}"
     }
 }
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
-MOCK_DATA_PATH = REPO_ROOT / "django" / "mock-data.json"
-
-
-
 
 def load_mock_store() -> dict:
     if MOCK_DATA_PATH.exists():
@@ -85,7 +190,7 @@ def data_uri(content_type: str, payload: bytes) -> str:
     return f"data:{content_type};base64,{encoded}"
 
 
-def serialize_response(method: str, url: str, response: requests.Response, store: dict, cookie_snapshot: dict | None = None) -> None:
+def serialize_response(method: str, url: str, response: HTTPResponse, store: dict) -> None:
     bucket = store.setdefault(method.lower(), {})
     entry: dict = {"status_code": response.status_code}
 
@@ -101,18 +206,18 @@ def serialize_response(method: str, url: str, response: requests.Response, store
     bucket[url] = entry
 
 
-def ensure_session() -> tuple[requests.Session, requests.Response]:
+def ensure_session() -> tuple[HTTPSession, HTTPResponse]:
     username = input("SIGARRA username: ")
     password = input("SIGARRA password: ")
 
-    session = requests.Session()
+    session = HTTPSession()
     login_url = sigarra_requests["login"]["url"]
     response = session.post(login_url, data={"p_user": username, "p_pass": password})
     response.raise_for_status()
     return session, response
 
 
-def fetch_all(session: requests.Session, store: dict, login_response: requests.Response) -> None:
+def fetch_all(session: HTTPSession, store: dict, login_response: HTTPResponse) -> None:
     serialize_response(
         "POST",
         sigarra_requests["login"]["url"],
