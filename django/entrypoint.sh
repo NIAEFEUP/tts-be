@@ -26,7 +26,7 @@ fi
 python manage.py makemigrations # default django migrations
 python manage.py makemigrations university
 python manage.py makemigrations exchange
-python manage.py migrate university --fake-initial
+python manage.py migrate university --fake
 python manage.py migrate exchange
 python manage.py migrate admin
 python manage.py migrate auth
