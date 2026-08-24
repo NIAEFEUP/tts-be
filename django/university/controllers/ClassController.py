@@ -88,7 +88,10 @@ class ClassController:
                 )
                 SlotClass.objects.update_or_create(slot=slot, class_field=new_class)
 
-            for person in entry.get('persons', []):
+            # SlotProfessor.slot is the primary key, so the schema supports
+            # exactly one professor per slot. Real payloads can contain
+            # co-teachers; keep the primary (first) one like the old parser.
+            for person in entry.get('persons', [])[:1]:
                 sigarra_id = person.get('sigarra_id')
                 person_id = person.get('id')
                 professor, _ = Professor.objects.update_or_create(
@@ -199,14 +202,17 @@ class ClassController:
 
         if not cache.get(f"schedule-{course_unit_id}"):
             with transaction.atomic():
-                schedule = SigarraController().get_course_schedule(course_unit_id, new_schedule_api=new_schedule_api, faculty=course_unit.course.faculty.acronym).data
-                
-                if new_schedule_api:
-                    ClassController.parse_classes_from_response_new_api(schedule)
-                else:
-                    ClassController.parse_classes_from_response_old_api(schedule)
+                schedule_response = SigarraController().get_course_schedule(course_unit_id, new_schedule_api=new_schedule_api, faculty=course_unit.course.faculty.acronym)
 
-                cache.set(f"schedule-{course_unit_id}", True, CLASS_SCHEDULE_CACHE_TTL)
+                if schedule_response.status_code == 200 and schedule_response.data is not None:
+                    if new_schedule_api:
+                        ClassController.parse_classes_from_response_new_api(schedule_response.data)
+                    else:
+                        ClassController.parse_classes_from_response_old_api(schedule_response.data)
+
+                    # Only mark as fetched on success so failed lookups are retried
+                    # instead of serving empty data until the TTL expires.
+                    cache.set(f"schedule-{course_unit_id}", True, CLASS_SCHEDULE_CACHE_TTL)
         
         classes = Class.objects.filter(
             course_unit=course_unit_id

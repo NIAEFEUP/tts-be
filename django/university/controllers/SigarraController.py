@@ -8,6 +8,12 @@ from university.utils import sigarra_mock
 from datetime import date
 from tts_be.settings import CONFIG
 
+# Sigarra's WAF rejects requests with default Python user-agents (403).
+BROWSER_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+    "Accept": "application/json,text/html;q=0.9,*/*;q=0.8",
+}
+
 class SigarraResponse:
     def __init__(self, data, status_code):
         self.data = data
@@ -23,19 +29,40 @@ class SigarraController:
         self.password = CONFIG["SIGARRA_PASSWORD"]
         self.cookies = None
         self.mock = int(CONFIG.get("MOCK_SIGARRA", "0"))
+        self._login_attempted = False
 
         if login and not self.mock:
             self.login()
 
     def make_get_request(self, url):
         if self.mock:
-            return sigarra_mock.get(url)
-        return requests.get(url, cookies=self.cookies)
-        
+            response = sigarra_mock.get(url)
+
+            # Captured entries are served as-is; anything else falls back to the
+            # live Sigarra so dev environments get real data like staging does.
+            if getattr(response, "status_code", 0) == 200:
+                return response
+
+            print(f"[sigarra] No captured mock entry; fetching live: {url}")
+
+        if not self._login_attempted:
+            self.login()
+
+        return requests.get(url, cookies=self.cookies, headers=BROWSER_HEADERS)
+
     def make_post_request(self, url, data = None):
         if self.mock:
-            return sigarra_mock.post(url, data)
-        return requests.post(url, data)
+            response = sigarra_mock.post(url, data)
+
+            if getattr(response, "status_code", 0) == 200:
+                return response
+
+            print(f"[sigarra] No captured mock entry; posting live: {url}")
+
+        if not self._login_attempted:
+            self.login()
+
+        return requests.post(url, data=data, headers=BROWSER_HEADERS)
 
     def get_student_photo_url(self, nmec) -> str:
         return f"https://sigarra.up.pt/feup/pt/fotografias_service.foto?pct_cod={nmec}"
@@ -100,11 +127,14 @@ class SigarraController:
         }, courses))
 
     def login(self):
+        if self._login_attempted:
+            return
+        self._login_attempted = True
         try:
-            response = self.make_post_request("https://sigarra.up.pt/feup/pt/vld_validacao.validacao", data={
+            response = requests.post("https://sigarra.up.pt/feup/pt/vld_validacao.validacao", data={
                 "p_user": self.username,
                 "p_pass": self.password
-            })
+            }, headers=BROWSER_HEADERS)
 
             self.cookies = response.cookies
         except requests.exceptions.RequestException as e:
@@ -148,6 +178,10 @@ class SigarraController:
         (semana_ini, semana_fim) = self.semester_weeks()
         schedule_controller = ScheduleController()
 
+        # Honor EXCHANGE_YEAR (like semester_weeks does) so dev/staging can pin
+        # the academic year whose timetables are actually published in Sigarra.
+        academic_year = CONFIG.get("EXCHANGE_YEAR", "") or schedule_controller.get_academic_year()
+
         response = self.make_get_request(self.course_unit_schedule_url(
             course_unit_id,
             semana_ini,
@@ -156,7 +190,7 @@ class SigarraController:
         ) if not new_schedule_api else ScheduleController().calendarios_api(
             faculty,
             course_unit_id,
-            schedule_controller.get_academic_year(),
+            academic_year,
             schedule_controller.get_period()
         ))
 

@@ -48,13 +48,24 @@ def _load_mock() -> dict:
     except (json.JSONDecodeError, FileNotFoundError):
         return {"get": {}, "post": {}}
 
+def _strip_query(url: str) -> str:
+    parsed = urlparse(url)
+    return urlunparse(parsed._replace(query=""))
+
+
 def _get_mock_entry(store: dict, url: str) -> dict | None:
     entry = store.get(url)
-    if entry is None:
-        parsed = urlparse(url)
-        no_query = urlunparse(parsed._replace(query=""))
-        entry = store.get(no_query)
-    return entry
+    if entry is not None:
+        return entry
+
+    # Fall back to matching by path only, so that changes in query params
+    # (e.g. academic_year, week ranges) do not break lookups.
+    url_no_query = _strip_query(url)
+    for key, value in store.items():
+        if _strip_query(key) == url_no_query:
+            return value
+    return None
+
 
 def get(url: str):
     """Handles mocked GET requests."""
@@ -62,6 +73,7 @@ def get(url: str):
     entry = _get_mock_entry(store, url)
 
     if entry is None:
+        print(f"[sigarra-mock] No mock entry for GET {url}")
         return MockResponse(404, None)
 
     return MockResponse(entry.get("status_code", 200), entry.get("data"))
@@ -72,6 +84,7 @@ def post(url: str, data=None):
     entry = _get_mock_entry(store, url)
 
     if entry is None:
+        print(f"[sigarra-mock] No mock entry for POST {url}")
         return MockPostResponse(404, {})
 
     return MockPostResponse(entry.get("status_code", 200), entry.get("cookies", {}))
