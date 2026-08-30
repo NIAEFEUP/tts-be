@@ -110,6 +110,18 @@ class DirectExchangeView(View):
         exchange_choices = request.POST.getlist('exchangeChoices[]')
         exchanges = list(map(lambda exchange : json.loads(exchange), exchange_choices))
 
+        if len(exchanges) == 0:
+            return JsonResponse({"error": "Pedido vazio"}, status=400, safe=False)
+
+        for exchange in exchanges:
+            course_unit_id = int(exchange["courseUnitId"])
+            if not ExchangeController.is_exchange_period_open_for_course_unit(course_unit_id):
+                return JsonResponse(
+                    {"error": f"O período de trocas encontra-se encerrado para a UC {course_unit_id}."},
+                    status=400,
+                    safe=False
+                )
+
         marketplace_id = exchanges[0].get("marketplace_id", None)
 
         # Add the other students schedule to the dictionary
@@ -124,11 +136,20 @@ class DirectExchangeView(View):
 
         # Restricts repeated exchange requests
         exchange_hash = ExchangeHasher.hash(exchanges, username)
-
-        if DirectExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
-            return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+        # Allow exchange overwrite with replace=true
+        replace = request.POST.get('replace', 'false') == 'true'
 
         with transaction.atomic():
+            if replace:
+                # Cancel previous exchanges with same hash
+                previous_exchanges = DirectExchange.objects.filter(hash=exchange_hash, canceled=False)
+                for previous_exchange in previous_exchanges:
+                    ExchangeValidationController().cancel_exchange(previous_exchange)
+
+            elif DirectExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
+                # Replace not set to true and a non-canceled exchange with the same hash already exists => return error
+                return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
+
             exchange_model = DirectExchange(
                 accepted=False,
                 issuer_name=f"{request.user.first_name} {request.user.last_name}",

@@ -1,5 +1,6 @@
 from django.urls import path, include
 
+from university.routes.docs.DocsView import SwaggerUIView, OpenAPISchemaView
 from university.routes.course_unit.CourseUnitEnrollmentView import CourseUnitEnrollmentView
 from university.routes.exchange.AdminMarketplaceView import AdminMarketplaceView
 from university.routes.MarketplaceExchangeView import MarketplaceExchangeView
@@ -45,13 +46,12 @@ from mozilla_django_oidc import views as oidc_views
 
 # URLConf
 urlpatterns = [
-    path('faculty/', views.faculty),
-    path('course/<int:year>', views.course),
-    path('course/<int:course_id>/groups', views.course_groups),
-    path('course_group/<int:course_group_id>/course_units', views.course_group_course_units),
+    path('faculty/', is_authenticated(views.faculty)),
+    path('course/<int:year>', is_authenticated(views.course)),
+    path('course/<int:course_id>/groups', is_authenticated(views.course_groups)),
+    path('course_group/<int:course_group_id>/course_units', is_authenticated(views.course_group_course_units)),
     path('course_units/<int:course_id>/<int:year>/<int:semester>/', is_authenticated(views.course_units)),
-    path('professors/<int:schedule>/', is_authenticated(views.professor)),
-    path('info/', views.info),
+    path('info/', is_authenticated(views.info)),
     path('auth/info/', InfoView.as_view()),
     path('csrf/', Csrf.as_view()),
     path('admin/courses/', exchange_admin_required(AdminExchangeCoursesView.as_view())),
@@ -76,6 +76,7 @@ urlpatterns = [
     path('course_unit/<int:course_unit_id>/exchange/metadata', is_authenticated(ExchangeCardMetadataView.as_view())),
     path('course_unit/<int:course_unit_id>/', is_authenticated(views.course_unit_by_id)),
     path('class/<int:course_unit_id>/', is_authenticated(views.classes)),
+    path('professors/<int:slot>/', is_authenticated(views.professor)),
     path('course_unit/hash', is_authenticated(views.get_course_unit_hashes)),
     path('course_unit/enrollment/', is_authenticated(CourseUnitEnrollmentView.as_view())),
 
@@ -95,6 +96,8 @@ urlpatterns = [
     path('exchange/admin/request/<str:request_type>/<int:id>/accept/', exchange_admin_required(AdminExchangeRequestAcceptView.as_view())),
     path('exchange/admin/request/<str:request_type>/<int:id>/awaiting-information/', exchange_admin_required(AdminRequestAwaitingInformationView.as_view())),
     path('api/oidc-auth/callback/', oidc_views.OIDCAuthenticationCallbackView.as_view(), name="api_oidc_authentication_callback"),
+    path('docs/', SwaggerUIView.as_view(), name="swagger-ui"),
+    path('schema/', OpenAPISchemaView.as_view(), name="openapi-schema"),
 ]
 
 if FEDERATED_AUTH == 0:
