@@ -4,14 +4,14 @@
 
 # Configure the shell behaviour.
 set -e
-if [[ "${DEBUG}" == 1 ]]; then
+if [ "${DEBUG}" = "1" ]; then
   set -x
 fi
 
 # Get parameters.
 cmd="$@"
 
-if [[ "${DEBUG}" == 0 ]]; then
+if [ "${DEBUG}" = "0" ]; then
   # Wait for PostgreSQL to be ready
   until PGPASSWORD="${POSTGRES_PASSWORD}" psql -h "${POSTGRES_HOST}" -U "${POSTGRES_USER}" "${POSTGRES_DB}" -c 'select 1'; do
     >&2 echo "PostgreSQL is unavailable - sleeping"
