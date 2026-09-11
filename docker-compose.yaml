@@ -9,7 +9,7 @@ services:
       - ./nginx/certs/:/etc/nginx/certs/
 
   django:
-    build: 
+    build:
       context: ./django
       target: dev
     container_name: tts_django
@@ -20,7 +20,7 @@ services:
       - ./django/:/usr/src/django/
     ports:
       - 8100:8000
-      
+
 
   fetcher:
     build: ./fetcher
@@ -44,3 +44,4 @@ services:
 networks:
   default:
     name: tts-docker-network
+    external: true
