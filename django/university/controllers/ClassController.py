@@ -18,12 +18,12 @@ class ClassController:
     @staticmethod
     def delete_cached_classes(course_unit_id: int):
         classes = Class.objects.filter(course_unit_id=course_unit_id)
-
+        
         slot_ids = SlotClass.objects.filter(class_field__in=classes).values_list('slot_id', flat=True)
         slots = Slot.objects.filter(id__in=slot_ids)
 
         professor_ids = SlotProfessor.objects.filter(slot__in=slots).values_list('professor_id', flat=True)
-
+        
         SlotClass.objects.filter(class_field__in=classes).delete()
         SlotProfessor.objects.filter(slot__in=slots).delete()
 
@@ -47,7 +47,7 @@ class ClassController:
 
             raw_day = entry.get('week_days', [None])[0]
             day = schedule_controller.day_from_sigarra_week_day(raw_day)
-
+            
             if day is None or day < 0:
                 continue
 
@@ -61,7 +61,7 @@ class ClassController:
 
             ucs = entry.get('ucs', [])
             primary_uc_sigarra_id = ucs[0].get('sigarra_id') if ucs else None
-
+            
             typology = entry.get('typology', {})
             lesson_type = typology.get('acronym')
 
@@ -70,7 +70,7 @@ class ClassController:
                 lesson_type=lesson_type,
                 day=day,
                 start_time=start_time_decimal,
-                duration=duration,
+                duration=duration,  
                 location=entry.get('rooms', [{}])[0].get('acronym'),
                 is_composed=len(entry.get('classes', [])) > 1,
                 last_updated=timezone.now()
@@ -106,12 +106,9 @@ class ClassController:
                 if professor == None:
                     continue
 
-                SlotProfessor.objects.update_or_create(
-                    slot=slot,
-                    defaults={'professor': professor}
-                )
+                SlotProfessor.objects.update_or_create(slot=slot, professor=professor)
 
-            processed_slot_ids.add(lesson_id)
+            processed_slot_ids.add(lesson_id) 
 
     @staticmethod
     def parse_classes_from_response_old_api(response_data: list):
@@ -170,10 +167,11 @@ class ClassController:
                     }
                 )
 
-                SlotProfessor.objects.update_or_create(
+                slot_professor = SlotProfessor(
                     slot=slot,
-                    defaults={'professor': professor}
-                )
+                    professor=professor
+                ) 
+                slot_professor.save()
 
     @staticmethod
     def get_professors(slot):
@@ -203,26 +201,19 @@ class ClassController:
         course_unit = CourseUnit.objects.get(id=course_unit_id)
 
         if not cache.get(f"schedule-{course_unit_id}"):
-            # 1. Fetch data OUTSIDE the transaction to prevent SQLite locks
-            schedule_response = SigarraController().get_course_schedule(
-                course_unit_id,
-                new_schedule_api=new_schedule_api,
-                faculty=course_unit.course.faculty.acronym
-            )
+            with transaction.atomic():
+                schedule_response = SigarraController().get_course_schedule(course_unit_id, new_schedule_api=new_schedule_api, faculty=course_unit.course.faculty.acronym)
 
-            if schedule_response.status_code == 200 and schedule_response.data is not None:
-                # 2. Open transaction ONLY for database writes
-                with transaction.atomic():
+                if schedule_response.status_code == 200 and schedule_response.data is not None:
                     if new_schedule_api:
                         ClassController.parse_classes_from_response_new_api(schedule_response.data)
                     else:
                         ClassController.parse_classes_from_response_old_api(schedule_response.data)
 
-                # Mark as fetched on success
-                cache.set(f"schedule-{course_unit_id}", True, CLASS_SCHEDULE_CACHE_TTL)
-
-            # --- CRITICAL INDENTATION BOUNDARY ---
-            # This MUST align with the "if not cache.get..." block above.
+                    # Only mark as fetched on success so failed lookups are retried
+                    # instead of serving empty data until the TTL expires.
+                    cache.set(f"schedule-{course_unit_id}", True, CLASS_SCHEDULE_CACHE_TTL)
+        
         classes = Class.objects.filter(
             course_unit=course_unit_id
         ).select_related(
@@ -238,7 +229,7 @@ class ClassController:
 
             if fetch_professors:
                 slot_list = [ClassController.get_professors(sc.slot) for sc in class_obj.slotclass_set.all()]
-            else:
+            else: 
                 slot_list = [
                     {
                         'id': sc.slot.id,
@@ -260,3 +251,4 @@ class ClassController:
             })
 
         return result
+
