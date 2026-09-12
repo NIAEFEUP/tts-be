@@ -86,13 +86,13 @@ if not DEBUG:
         },
     },
     }
-
+    
     logging.config.dictConfig(LOGGING)
 
 
 # Application definition
 
-INSTALLED_APPS = [
+INSTALLED_APPS = [ 
     'corsheaders',
     'anymail',
     # 'daphne',
@@ -101,7 +101,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions', # legacy
     'django.contrib.messages',
-    'rest_framework',
+    'rest_framework', 
     'django.contrib.staticfiles',
     'mozilla_django_oidc',
     'university',
@@ -199,14 +199,11 @@ OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 3600 * 60
 
 if DEBUG:
     DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': os.path.join(os.path.dirname(__file__), 'database.db'),
-                'OPTIONS': {
-                    'timeout': 20,  # Tells SQLite to wait up to 20s for locks to clear
-                }
-            }
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(os.path.dirname(__file__), 'database.db'),
         }
+    }
 else :
     DATABASES = {
         'default': {
