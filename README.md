@@ -60,3 +60,11 @@ http://localhost:8000/api/docs/
 The raw schema file is at `docs/openapi.yaml` and is served at `/api/schema/`.
 
 > **Convention:** whenever a view is changed or a new endpoint is added, the spec must be updated in the same PR.
+
+# License
+
+Copyright &copy; 2026 NIAEFEUP
+
+This project is open-source software licensed under the **GNU Affero General Public License v3.0** (AGPLv3). 
+
+See the [LICENSE](./LICENSE) file for the full license text.
