@@ -105,14 +105,10 @@ class ClassController:
                 )
                 SlotClass.objects.update_or_create(slot=slot, class_field=new_class)
 
-            # SlotProfessor.slot is the primary key, so the schema supports
-            # exactly one professor per slot. Real payloads can contain
-            # co-teachers; keep the primary (first) one like the old parser.
-            for person in entry.get('persons', [])[:1]:
+            for person in entry.get('persons', []):
                 sigarra_id = person.get('sigarra_id')
                 person_id = person.get('id')
                 professor, _ = Professor.objects.update_or_create(
-
                     id=sigarra_id if sigarra_id else person_id,
                     defaults={
                         'professor_acronym': person.get('acronym'),
@@ -120,13 +116,10 @@ class ClassController:
                     }
                 )
 
-                if professor == None:
+                if professor is None:
                     continue
 
-                SlotProfessor.objects.update_or_create(
-                    slot=slot,
-                    defaults={'professor': professor}
-                )
+                SlotProfessor.objects.get_or_create(slot=slot, professor=professor)
 
             processed_slot_ids.add(lesson_id)
 
@@ -174,14 +167,13 @@ class ClassController:
                 new_class, created = Class.objects.get_or_create(
                     name=turma.get('turma_sigla'),
                     course_unit_id=course_unit_id,
-
                     defaults={
                         'vacancies': 0,
                         'last_updated': timezone.now()
                     }
                 )
 
-                slot_class, created = SlotClass.objects.get_or_create(
+                SlotClass.objects.get_or_create(
                     slot=slot,
                     class_field=new_class,
                 )
@@ -195,10 +187,7 @@ class ClassController:
                     }
                 )
 
-                SlotProfessor.objects.update_or_create(
-                    slot=slot,
-                    defaults={'professor': professor}
-                )
+                SlotProfessor.objects.get_or_create(slot=slot, professor=professor)
 
             processed_slot_ids.add(slot.id)
 
@@ -228,35 +217,47 @@ class ClassController:
         }
 
     @staticmethod
+    def _fetch_and_sync_schedule(course_unit: CourseUnit, new_schedule_api: bool):
+        """Fetches the schedule from Sigarra and syncs it to the DB atomically.
+
+        The HTTP call is made outside the transaction to avoid holding a DB
+        connection open during a slow network request. The write transaction
+        then upserts fresh slots and removes any that Sigarra no longer returns,
+        keeping the DB in sync with the source of truth.
+
+        Returns True on a successful sync, False otherwise.
+        """
+        schedule_response = SigarraController().get_course_schedule(
+            course_unit.id,
+            new_schedule_api=new_schedule_api,
+            faculty=course_unit.course.faculty.acronym
+        )
+
+        if schedule_response.status_code != 200 or schedule_response.data is None:
+            return False
+
+        with transaction.atomic():
+            if new_schedule_api:
+                fresh_slot_ids = ClassController.parse_classes_from_response_new_api(schedule_response.data)
+            else:
+                fresh_slot_ids = ClassController.parse_classes_from_response_old_api(schedule_response.data)
+
+            ClassController.remove_stale_slots(course_unit.id, fresh_slot_ids)
+
+        return True
+
+    @staticmethod
     def get_classes(course_unit_id: int, fetch_professors: bool = True, new_schedule_api: bool = True):
         course_unit = CourseUnit.objects.get(id=course_unit_id)
 
         if not cache.get(f"schedule-{course_unit_id}"):
-            # 1. Fetch data OUTSIDE the transaction to prevent SQLite locks
-            schedule_response = SigarraController().get_course_schedule(
-                course_unit_id,
-                new_schedule_api=new_schedule_api,
-                faculty=course_unit.course.faculty.acronym
-            )
+            synced = ClassController._fetch_and_sync_schedule(course_unit, new_schedule_api)
 
-            if schedule_response.status_code == 200 and schedule_response.data is not None:
-                # 2. Open transaction ONLY for database writes
-                with transaction.atomic():
-                    if new_schedule_api:
-                        fresh_slot_ids = ClassController.parse_classes_from_response_new_api(schedule_response.data)
-                    else:
-                        fresh_slot_ids = ClassController.parse_classes_from_response_old_api(schedule_response.data)
-
-                    # Remove slots that Sigarra no longer returns for this UC,
-                    # keeping the DB in sync with the source of truth.
-                    ClassController.remove_stale_slots(course_unit_id, fresh_slot_ids)
-
-                # Only mark as fetched on success so failed lookups are retried
-                # instead of serving empty data until the TTL expires.
+            # Only mark as fetched on success so failed lookups are retried
+            # instead of serving empty data until the TTL expires.
+            if synced:
                 cache.set(f"schedule-{course_unit_id}", True, CLASS_SCHEDULE_CACHE_TTL)
 
-            # --- CRITICAL INDENTATION BOUNDARY ---
-            # This MUST align with the "if not cache.get...\" block above.
         classes = Class.objects.filter(
             course_unit=course_unit_id
         ).select_related(
