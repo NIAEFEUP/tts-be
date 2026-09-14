@@ -33,12 +33,28 @@ class ClassController:
         Professor.objects.filter(id__in=professor_ids).delete()
 
     @staticmethod
+    def remove_stale_slots(course_unit_id: int, fresh_slot_ids: set):
+        # Sigarra is the source of truth: lessons that no longer appear in its
+        # schedule for this course unit must be dropped, otherwise rescheduled
+        # classes accumulate ghost slots from previous scrapes forever.
+        stale_slot_classes = SlotClass.objects.filter(
+            class_field__course_unit_id=course_unit_id
+        ).exclude(slot_id__in=fresh_slot_ids)
+
+        stale_slot_ids = list(stale_slot_classes.values_list('slot_id', flat=True))
+        stale_slot_classes.delete()
+
+        orphaned_slots = Slot.objects.filter(id__in=stale_slot_ids, slotclass__isnull=True)
+        SlotProfessor.objects.filter(slot__in=orphaned_slots).delete()
+        orphaned_slots.delete()
+
+    @staticmethod
     def parse_classes_from_response_new_api(response_data: list):
         processed_slot_ids = set()
         schedule_controller = ScheduleController()
 
         if response_data is None:
-            return
+            return processed_slot_ids
 
         for entry in response_data:
             lesson_id = entry.get('id')
@@ -108,11 +124,14 @@ class ClassController:
 
                 SlotProfessor.objects.update_or_create(slot=slot, professor=professor)
 
-            processed_slot_ids.add(lesson_id) 
+            processed_slot_ids.add(lesson_id)
+
+        return processed_slot_ids
 
     @staticmethod
     def parse_classes_from_response_old_api(response_data: list):
         fetched_classes = set()
+        processed_slot_ids = set()
         schedule_controller = ScheduleController()
 
         for entry in response_data:
@@ -173,6 +192,10 @@ class ClassController:
                 ) 
                 slot_professor.save()
 
+            processed_slot_ids.add(slot.id)
+
+        return processed_slot_ids
+
     @staticmethod
     def get_professors(slot):
         slot_professors = SlotProfessor.objects.filter(slot_id=slot.id).select_related("professor")
@@ -206,9 +229,11 @@ class ClassController:
 
                 if schedule_response.status_code == 200 and schedule_response.data is not None:
                     if new_schedule_api:
-                        ClassController.parse_classes_from_response_new_api(schedule_response.data)
+                        fresh_slot_ids = ClassController.parse_classes_from_response_new_api(schedule_response.data)
                     else:
-                        ClassController.parse_classes_from_response_old_api(schedule_response.data)
+                        fresh_slot_ids = ClassController.parse_classes_from_response_old_api(schedule_response.data)
+
+                    ClassController.remove_stale_slots(course_unit_id, fresh_slot_ids)
 
                     # Only mark as fetched on success so failed lookups are retried
                     # instead of serving empty data until the TTL expires.
