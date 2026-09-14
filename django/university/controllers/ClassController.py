@@ -18,12 +18,12 @@ class ClassController:
     @staticmethod
     def delete_cached_classes(course_unit_id: int):
         classes = Class.objects.filter(course_unit_id=course_unit_id)
-        
+
         slot_ids = SlotClass.objects.filter(class_field__in=classes).values_list('slot_id', flat=True)
         slots = Slot.objects.filter(id__in=slot_ids)
 
         professor_ids = SlotProfessor.objects.filter(slot__in=slots).values_list('professor_id', flat=True)
-        
+
         SlotClass.objects.filter(class_field__in=classes).delete()
         SlotProfessor.objects.filter(slot__in=slots).delete()
 
@@ -63,7 +63,7 @@ class ClassController:
 
             raw_day = entry.get('week_days', [None])[0]
             day = schedule_controller.day_from_sigarra_week_day(raw_day)
-            
+
             if day is None or day < 0:
                 continue
 
@@ -77,21 +77,22 @@ class ClassController:
 
             ucs = entry.get('ucs', [])
             primary_uc_sigarra_id = ucs[0].get('sigarra_id') if ucs else None
-            
+
             typology = entry.get('typology', {})
             lesson_type = typology.get('acronym')
 
-            slot = Slot(
+            slot, _ = Slot.objects.update_or_create(
                 id=lesson_id,
-                lesson_type=lesson_type,
-                day=day,
-                start_time=start_time_decimal,
-                duration=duration,  
-                location=entry.get('rooms', [{}])[0].get('acronym'),
-                is_composed=len(entry.get('classes', [])) > 1,
-                last_updated=timezone.now()
+                defaults={
+                    'lesson_type': lesson_type,
+                    'day': day,
+                    'start_time': start_time_decimal,
+                    'duration': duration,
+                    'location': entry.get('rooms', [{}])[0].get('acronym'),
+                    'is_composed': len(entry.get('classes', [])) > 1,
+                    'last_updated': timezone.now()
+                }
             )
-            slot.save()
 
             for turma in entry.get('classes', []):
                 new_class, _ = Class.objects.update_or_create(
@@ -122,7 +123,10 @@ class ClassController:
                 if professor == None:
                     continue
 
-                SlotProfessor.objects.update_or_create(slot=slot, professor=professor)
+                SlotProfessor.objects.update_or_create(
+                    slot=slot,
+                    defaults={'professor': professor}
+                )
 
             processed_slot_ids.add(lesson_id)
 
@@ -145,21 +149,26 @@ class ClassController:
             hash = hashlib.sha256(f"{course_unit_id}{day}{start_time}{duration}{lesson_type}".encode('utf-8')).hexdigest()
 
             if hash in fetched_classes:
+                # The slot is a duplicate by content but may have a different
+                # aula_id; still register it so remove_stale_slots doesn't
+                # treat it as stale.
+                processed_slot_ids.add(entry.get('aula_id'))
                 continue
 
             fetched_classes.add(hash)
 
-            slot = Slot(
+            slot, _ = Slot.objects.update_or_create(
                 id=entry.get('aula_id'),
-                lesson_type=entry.get('tipo'),
-                day=day,
-                start_time=float(entry.get('hora_inicio', 0)) / 3600.0,
-                duration=float(entry.get('aula_duracao', 0)),
-                location=entry.get('sala_sigla'),
-                is_composed=len(entry.get('turmas', [])) > 1,
-                last_updated=timezone.now()
+                defaults={
+                    'lesson_type': entry.get('tipo'),
+                    'day': day,
+                    'start_time': float(entry.get('hora_inicio', 0)) / 3600.0,
+                    'duration': float(entry.get('aula_duracao', 0)),
+                    'location': entry.get('sala_sigla'),
+                    'is_composed': len(entry.get('turmas', [])) > 1,
+                    'last_updated': timezone.now()
+                }
             )
-            slot.save()
 
             for turma in entry.get('turmas', []):
                 new_class, created = Class.objects.get_or_create(
@@ -186,11 +195,10 @@ class ClassController:
                     }
                 )
 
-                slot_professor = SlotProfessor(
+                SlotProfessor.objects.update_or_create(
                     slot=slot,
-                    professor=professor
-                ) 
-                slot_professor.save()
+                    defaults={'professor': professor}
+                )
 
             processed_slot_ids.add(slot.id)
 
@@ -224,21 +232,31 @@ class ClassController:
         course_unit = CourseUnit.objects.get(id=course_unit_id)
 
         if not cache.get(f"schedule-{course_unit_id}"):
-            with transaction.atomic():
-                schedule_response = SigarraController().get_course_schedule(course_unit_id, new_schedule_api=new_schedule_api, faculty=course_unit.course.faculty.acronym)
+            # 1. Fetch data OUTSIDE the transaction to prevent SQLite locks
+            schedule_response = SigarraController().get_course_schedule(
+                course_unit_id,
+                new_schedule_api=new_schedule_api,
+                faculty=course_unit.course.faculty.acronym
+            )
 
-                if schedule_response.status_code == 200 and schedule_response.data is not None:
+            if schedule_response.status_code == 200 and schedule_response.data is not None:
+                # 2. Open transaction ONLY for database writes
+                with transaction.atomic():
                     if new_schedule_api:
                         fresh_slot_ids = ClassController.parse_classes_from_response_new_api(schedule_response.data)
                     else:
                         fresh_slot_ids = ClassController.parse_classes_from_response_old_api(schedule_response.data)
 
+                    # Remove slots that Sigarra no longer returns for this UC,
+                    # keeping the DB in sync with the source of truth.
                     ClassController.remove_stale_slots(course_unit_id, fresh_slot_ids)
 
-                    # Only mark as fetched on success so failed lookups are retried
-                    # instead of serving empty data until the TTL expires.
-                    cache.set(f"schedule-{course_unit_id}", True, CLASS_SCHEDULE_CACHE_TTL)
-        
+                # Only mark as fetched on success so failed lookups are retried
+                # instead of serving empty data until the TTL expires.
+                cache.set(f"schedule-{course_unit_id}", True, CLASS_SCHEDULE_CACHE_TTL)
+
+            # --- CRITICAL INDENTATION BOUNDARY ---
+            # This MUST align with the "if not cache.get...\" block above.
         classes = Class.objects.filter(
             course_unit=course_unit_id
         ).select_related(
@@ -254,7 +272,7 @@ class ClassController:
 
             if fetch_professors:
                 slot_list = [ClassController.get_professors(sc.slot) for sc in class_obj.slotclass_set.all()]
-            else: 
+            else:
                 slot_list = [
                     {
                         'id': sc.slot.id,
@@ -276,4 +294,3 @@ class ClassController:
             })
 
         return result
-
