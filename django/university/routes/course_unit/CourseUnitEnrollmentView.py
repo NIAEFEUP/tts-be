@@ -122,6 +122,10 @@ class CourseUnitEnrollmentView(APIView):
                 )
                 models_to_save.append(db_enrollment)
 
+            # Never persist an enrollment request without options: it would show up as a
+            # ghost request with an empty UC list in the admin panel.
+            if len(models_to_save) == 0:
+                return JsonResponse({"error": "Pedido vazio"}, status=400)
 
             course_unit_enrollment.save()
             CourseUnitEnrollmentOptions.objects.bulk_create(models_to_save)
