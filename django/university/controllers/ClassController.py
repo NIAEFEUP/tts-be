@@ -1,5 +1,5 @@
 from university.models import Class, Professor, Slot, SlotProfessor, SlotClass, CourseUnit
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from university.controllers.SigarraController import SigarraController
 from university.controllers.ScheduleController import ScheduleController
 from django.forms.models import model_to_dict
@@ -8,11 +8,14 @@ from django.core.cache import cache
 from tts_be.settings import CLASS_SCHEDULE_CACHE_TTL
 
 import hashlib
+import logging
 
 from django.utils import timezone
 from datetime import datetime
 
 from django.db.models import Prefetch
+
+logger = logging.getLogger(__name__)
 
 class ClassController:
     @staticmethod
@@ -123,7 +126,11 @@ class ClassController:
                     try:
                         with transaction.atomic():
                             SlotProfessor.objects.create(slot=slot, professor=professor)
-                    except Exception:
+                    except IntegrityError:
+                        # slot_professor.slot_id is a OneToOneField (PK) in the current
+                        # schema, so only one professor per slot is supported at the DB
+                        # level. The exists() guard handles the common case; this catch
+                        # covers the rare race-condition duplicate.
                         pass
 
             processed_slot_ids.add(lesson_id)
@@ -196,7 +203,11 @@ class ClassController:
                     try:
                         with transaction.atomic():
                             SlotProfessor.objects.create(slot=slot, professor=professor)
-                    except Exception:
+                    except IntegrityError:
+                        # slot_professor.slot_id is a OneToOneField (PK) in the current
+                        # schema, so only one professor per slot is supported at the DB
+                        # level. The exists() guard handles the common case; this catch
+                        # covers the rare race-condition duplicate.
                         pass
 
             processed_slot_ids.add(slot.id)
@@ -257,6 +268,7 @@ class ClassController:
 
             return True
         except Exception:
+            logger.exception("Failed to sync schedule for course unit %s", course_unit.id)
             return False
 
     @staticmethod
@@ -264,6 +276,7 @@ class ClassController:
         try:
             course_unit = CourseUnit.objects.get(id=course_unit_id)
         except (CourseUnit.DoesNotExist, ValueError, TypeError):
+            logger.warning("get_classes called with invalid course_unit_id=%r", course_unit_id)
             return []
 
         if not cache.get(f"schedule-{course_unit_id}"):
