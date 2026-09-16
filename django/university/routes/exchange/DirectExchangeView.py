@@ -229,6 +229,12 @@ class DirectExchangeView(View):
 
         try:
             with transaction.atomic():
+                # Lock the exchange row so concurrent acceptances are serialized.
+                # Otherwise two students accepting at the same time can each read the
+                # other's acceptance as still False (READ COMMITTED) and neither sets
+                # exchange.accepted, leaving the exchange invisible to admins.
+                exchange = DirectExchange.objects.select_for_update().get(id=id)
+
                 # Update exchange accepted states
                 self.set_participant_acceptance(exchange, request.user.username, True)
 
