@@ -60,7 +60,6 @@ class ExchangeController:
         now = timezone.now()
         return ExchangeExpirations.objects.filter(
             course_unit_id=course_unit_id,
-            is_course_expiration=False,
             active_date__lte=now,
             end_date__gte=now,
         ).exists()
@@ -71,7 +70,6 @@ class ExchangeController:
 
         exchange_expirations = ExchangeExpirations.objects.filter(
             course_unit_id__in=course_units,
-            is_course_expiration=False,
             active_date__lte=timezone.now(),
             end_date__gte=timezone.now(),
         ).values_list("course_unit_id", flat=True)
