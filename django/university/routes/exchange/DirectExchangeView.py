@@ -229,6 +229,9 @@ class DirectExchangeView(View):
 
         try:
             with transaction.atomic():
+                # Serialize concurrent acceptances for this exchange.
+                exchange = DirectExchange.objects.select_for_update().get(id=id)
+
                 # Update exchange accepted states
                 self.set_participant_acceptance(exchange, request.user.username, True)
 
