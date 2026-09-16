@@ -119,7 +119,10 @@ class ClassController:
                 if professor is None:
                     continue
 
-                SlotProfessor.objects.get_or_create(slot=slot, professor=professor)
+                try:
+                    SlotProfessor.objects.get_or_create(slot=slot, professor=professor)
+                except Exception:
+                    pass
 
             processed_slot_ids.add(lesson_id)
 
@@ -187,7 +190,10 @@ class ClassController:
                     }
                 )
 
-                SlotProfessor.objects.get_or_create(slot=slot, professor=professor)
+                try:
+                    SlotProfessor.objects.get_or_create(slot=slot, professor=professor)
+                except Exception:
+                    pass
 
             processed_slot_ids.add(slot.id)
 

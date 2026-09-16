@@ -46,22 +46,20 @@ class DirectExchangeParticipantsSerializer(serializers.Serializer):
 
     def get_class_participant_goes_from(self, obj):
         class_issuer_id = obj.class_participant_goes_from
-        classes = ClassController.get_classes(obj.course_unit_id, new_schedule_api=True, fetch_professors=False)
-        filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
-
         try:
+            classes = ClassController.get_classes(obj.course_unit_id, new_schedule_api=True, fetch_professors=False)
+            filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
             return filtered_classes[0]
-        except:
+        except Exception:
             return None
 
     def get_class_participant_goes_to(self, obj):
         class_issuer_id = obj.class_participant_goes_to
-        classes = ClassController.get_classes(obj.course_unit_id, new_schedule_api=True, fetch_professors=False)
-        filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
-
         try:
+            classes = ClassController.get_classes(obj.course_unit_id, new_schedule_api=True, fetch_professors=False)
+            filtered_classes = list(filter(lambda x: x['name'] == class_issuer_id, classes))
             return filtered_classes[0]
-        except:
+        except Exception:
             return None
 
     def get_is_enrolled_in_expected_class(self, obj):
