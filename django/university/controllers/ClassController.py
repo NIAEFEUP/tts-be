@@ -1,5 +1,5 @@
 from university.models import Class, Professor, Slot, SlotProfessor, SlotClass, CourseUnit
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from university.controllers.SigarraController import SigarraController
 from university.controllers.ScheduleController import ScheduleController
 from django.forms.models import model_to_dict
@@ -8,11 +8,14 @@ from django.core.cache import cache
 from tts_be.settings import CLASS_SCHEDULE_CACHE_TTL
 
 import hashlib
+import logging
 
 from django.utils import timezone
 from datetime import datetime
 
 from django.db.models import Prefetch
+
+logger = logging.getLogger(__name__)
 
 class ClassController:
     @staticmethod
@@ -119,10 +122,16 @@ class ClassController:
                 if professor is None:
                     continue
 
-                try:
-                    SlotProfessor.objects.get_or_create(slot=slot, professor=professor)
-                except Exception:
-                    pass
+                if not SlotProfessor.objects.filter(slot=slot).exists():
+                    try:
+                        with transaction.atomic():
+                            SlotProfessor.objects.create(slot=slot, professor=professor)
+                    except IntegrityError:
+                        # slot_professor.slot_id is a OneToOneField (PK) in the current
+                        # schema, so only one professor per slot is supported at the DB
+                        # level. The exists() guard handles the common case; this catch
+                        # covers the rare race-condition duplicate.
+                        pass
 
             processed_slot_ids.add(lesson_id)
 
@@ -190,10 +199,16 @@ class ClassController:
                     }
                 )
 
-                try:
-                    SlotProfessor.objects.get_or_create(slot=slot, professor=professor)
-                except Exception:
-                    pass
+                if not SlotProfessor.objects.filter(slot=slot).exists():
+                    try:
+                        with transaction.atomic():
+                            SlotProfessor.objects.create(slot=slot, professor=professor)
+                    except IntegrityError:
+                        # slot_professor.slot_id is a OneToOneField (PK) in the current
+                        # schema, so only one professor per slot is supported at the DB
+                        # level. The exists() guard handles the common case; this catch
+                        # covers the rare race-condition duplicate.
+                        pass
 
             processed_slot_ids.add(slot.id)
 
@@ -242,19 +257,27 @@ class ClassController:
         if schedule_response.status_code != 200 or schedule_response.data is None:
             return False
 
-        with transaction.atomic():
-            if new_schedule_api:
-                fresh_slot_ids = ClassController.parse_classes_from_response_new_api(schedule_response.data)
-            else:
-                fresh_slot_ids = ClassController.parse_classes_from_response_old_api(schedule_response.data)
+        try:
+            with transaction.atomic():
+                if new_schedule_api:
+                    fresh_slot_ids = ClassController.parse_classes_from_response_new_api(schedule_response.data)
+                else:
+                    fresh_slot_ids = ClassController.parse_classes_from_response_old_api(schedule_response.data)
 
-            ClassController.remove_stale_slots(course_unit.id, fresh_slot_ids)
+                ClassController.remove_stale_slots(course_unit.id, fresh_slot_ids)
 
-        return True
+            return True
+        except Exception:
+            logger.exception("Failed to sync schedule for course unit %s", course_unit.id)
+            return False
 
     @staticmethod
     def get_classes(course_unit_id: int, fetch_professors: bool = True, new_schedule_api: bool = True):
-        course_unit = CourseUnit.objects.get(id=course_unit_id)
+        try:
+            course_unit = CourseUnit.objects.get(id=course_unit_id)
+        except (CourseUnit.DoesNotExist, ValueError, TypeError):
+            logger.warning("get_classes called with invalid course_unit_id=%r", course_unit_id)
+            return []
 
         if not cache.get(f"schedule-{course_unit_id}"):
             synced = ClassController._fetch_and_sync_schedule(course_unit, new_schedule_api)

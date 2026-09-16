@@ -127,7 +127,7 @@ class SlotProfessor(models.Model):
     class Meta:
         managed = True
         db_table = 'slot_professor'
-        unique_together = (('slot', 'professor'), ('slot', 'professor'),)
+        unique_together = (('slot', 'professor'),)
 
 
 
