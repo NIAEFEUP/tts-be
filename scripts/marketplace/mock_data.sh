@@ -14,3 +14,11 @@ USERNAME=$1
 sed "s/<username>/$USERNAME/g" $ROOT/scripts/marketplace/mock_data.sql > /tmp/mock_data.sql
 sqlite3 $ROOT/django/tts_be/database.db < /tmp/mock_data.sql
 rm /tmp/mock_data.sql
+
+echo "Gerando dados de teste complexos (Python)..."
+cd "$ROOT/django"
+if docker ps | grep -q tts_django; then
+    docker exec tts_django python manage.py generate_mock_requests
+else
+    python3 manage.py generate_mock_requests
+fi

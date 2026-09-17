@@ -202,7 +202,7 @@ class ExchangeController:
 
     @staticmethod
     def update_schedule_accepted_exchanges(student, schedule, metadata: 'StudentScheduleMetadata | None' = None):
-        accepted_options = DirectExchangeParticipants.objects.filter(participant_nmec=student, accepted=True, direct_exchange__canceled=False, direct_exchange__accepted=True)
+        accepted_options = DirectExchangeParticipants.objects.filter(participant_nmec=student, accepted=True, direct_exchange__canceled=False, direct_exchange__accepted=True).order_by('direct_exchange__date')
         (status, trailing) = ExchangeController.update_schedule(schedule, accepted_options)
         if status == ExchangeStatus.FETCH_SCHEDULE_ERROR:
             return (ExchangeStatus.FETCH_SCHEDULE_ERROR, trailing)

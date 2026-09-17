@@ -48,19 +48,23 @@ class ExchangeValidationController:
         with transaction.atomic():
             accepted_exchange_participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=accepted_exchange_id)
             for participant in accepted_exchange_participants:
-                # 1. Are there any exchanges that include classes that a participant changed from?
+                # 1. Are there any pending exchanges that include classes that a participant changed from?
                 conflicting = DirectExchangeParticipants.objects.exclude(direct_exchange__id=accepted_exchange_id).filter(
                     participant_nmec=participant.participant_nmec,
                     class_participant_goes_from=participant.class_participant_goes_from,
-                    direct_exchange__accepted=True
+                    course_unit_id=participant.course_unit_id,
+                    direct_exchange__accepted=False,
+                    direct_exchange__canceled=False
                 )
                 conflicting_exchanges.extend(list(map(lambda conflicting_exchange: conflicting_exchange.direct_exchange, conflicting)))
 
-            # 2. Revalidate all of the other exchanges who include classes from the participant but not classes
+            # 2. Revalidate all of the other pending exchanges who include classes from the participant but not classes
             # that are the "class_participant_goes_from" of the exchange
             for participant in accepted_exchange_participants:
                 exchanges = DirectExchange.objects.exclude(id=accepted_exchange_id).filter(
-                    directexchangeparticipants__participant_nmec=participant.participant_nmec
+                    directexchangeparticipants__participant_nmec=participant.participant_nmec,
+                    accepted=False,
+                    canceled=False
                 )
                 exchanges = [exchange for exchange in exchanges if exchange not in conflicting_exchanges]
 
