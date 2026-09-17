@@ -44,7 +44,7 @@ def create_marketplace_exchange_on_db(exchanges, curr_student):
 
 def build_marketplace_submission_schedule(schedule, submission, auth_student):
     for exchange in submission:
-        course_unit = exchange["courseUnitId"]
+        course_unit = int(exchange["courseUnitId"])
         class_auth_student_goes_to = exchange["classNameRequesterGoesTo"]
         class_auth_student_goes_from = exchange["classNameRequesterGoesFrom"]
 
@@ -113,7 +113,7 @@ def build_student_schedule_dicts(student_schedules, exchanges):
 
 def build_student_schedule_dict(schedule: list):
     return {
-        (class_schedule["turma_sigla"].split("+")[0], class_schedule["ocorrencia_id"]): class_schedule for class_schedule in schedule if (class_schedule["tipo"] == "TP" or class_schedule["tipo"] == "PL")
+        (class_schedule["turma_sigla"].split("+")[0], int(class_schedule["ocorrencia_id"])): class_schedule for class_schedule in schedule if (class_schedule["tipo"] == "TP" or class_schedule["tipo"] == "PL")
     }
 
 def check_class_schedule_overlap(day_1: int, start_1: int, end_1: int, day_2: int, start_2: int, end_2: int) -> bool:

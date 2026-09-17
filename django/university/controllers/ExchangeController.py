@@ -104,7 +104,7 @@ class ExchangeController:
         matches = []
         for courseUnitId in courseUnitNameFilter:
             for option in options:
-                if courseUnitId == option.course_unit_id:
+                if int(courseUnitId) == option.course_unit_id:
                     matches.append(1)
 
         return len(matches) == len(courseUnitNameFilter)
@@ -122,7 +122,7 @@ class ExchangeController:
     def getStudentClass(student_schedules, username, courseUnitId):
         schedule = student_schedules[username]
         for key in schedule.keys():
-            if key[1] == courseUnitId:
+            if key[1] == int(courseUnitId):
                 return key[0]
 
         return None
