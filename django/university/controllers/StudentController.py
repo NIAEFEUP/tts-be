@@ -42,12 +42,13 @@ class StudentController:
             if not corresponding_class:
                 continue
 
-            user_course_unit = UserCourseUnits(
-                user_nmec=nmec,
-                course_unit_id=course_unit_id,
-                class_field=corresponding_class
-            )
-            user_course_unit.save()
+            if not UserCourseUnits.objects.filter(user_nmec=nmec, course_unit_id=course_unit_id).exists():
+                user_course_unit = UserCourseUnits(
+                    user_nmec=nmec,
+                    course_unit_id=course_unit_id,
+                    class_field=corresponding_class
+                )
+                user_course_unit.save()
 
     @staticmethod
     def refresh_metadata(nmec):
@@ -55,6 +56,10 @@ class StudentController:
 
         sigarra_course_units = StudentScheduleController.retrieve_course_unit_classes(SigarraController(), nmec)
         current_course_units = UserCourseUnits.objects.filter(user_nmec=nmec)
+        
+        # Remove course units that are no longer in Sigarra
+        sigarra_course_unit_ids = [item[0] for item in sigarra_course_units]
+        current_course_units.exclude(course_unit_id__in=sigarra_course_unit_ids).delete()
 
         for item in sigarra_course_units:
             (course_unit_id, class_acronym) = item
