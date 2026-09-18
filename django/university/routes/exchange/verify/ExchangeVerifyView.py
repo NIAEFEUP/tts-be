@@ -61,7 +61,10 @@ class ExchangeVerifyView(View):
 
                 ExchangeValidationController().fetch_conflicting_exchanges_metadata(int(exchange_info["exchange_id"]), metadata=student_schedule_metadata)
                 for participant in all_participants:
-                    StudentScheduleController.fetch_student_schedule_metadata(SigarraController(), student_schedule_metadata, participant.participant_nmec)
+                    res = StudentScheduleController.fetch_student_schedule_metadata(SigarraController(), student_schedule_metadata, participant.participant_nmec)
+                    if isinstance(res, HttpResponse):
+                        DirectExchangeParticipants.objects.filter(participant_nmec=request.user.username, direct_exchange=direct_exchange).update(accepted=False)
+                        return res
 
             with transaction.atomic():
                 if all_participants_accepted:
@@ -109,4 +112,11 @@ class ExchangeVerifyView(View):
 
         except Exception as e:
             print("Error: ", e)
+            try:
+                if 'request' in locals() and 'direct_exchange' in locals():
+                    DirectExchangeParticipants.objects.filter(
+                        participant_nmec=request.user.username, direct_exchange=direct_exchange
+                    ).update(accepted=False)
+            except Exception:
+                pass
             return HttpResponse(status=500)
