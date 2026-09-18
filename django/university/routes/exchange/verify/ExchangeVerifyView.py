@@ -47,7 +47,7 @@ class ExchangeVerifyView(View):
 
             # Update participant acceptance
             with transaction.atomic():
-                participant = DirectExchangeParticipants.objects.filter(participant_nmec=request.user.username)
+                participant = DirectExchangeParticipants.objects.filter(participant_nmec=request.user.username, direct_exchange=direct_exchange)
                 participant.update(accepted=True)
 
                 all_participants = DirectExchangeParticipants.objects.filter(direct_exchange__id=exchange_info["exchange_id"])
