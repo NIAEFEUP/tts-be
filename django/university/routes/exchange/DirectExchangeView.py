@@ -142,12 +142,12 @@ class DirectExchangeView(View):
         with transaction.atomic():
             if replace:
                 # Cancel previous exchanges with same hash
-                previous_exchanges = DirectExchange.objects.filter(hash=exchange_hash, canceled=False)
+                previous_exchanges = DirectExchange.objects.filter(hash=exchange_hash, canceled=False, accepted=False)
                 for previous_exchange in previous_exchanges:
                     ExchangeValidationController().cancel_exchange(previous_exchange)
 
-            elif DirectExchange.objects.filter(hash=exchange_hash, canceled=False).exists():
-                # Replace not set to true and a non-canceled exchange with the same hash already exists => return error
+            elif DirectExchange.objects.filter(hash=exchange_hash, canceled=False, accepted=False).exists():
+                # Replace not set to true and a non-canceled pending exchange with the same hash already exists => return error
                 return JsonResponse({"error": "duplicate-request"}, status=400, safe=False)
 
             exchange_model = DirectExchange(
@@ -221,6 +221,9 @@ class DirectExchangeView(View):
         ).exists()
         if not is_participant:
             return JsonResponse({"error": "Sem permissões suficientes"}, status=403, safe=False)
+
+        if exchange.accepted:
+            return JsonResponse({"success": True}, safe=False)
 
         # Validate if exchange is still valid
         if not ExchangeValidationController().validate_direct_exchange(id).status:
