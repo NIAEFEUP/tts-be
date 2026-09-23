@@ -244,9 +244,12 @@ class ClassController:
         The HTTP call is made outside the transaction to avoid holding a DB
         connection open during a slow network request. The write transaction
         then upserts fresh slots and removes any that Sigarra no longer returns,
-        keeping the DB in sync with the source of truth.
+        keeping the DB in sync with the source of truth. If Sigarra returns no
+        lessons at all, nothing is removed.
 
-        Returns True on a successful sync, False otherwise.
+        Returns True on a successful sync (including an empty one, so it is cached
+        like any other result instead of re-querying Sigarra on every request),
+        False otherwise.
         """
         schedule_response = SigarraController().get_course_schedule(
             course_unit.id,
@@ -264,7 +267,16 @@ class ClassController:
                 else:
                     fresh_slot_ids = ClassController.parse_classes_from_response_old_api(schedule_response.data)
 
-                ClassController.remove_stale_slots(course_unit.id, fresh_slot_ids)
+                # An empty schedule is far more likely to be a SIGARRA hiccup or a query for
+                # the wrong period than a course unit that really lost every lesson. Pruning
+                # against an empty set would delete the whole timetable, so keep what we have.
+                if fresh_slot_ids:
+                    ClassController.remove_stale_slots(course_unit.id, fresh_slot_ids)
+                else:
+                    logger.warning(
+                        "SIGARRA returned no lessons for course unit %s; keeping its existing slots",
+                        course_unit.id,
+                    )
 
             return True
         except Exception:
