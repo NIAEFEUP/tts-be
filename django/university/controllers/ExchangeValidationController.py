@@ -117,7 +117,10 @@ class ExchangeValidationController:
                 else:
                     new_schedule = SigarraController().get_student_schedule(int(participant.participant_nmec)).data
 
-                ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, new_schedule)
+                # Replay the student's other accepted exchanges, but never this one: if it is
+                # already accepted, replaying it would move the student out of the class they
+                # are exchanging from, and the exchange would always look invalid.
+                ExchangeController.update_schedule_accepted_exchanges(participant.participant_nmec, new_schedule, exclude_exchange_id=exchange_id)
                 schedule[participant.participant_nmec] = build_student_schedule_dict(new_schedule)
 
         # 2. Check if users are inside classes they will exchange from with

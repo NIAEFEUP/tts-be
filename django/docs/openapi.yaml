@@ -621,7 +621,11 @@ paths:
   /exchange/direct/validate/{id}:
     get:
       tags: [exchange-direct]
-      summary: Validate whether a direct exchange is still valid
+      summary: Validate whether a direct exchange is still valid (admin only)
+      description: |
+        Read-only: reports whether the exchange still applies, given the students' SIGARRA
+        schedules and their other accepted exchanges. It never cancels or modifies the
+        exchange, apart from updating `last_validated` when it is valid.
       parameters:
         - name: id
           in: path
@@ -630,7 +634,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Validation result
+          description: The exchange is valid
           content:
             application/json:
               schema:
@@ -638,11 +642,26 @@ paths:
                 properties:
                   valid:
                     type: boolean
-                  error:
-                    type: string
+                    example: true
                   last_validated:
                     type: string
                     format: date-time
+        "400":
+          description: The exchange is no longer valid (it is left untouched)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+        "403":
+          description: Not an admin
+        "404":
+          description: Exchange not found
 
   /exchange/verify/{token}:
     post:
