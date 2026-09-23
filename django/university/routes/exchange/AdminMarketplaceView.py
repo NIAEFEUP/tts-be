@@ -52,36 +52,57 @@ class AdminMarketplaceView(View):
             )
         )
 
+
     def get(self, request):
         exchanges = MarketplaceExchange.objects.prefetch_related(
-                Prefetch(
-                    'marketplaceexchangeclass_set',
-                    to_attr='options'
-                )).all()
+            Prefetch(
+                'marketplaceexchangeclass_set',
+                to_attr='options'
+            )
+        ).all()
 
-        paginator = Paginator(exchanges, 10)
-        page = request.GET.get('page')
-        page_obj = paginator.get_page(page)
+
+        exchanges = [
+            exchange
+            for exchange in exchanges
+            if not DirectExchange.objects.filter(
+                marketplace_exchange=exchange
+            ).exists()
+        ]
 
         exchanges = [{
-                "id": exchange.id,
-                "type": "marketplaceexchange",
-                "issuer_name": exchange.issuer_name,
-                "issuer_nmec": exchange.issuer_nmec,
-                "options": [
-                    MarketplaceExchangeClassSerializer(exchange_class).data for exchange_class in exchange.options
-                ],
-                "classes": list(ExchangeController.getExchangeOptionClasses(exchange.options)),
-                "date":  exchange.date,
-                "admin_state": exchange.admin_state,
-                "accepted": exchange.accepted
-            } for exchange in page_obj if not DirectExchange.objects.filter(marketplace_exchange=exchange).exists()]
+            "id": exchange.id,
+            "type": "marketplaceexchange",
+            "issuer_name": exchange.issuer_name,
+            "issuer_nmec": exchange.issuer_nmec,
+            "options": [
+                MarketplaceExchangeClassSerializer(exchange_class).data
+                for exchange_class in exchange.options
+            ],
+            "classes": list(
+                ExchangeController.getExchangeOptionClasses(exchange.options)
+            ),
+            "date": exchange.date,
+            "admin_state": exchange.admin_state,
+            "accepted": exchange.accepted
+        } for exchange in exchanges]
 
         for filter in AdminRequestFiltersController.filter_values():
             if request.GET.get(filter):
-                exchanges = self.filter_actions[filter](exchanges, request.GET.get(filter))
+                exchanges = self.filter_actions[filter](
+                    exchanges,
+                    request.GET.get(filter)
+                )
+
+        page_size = int(request.GET.get('page_size', 10))
+        paginator = Paginator(exchanges, page_size)
+
+        page = request.GET.get('page')
+        page_obj = paginator.get_page(page)
 
         return JsonResponse({
-            "exchanges": exchanges,
+            "exchanges": page_obj.object_list,
             "total_pages": paginator.num_pages
-        }, safe = False)
+        }, safe=False)
+
+
