@@ -892,6 +892,9 @@ paths:
     put:
       tags: [exchange-admin]
       summary: Accept an exchange request (admin only)
+      description: |
+        Marks the request as `treated`/accepted and moves the students to their new classes.
+        This is all-or-nothing: if any student cannot be moved, nothing is changed.
       parameters:
         - name: request_type
           in: path
@@ -907,8 +910,28 @@ paths:
       responses:
         "200":
           description: Accepted
+        "400":
+          description: A target class of the request does not exist; nothing was changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "class-not-found"
+                  course_unit_id:
+                    type: string
+                  class_name:
+                    type: string
         "403":
           description: Not an admin
+        "404":
+          description: Urgent request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /exchange/admin/request/{request_type}/{id}/reject/:
     put:
