@@ -18,7 +18,8 @@
     "migration:show": "prisma migration show",
     "migration:status": "prisma migration status",
     "migration:list": "prisma migration list",
-    "migration:ref:set": "prisma migration ref set"
+    "migration:ref:set": "prisma migration ref set",
+    "db:studio": "node -e \"require('dotenv').config(); require('child_process').execSync('npx --yes prisma@prev studio --url ' + process.env.DATABASE_URL, {stdio: 'inherit'})\""
   },
   "dependencies": {
     "@elysiajs/node": "^1.4.5",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.6.2",
+    "dotenv": "^16.0.0",
     "prisma": "8.0.0-rc.18",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"

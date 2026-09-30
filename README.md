@@ -263,6 +263,7 @@ bun run db:sign
 | `db:verify` | `bun run db:verify` | Check live DB matches the contract |
 | `db:schema` | `bun run db:schema` | Print the live DB schema as a tree |
 | `db:sign` | `bun run db:sign` | Re-sign the marker after a manual DB fix |
+| `db:studio` | `bun run db:studio` | Open Prisma Studio (visual DB inspector) |
 | `migration:plan` | `bun run migration:plan -- --name <slug>` | Plan a migration from the current contract diff |
 | `migrate` | `bun run migrate` | Apply all pending migrations |
 | `migrate:show` | `bun run migrate:show` | Preview what would run (no writes) |
