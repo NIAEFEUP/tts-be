@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Upload to NIployments registry
-      uses: NIAEFEUP/push-to-niployments@v2.2
+      uses: NIAEFEUP/push-to-niployments@v2.3
       with:
         docker_dockerfile: Dockerfile
         docker_context: ./django
